@@ -10,7 +10,7 @@ interface ChapterCardProps {
 export default function ChapterCard(props: ChapterCardProps) {
   // biome-ignore lint/suspicious/noUnassignedVariables: assigned by ref
   let ref: HTMLDivElement | undefined;
-  const { settings } = useReaderSettings();
+  const { settings, themeColors } = useReaderSettings();
 
   onMount(() => {
     if (!ref) {
@@ -42,12 +42,12 @@ export default function ChapterCard(props: ChapterCardProps) {
         "--reader-h-padding": `${settings().hPadding}rem`,
         "padding-left": `${settings().hPadding}rem`,
         "padding-right": `${settings().hPadding}rem`,
+        background: themeColors().bgColor,
+        color: themeColors().textColor,
       }}
     >
       <Show when={props.title}>
-        <h2 class="shrink-0 px-6 pt-6 pb-2 font-bold text-ink text-xl">
-          {props.title}
-        </h2>
+        <h2 class="shrink-0 px-6 pt-6 pb-2 font-bold text-xl">{props.title}</h2>
       </Show>
       <div
         class="min-h-0 flex-1 overflow-y-auto py-4"
@@ -56,9 +56,10 @@ export default function ChapterCard(props: ChapterCardProps) {
         }}
       >
         <div
-          class="reader-content prose prose-ink max-w-none"
+          class="reader-content prose max-w-none"
           innerHTML={props.html}
           ref={ref}
+          style={{ color: "inherit" }}
         />
       </div>
     </div>

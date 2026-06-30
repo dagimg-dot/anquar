@@ -1,4 +1,4 @@
-import { useReaderSettings } from "../lib/reader-settings.tsx";
+import { READER_THEMES, useReaderSettings } from "../lib/reader-settings.tsx";
 
 const FONT_SIZES = [75, 90, 100, 115, 130, 150, 175, 200] as const;
 const LINE_HEIGHTS = [1.3, 1.5, 1.7, 1.9, 2.1] as const;
@@ -93,6 +93,38 @@ export default function ReaderSettingsPanel() {
               type="button"
             >
               {lineHeightLabel(lh)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Theme */}
+      <div>
+        <span class="mb-2 block font-medium text-ink text-sm">Theme</span>
+        <div class="flex gap-2">
+          {READER_THEMES.map((theme) => (
+            <button
+              aria-label={theme.label}
+              class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 transition-colors"
+              classList={{
+                "border-brand-500": settings().themeId === theme.id,
+                "border-transparent": settings().themeId !== theme.id,
+              }}
+              onClick={() =>
+                setSettings({ themeId: theme.id, textColor: "", bgColor: "" })
+              }
+              title={theme.label}
+              type="button"
+            >
+              <span
+                class="flex h-full w-full items-center justify-center rounded-full"
+                style={{ background: theme.bgColor }}
+              >
+                <span
+                  class="h-3 w-1 rounded-full"
+                  style={{ background: theme.textColor }}
+                />
+              </span>
             </button>
           ))}
         </div>
