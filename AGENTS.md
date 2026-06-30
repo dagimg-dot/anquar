@@ -1,4 +1,4 @@
-# BokTok
+# BukTok
 
 Guilt-free doomscrolling — a Solid.js PWA that turns books into a TikTok-style vertical scroll feed.
 
