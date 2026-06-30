@@ -90,7 +90,9 @@ export async function saveBook(
   toc: TocEntry[],
   coverImage?: string
 ): Promise<string> {
-  const id = crypto.randomUUID();
+  const id =
+    self.crypto?.randomUUID?.() ??
+    `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
   await db.transaction("rw", db.books, db.chapters, db.toc, async () => {
     await db.books.put({

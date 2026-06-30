@@ -2,8 +2,8 @@ import { createSignal, For, onMount, Show } from "solid-js";
 import { getBook, listBooks } from "../lib/db.ts";
 import type { BookMetadata, ChapterData, TocEntry } from "../lib/types.ts";
 import { useTikTokScroll } from "../lib/useTikTokScroll.ts";
-import ChapterCard from "./ChapterCard.tsx";
 import CoverCard from "./CoverCard.tsx";
+import ChapterCard from "./PaginatedChapter.tsx";
 
 interface BookState {
   chapters: ChapterData[];
