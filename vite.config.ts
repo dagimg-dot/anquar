@@ -1,12 +1,39 @@
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { VitePWA } from "vite-plugin-pwa";
 import solid from "vite-plugin-solid";
 
+function manifestContentType(): Plugin {
+  return {
+    name: "manifest-content-type",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url?.endsWith(".webmanifest")) {
+          res.setHeader("Content-Type", "application/manifest+json");
+        }
+        next();
+      });
+    },
+  };
+}
+
 export default defineConfig({
+  resolve: {
+    conditions: ["browser"],
+    mainFields: ["browser", "module", "main"],
+  },
   plugins: [
     tailwindcss(),
     solid(),
+    manifestContentType(),
+    nodePolyfills({
+      include: ["buffer", "events", "stream", "util"],
+      globals: {
+        process: true,
+        Buffer: true,
+      },
+    }),
     VitePWA({
       registerType: "prompt",
       injectRegister: false,
