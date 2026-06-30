@@ -1,6 +1,7 @@
 import { createSignal, For, onMount, Show } from "solid-js";
 import { getBook, listBooks } from "../lib/db.ts";
 import type { BookMetadata, ChapterData, TocEntry } from "../lib/types.ts";
+import { useTikTokScroll } from "../lib/useTikTokScroll.ts";
 import ChapterCard from "./ChapterCard.tsx";
 import CoverCard from "./CoverCard.tsx";
 
@@ -15,6 +16,10 @@ interface BookState {
 export default function Feed() {
   const [book, setBook] = createSignal<BookState | null>(null);
   const [loading, setLoading] = createSignal(true);
+
+  // biome-ignore lint/suspicious/noUnassignedVariables: assigned by ref
+  let containerRef: HTMLDivElement | undefined;
+  useTikTokScroll(() => containerRef);
 
   onMount(async () => {
     try {
@@ -64,7 +69,7 @@ export default function Feed() {
         }
         when={book()}
       >
-        <div class="snap-container h-dvh overflow-y-auto">
+        <div class="snap-container h-dvh overflow-y-auto" ref={containerRef}>
           <CoverCard
             author={book()?.metadata.author ?? ""}
             chapterCount={book()?.chapters.length ?? 0}

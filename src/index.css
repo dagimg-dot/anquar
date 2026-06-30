@@ -99,6 +99,7 @@ html {
   height: 100dvh;
   overflow: hidden;
   scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 /* --- Reader content pagination --- */
