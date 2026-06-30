@@ -26,8 +26,8 @@
   --color-brand-950: oklch(0.18 0.12 250);
 
   /* Glass tokens */
-  --color-glass-bg: oklch(1 0 0 / 0.08);
-  --color-glass-border: oklch(1 0 0 / 0.18);
+  --color-glass-bg: oklch(1 0 0 / 0.12);
+  --color-glass-border: oklch(1 0 0 / 0.25);
   --color-glass-shadow: oklch(0 0 0 / 0.25);
   --color-scrim: oklch(0 0 0 / 0.4);
 
@@ -58,8 +58,8 @@
   --color-brand-900: oklch(0.4 0.2 250);
   --color-brand-950: oklch(0.32 0.15 250);
 
-  --color-glass-bg: oklch(0 0 0 / 0.15);
-  --color-glass-border: oklch(1 0 0 / 0.1);
+  --color-glass-bg: oklch(0 0 0 / 0.25);
+  --color-glass-border: oklch(1 0 0 / 0.15);
   --color-glass-shadow: oklch(0 0 0 / 0.5);
   --color-scrim: oklch(0 0 0 / 0.6);
 }
@@ -80,4 +80,122 @@ html {
   transition:
     background-color 0.3s,
     color 0.3s;
+}
+
+/* --- Animated gradient orbs --- */
+@keyframes float-1 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(30px, -20px) scale(1.05);
+  }
+  50% {
+    transform: translate(-10px, 20px) scale(0.95);
+  }
+  75% {
+    transform: translate(-30px, -10px) scale(1.02);
+  }
+}
+
+@keyframes float-2 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-40px, 30px) scale(1.08);
+  }
+  66% {
+    transform: translate(20px, -30px) scale(0.92);
+  }
+}
+
+@keyframes float-3 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(25px, 25px) scale(1.1);
+  }
+}
+
+.orb {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  opacity: 0.4;
+  filter: blur(60px);
+}
+
+.orb-1 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, oklch(0.65 0.25 300), transparent 70%);
+  animation: float-1 12s ease-in-out infinite;
+}
+
+.orb-2 {
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, oklch(0.6 0.22 200), transparent 70%);
+  animation: float-2 15s ease-in-out infinite;
+}
+
+.orb-3 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, oklch(0.7 0.2 350), transparent 70%);
+  animation: float-3 10s ease-in-out infinite;
+}
+
+/* --- Glass specular highlights (pseudo-element) --- */
+.glass-specular::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  content: "";
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  border-radius: inherit;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.05);
+}
+
+/* --- Glass mask for thicker feel --- */
+.glass-mask {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    black 70%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
+}
+
+/* --- Scroll-driven adaptive tint --- */
+.glass-nav {
+  transition:
+    background-color 0.2s ease,
+    backdrop-filter 0.2s ease;
+}
+
+.glass-nav[data-scrolled="true"] {
+  background-color: oklch(0.13 0.01 240 / 0.6) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* --- SVG refraction filter (Chromium progressive enhancement) --- */
+@supports (backdrop-filter: url("#liquid-glass")) {
+  .glass-refract {
+    backdrop-filter: url("#liquid-glass-refraction") blur(12px) saturate(150%);
+  }
 }

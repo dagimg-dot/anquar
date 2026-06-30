@@ -1,4 +1,5 @@
 import { Bookmark, BookOpen, Books, GearSix } from "phosphor-solid";
+import { createSignal, onCleanup, onMount } from "solid-js";
 import { useTheme } from "../theme/ThemeContext.tsx";
 
 const NAV_ITEMS = [
@@ -10,17 +11,28 @@ const NAV_ITEMS = [
 
 export default function BottomNav() {
   useTheme();
+  const [scrolled, setScrolled] = createSignal(false);
+
+  onMount(() => {
+    function onScroll() {
+      setScrolled(window.scrollY > 50);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onCleanup(() => window.removeEventListener("scroll", onScroll));
+  });
 
   return (
     <nav class="fixed inset-x-0 bottom-0 z-50 pb-[env(safe-area-inset-bottom)]">
       <div
         class={[
+          "glass-nav glass-specular",
           "relative mx-2 mb-2 overflow-hidden rounded-2xl",
           "backdrop-blur-xl backdrop-saturate-150",
           "border border-glass-border bg-glass-bg",
           "shadow-2xl shadow-glass-shadow",
           "[transform:translateZ(0)]",
         ].join(" ")}
+        data-scrolled={scrolled()}
       >
         <div class="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-transparent" />
 
