@@ -1,5 +1,6 @@
 import { BookOpen, Plus } from "phosphor-solid";
 import { createSignal, Show } from "solid-js";
+import toast from "solid-toast";
 import { saveBook } from "../lib/db.ts";
 import { useEpubParser } from "../lib/epub.ts";
 
@@ -27,6 +28,7 @@ export default function FilePicker(props: FilePickerProps) {
         result.toc,
         result.coverImage ?? undefined
       );
+      toast.success(`${result.metadata.title} imported successfully`);
       props.onBookLoaded(bookId);
     } catch (err) {
       console.error("Failed to parse EPUB:", err);

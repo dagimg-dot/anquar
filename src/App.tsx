@@ -1,4 +1,5 @@
 import { createSignal, Show } from "solid-js";
+import AppleToaster from "./components/AppleToaster.tsx";
 import BottomNav from "./components/BottomNav.tsx";
 import Feed from "./components/Feed.tsx";
 import FilePicker from "./components/FilePicker.tsx";
@@ -39,6 +40,7 @@ function App() {
         </Show>
       </main>
       <BottomNav />
+      <AppleToaster />
       <PWABadge />
     </div>
   );

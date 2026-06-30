@@ -25,12 +25,8 @@ export default function BottomNav() {
     <nav class="fixed inset-x-0 bottom-0 z-50 pb-[env(safe-area-inset-bottom)]">
       <div
         class={[
-          "glass-nav glass-specular",
-          "relative mx-2 mb-2 overflow-hidden rounded-2xl",
-          "backdrop-blur-xl backdrop-saturate-150",
-          "border border-glass-border bg-glass-bg",
-          "shadow-2xl shadow-glass-shadow",
-          "[transform:translateZ(0)]",
+          "liquid-glass glass-nav",
+          "relative mx-2 mb-2 rounded-2xl",
         ].join(" ")}
         data-scrolled={scrolled()}
       >
