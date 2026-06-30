@@ -4,6 +4,7 @@ import BottomNav from "./components/BottomNav.tsx";
 import Feed from "./components/Feed.tsx";
 import FilePicker from "./components/FilePicker.tsx";
 import ReaderSettingsPanel from "./components/ReaderSettingsPanel.tsx";
+import { ReaderSettingsProvider } from "./lib/reader-settings.tsx";
 import PWABadge from "./PWABadge.tsx";
 
 function App() {
@@ -38,11 +39,12 @@ function App() {
           fallback={<FilePicker onBookLoaded={(id) => setBookId(id)} />}
           when={bookId()}
         >
-          <Feed />
+          <ReaderSettingsProvider bookId={bookId() ?? undefined}>
+            <Feed />
+          </ReaderSettingsProvider>
         </Show>
       </main>
 
-      {/* Reader settings panel */}
       <div
         class="fixed inset-x-0 bottom-24 z-40 mx-auto max-w-md px-4 transition-all duration-200"
         classList={{
@@ -55,7 +57,6 @@ function App() {
         </Show>
       </div>
 
-      {/* Settings toggle button (only visible while reading) */}
       <Show when={bookId()}>
         <button
           aria-label="Toggle reading settings"

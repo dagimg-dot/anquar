@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from "dexie";
+import type { ReaderSettings } from "./reader-settings.tsx";
 import type { BookMetadata, ChapterData, TocEntry } from "./types.ts";
 
 interface BookRecord {
@@ -48,12 +49,23 @@ interface BookmarkRecord {
   wordOffset: number;
 }
 
+interface ReaderSettingsRecord {
+  bgColor: string;
+  bookId: string;
+  fontSize: number;
+  hPadding: number;
+  lineHeight: number;
+  textColor: string;
+  themeId: string;
+}
+
 class BukTokDB extends Dexie {
   books!: EntityTable<BookRecord, "id">;
   chapters!: EntityTable<ChapterRecord, "id">;
   toc!: EntityTable<TocRecord, "id">;
   progress!: EntityTable<ProgressRecord, "bookId">;
   bookmarks!: EntityTable<BookmarkRecord, "id">;
+  readerSettings!: EntityTable<ReaderSettingsRecord, "bookId">;
 
   constructor() {
     super("buktok");
@@ -63,6 +75,9 @@ class BukTokDB extends Dexie {
       toc: "id, bookId, href",
       progress: "bookId, lastReadAt",
       bookmarks: "++id, bookId, chapterIndex, createdAt",
+    });
+    this.version(2).stores({
+      readerSettings: "bookId",
     });
   }
 }
@@ -169,21 +184,30 @@ export function getProgress(bookId: string) {
 }
 
 export async function deleteBook(bookId: string) {
-  await db.transaction(
-    "rw",
+  const tables = [
     db.books,
     db.chapters,
     db.toc,
     db.progress,
     db.bookmarks,
-    async () => {
-      await db.books.delete(bookId);
-      await db.chapters.where("bookId").equals(bookId).delete();
-      await db.toc.where("bookId").equals(bookId).delete();
-      await db.progress.delete(bookId);
-      await db.bookmarks.where("bookId").equals(bookId).delete();
-    }
-  );
+    db.readerSettings,
+  ] as const;
+  await db.transaction("rw", tables, async () => {
+    await db.books.delete(bookId);
+    await db.chapters.where("bookId").equals(bookId).delete();
+    await db.toc.where("bookId").equals(bookId).delete();
+    await db.progress.delete(bookId);
+    await db.bookmarks.where("bookId").equals(bookId).delete();
+    await db.readerSettings.delete(bookId);
+  });
+}
+
+export function saveReaderSettings(bookId: string, settings: ReaderSettings) {
+  return db.readerSettings.put({ bookId, ...settings });
+}
+
+export function loadReaderSettings(bookId: string) {
+  return db.readerSettings.get(bookId);
 }
 
 export { db };

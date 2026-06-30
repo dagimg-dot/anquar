@@ -129,6 +129,28 @@ export default function ReaderSettingsPanel() {
           ))}
         </div>
       </div>
+
+      {/* Custom colors */}
+      <div class="flex gap-3">
+        <label class="flex flex-1 items-center gap-2">
+          <span class="shrink-0 font-medium text-ink text-xs">Text</span>
+          <input
+            class="h-7 w-full cursor-pointer rounded border border-border"
+            onChange={(e) => setSettings({ textColor: e.target.value })}
+            type="color"
+            value={settings().textColor || "#1a1a1a"}
+          />
+        </label>
+        <label class="flex flex-1 items-center gap-2">
+          <span class="shrink-0 font-medium text-ink text-xs">Bg</span>
+          <input
+            class="h-7 w-full cursor-pointer rounded border border-border"
+            onChange={(e) => setSettings({ bgColor: e.target.value })}
+            type="color"
+            value={settings().bgColor || "#ffffff"}
+          />
+        </label>
+      </div>
     </div>
   );
 }

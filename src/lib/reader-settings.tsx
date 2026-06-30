@@ -1,9 +1,12 @@
 import {
   createContext,
+  createEffect,
   createSignal,
+  onCleanup,
   type ParentComponent,
   useContext,
 } from "solid-js";
+import { loadReaderSettings, saveReaderSettings } from "./db.ts";
 
 export interface ReaderTheme {
   bgColor: string;
@@ -21,26 +24,26 @@ export const READER_THEMES: ReaderTheme[] = [
 ];
 
 export interface ReaderSettings {
-  bgColor: string; // CSS color value (empty = use theme default)
-  fontSize: number; // percentage (100 = 1rem base)
-  hPadding: number; // horizontal padding in rem
-  lineHeight: number; // unitless multiplier
-  textColor: string; // CSS color value (empty = use theme default)
-  themeId: string; // selected preset theme id
+  bgColor: string;
+  fontSize: number;
+  hPadding: number;
+  lineHeight: number;
+  textColor: string;
+  themeId: string;
 }
 
 const DEFAULTS: ReaderSettings = {
-  fontSize: 100,
-  lineHeight: 1.7,
-  hPadding: 1.5,
-  textColor: "",
   bgColor: "",
+  fontSize: 100,
+  hPadding: 1.5,
+  lineHeight: 1.7,
+  textColor: "",
   themeId: "light",
 };
 
 export function getThemeColors(settings: ReaderSettings): {
-  textColor: string;
   bgColor: string;
+  textColor: string;
 } {
   const theme = READER_THEMES.find((t) => t.id === settings.themeId);
   return {
@@ -53,13 +56,16 @@ interface ReaderSettingsContextValue {
   resetSettings: () => void;
   setSettings: (updates: Partial<ReaderSettings>) => void;
   settings: () => ReaderSettings;
-  themeColors: () => { textColor: string; bgColor: string };
+  themeColors: () => { bgColor: string; textColor: string };
 }
 
 const ReaderSettingsCtx = createContext<ReaderSettingsContextValue>();
 
-export const ReaderSettingsProvider: ParentComponent = (props) => {
+export const ReaderSettingsProvider: ParentComponent<{ bookId?: string }> = (
+  props
+) => {
   const [settings, setSettings] = createSignal<ReaderSettings>({ ...DEFAULTS });
+  const [loaded, setLoaded] = createSignal(false);
 
   const updateSettings = (updates: Partial<ReaderSettings>) => {
     setSettings((prev) => ({ ...prev, ...updates }));
@@ -70,6 +76,37 @@ export const ReaderSettingsProvider: ParentComponent = (props) => {
   };
 
   const themeColors = () => getThemeColors(settings());
+
+  createEffect(() => {
+    const bid = props.bookId;
+    if (bid) {
+      loadReaderSettings(bid).then((record) => {
+        if (record) {
+          setSettings({
+            bgColor: record.bgColor ?? "",
+            fontSize: record.fontSize ?? DEFAULTS.fontSize,
+            hPadding: record.hPadding ?? DEFAULTS.hPadding,
+            lineHeight: record.lineHeight ?? DEFAULTS.lineHeight,
+            textColor: record.textColor ?? "",
+            themeId: record.themeId ?? DEFAULTS.themeId,
+          });
+        }
+        setLoaded(true);
+      });
+    } else {
+      setLoaded(true);
+    }
+  });
+
+  createEffect(() => {
+    const bid = props.bookId;
+    if (loaded() && bid) {
+      const timer = setTimeout(() => {
+        saveReaderSettings(bid, settings());
+      }, 300);
+      onCleanup(() => clearTimeout(timer));
+    }
+  });
 
   return (
     <ReaderSettingsCtx.Provider
