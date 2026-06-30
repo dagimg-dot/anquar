@@ -1,0 +1,24 @@
+{
+  "dependencies": {
+    "solid-js": "^1.9.13"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.16",
+    "@types/node": "^24.13.2",
+    "typescript": "~6.0.2",
+    "ultracite": "7.8.3",
+    "vite": "^8.1.0",
+    "vite-plugin-solid": "^2.11.12"
+  },
+  "name": "buktok",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "check": "ultracite check",
+    "fix": "ultracite fix"
+  },
+  "type": "module",
+  "version": "0.0.0",
+  "private": true
+}

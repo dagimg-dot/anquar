@@ -1,0 +1,16 @@
+:root {
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  display: flex;
+  place-content: center;
+  place-items: center;
+  min-height: 100svh;
+}
