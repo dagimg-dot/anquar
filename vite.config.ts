@@ -23,6 +23,12 @@ export default defineConfig({
     conditions: ["browser"],
     mainFields: ["browser", "module", "main"],
   },
+  server: {
+    forwardConsole: {
+      unhandledErrors: true,
+      logLevels: ["error", "warn"],
+    },
+  },
   plugins: [
     tailwindcss(),
     solid(),
