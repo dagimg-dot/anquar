@@ -142,7 +142,7 @@ export async function getBook(id: string) {
 }
 
 export function listBooks() {
-  return db.books.orderBy("lastOpenedAt").reverse().toArray();
+  return db.books.orderBy("addedAt").reverse().toArray();
 }
 
 export async function saveProgress(

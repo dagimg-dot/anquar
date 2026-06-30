@@ -17,20 +17,12 @@ export default function ChapterCard(props: ChapterCardProps) {
 
     const styles: HTMLStyleElement[] = [];
 
-    Promise.all(
-      props.css.map(async (sheet) => {
-        try {
-          const response = await fetch(sheet.href);
-          const cssText = await response.text();
-          const style = document.createElement("style");
-          style.textContent = cssText;
-          ref?.appendChild(style);
-          styles.push(style);
-        } catch {
-          // CSS load failed, continue
-        }
-      })
-    );
+    for (const sheet of props.css) {
+      const style = document.createElement("style");
+      style.textContent = sheet.href;
+      ref.appendChild(style);
+      styles.push(style);
+    }
 
     onCleanup(() => {
       for (const style of styles) {
