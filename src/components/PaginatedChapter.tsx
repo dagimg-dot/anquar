@@ -114,8 +114,16 @@ export default function PaginatedChapter(props: PaginatedChapterProps) {
     }
 
     const result: string[] = [];
+    // Account for inner wrapper paddingTop (1rem = 16px)
+    // and add 4px buffer for sub-pixel rendering safety
+    const baseHeight = pageHeight - 16 - 4;
 
     for (let i = 0; i < allBlocks.length; ) {
+      // First page has the chapter title, which takes ~60px
+      const isFirstPage = result.length === 0;
+      const titleOffset = isFirstPage && props.title ? 60 : 0;
+      const availHeight = baseHeight - titleOffset;
+
       const pageDiv = document.createElement("div");
       pageDiv.style.cssText = `
         position: fixed;
@@ -136,7 +144,7 @@ export default function PaginatedChapter(props: PaginatedChapterProps) {
         const clone = allBlocks[j].cloneNode(true) as HTMLElement;
         pageDiv.appendChild(clone);
 
-        if (pageDiv.scrollHeight > pageHeight && j > i) {
+        if (pageDiv.scrollHeight > availHeight && j > i) {
           pageDiv.removeChild(clone);
           i = j;
           overflow = true;
