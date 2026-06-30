@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@lingo-reader/epub-parser": "^0.4.6",
     "phosphor-solid": "^1.1.5",
     "solid-js": "^1.9.13"
   },
