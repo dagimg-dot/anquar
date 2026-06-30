@@ -49,60 +49,115 @@ export default function PaginatedChapter(props: PaginatedChapterProps) {
     }
 
     const measurer = measurerRef;
-    // Set the measurer up to match a snap-page exactly
-    measurer.style.height = "100dvh";
-    measurer.style.overflow = "hidden";
-    measurer.style.width = `${window.innerWidth}px`;
-    measurer.style.paddingLeft = `${settings().hPadding}rem`;
-    measurer.style.paddingRight = `${settings().hPadding}rem`;
-    measurer.style.fontSize = `${settings().fontSize}%`;
-    measurer.style.lineHeight = `${settings().lineHeight}`;
-    measurer.style.columnFill = "auto";
-    measurer.style.columnGap = "0";
-    measurer.style.visibility = "visible";
-    measurer.style.position = "fixed";
-    measurer.style.left = "-9999px";
-    measurer.style.top = "0";
+    const pageHeight = window.innerHeight;
+    const padRem = settings().hPadding;
+
+    // Set measurer styles to match snap-page dimensions exactly
+    measurer.style.cssText = `
+      position: fixed;
+      left: -9999px;
+      top: 0;
+      width: ${window.innerWidth}px;
+      padding-left: ${padRem}rem;
+      padding-right: ${padRem}rem;
+      font-size: ${settings().fontSize}%;
+      line-height: ${settings().lineHeight};
+      visibility: visible;
+    `;
     measurer.innerHTML = props.html;
 
-    // Traverse block-level children and accumulate
-    const children = Array.from(measurer.children).filter(
-      (child) => child instanceof HTMLElement
-    ) as HTMLElement[];
+    // Flatten block-level content: walk all descendants, collect leaf blocks
+    function collectBlocks(el: HTMLElement): HTMLElement[] {
+      const blocks: HTMLElement[] = [];
+      const INLINE = new Set([
+        "span",
+        "a",
+        "em",
+        "strong",
+        "b",
+        "i",
+        "u",
+        "code",
+        "br",
+        "img",
+      ]);
+      const WRAPPERS = new Set([
+        "div",
+        "section",
+        "article",
+        "main",
+        "header",
+        "footer",
+      ]);
 
-    const pageHeight = window.innerHeight;
+      for (const child of Array.from(el.children) as HTMLElement[]) {
+        const tag = child.tagName.toLowerCase();
+        if (child.children.length === 0 && !child.textContent?.trim()) {
+          continue;
+        }
+        if (INLINE.has(tag) || !WRAPPERS.has(tag)) {
+          blocks.push(child);
+        } else if (child.children.length <= 2) {
+          blocks.push(...collectBlocks(child));
+        } else {
+          blocks.push(child);
+        }
+      }
+      return blocks;
+    }
+
+    const allBlocks = collectBlocks(measurer);
+    if (allBlocks.length === 0) {
+      setPages([props.html]);
+      measurer.style.visibility = "hidden";
+      return;
+    }
+
     const result: string[] = [];
-    let batch: HTMLElement[] = [];
-    let batchHeight = 0;
+    const pageW = window.innerWidth - padRem * 16 * 2;
 
-    // Measure with a small buffer to avoid single-line overflow
-    const BUFFER = 4;
+    for (let i = 0; i < allBlocks.length; ) {
+      const pageDiv = document.createElement("div");
+      pageDiv.style.cssText = `
+        position: fixed;
+        left: -9999px;
+        top: 0;
+        width: ${pageW}px;
+        font-size: ${settings().fontSize}%;
+        line-height: ${settings().lineHeight};
+        padding: 0;
+        margin: 0;
+      `;
+      measurer.parentNode?.appendChild(pageDiv);
 
-    for (const child of children) {
-      const h = child.offsetHeight;
+      let overflow = false;
 
-      if (batch.length > 0 && batchHeight + h > pageHeight - BUFFER) {
-        // Flush current page
-        result.push(batch.map((el) => el.outerHTML).join(""));
-        batch = [];
-        batchHeight = 0;
+      for (let j = i; j < allBlocks.length; j++) {
+        const clone = allBlocks[j].cloneNode(true) as HTMLElement;
+        pageDiv.appendChild(clone);
+
+        if (pageDiv.scrollHeight > pageHeight && j > i) {
+          pageDiv.removeChild(clone);
+          i = j;
+          overflow = true;
+          break;
+        }
       }
 
-      batch.push(child);
-      batchHeight += h;
+      if (!overflow) {
+        i = allBlocks.length;
+      }
+
+      result.push(pageDiv.innerHTML);
+      pageDiv.remove();
     }
 
-    if (batch.length > 0) {
-      result.push(batch.map((el) => el.outerHTML).join(""));
-    }
-
-    // Fallback: if no pages were created or height measurement collapsed
     if (result.length === 0) {
       result.push(props.html);
     }
 
     setPages(result);
-    measurer.innerHTML = ""; // clear for next measure
+    measurer.innerHTML = "";
     measurer.style.visibility = "hidden";
   }
 
