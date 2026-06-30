@@ -48,7 +48,7 @@ export default function Feed() {
   return (
     <Show
       fallback={
-        <div class="flex min-h-[60svh] items-center justify-center">
+        <div class="flex h-dvh items-center justify-center">
           <div class="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
         </div>
       }
@@ -56,15 +56,15 @@ export default function Feed() {
     >
       <Show
         fallback={
-          <div class="space-y-4">
+          <div class="h-dvh space-y-4 p-4">
             <For each={Array.from({ length: 5 }, (_, i) => i)}>
-              {() => <div class="h-48 animate-pulse rounded-2xl bg-surface" />}
+              {() => <div class="h-dvh animate-pulse rounded-2xl bg-surface" />}
             </For>
           </div>
         }
         when={book()}
       >
-        <div class="space-y-4">
+        <div class="snap-container h-dvh overflow-y-auto">
           <CoverCard
             author={book()?.metadata.author ?? ""}
             chapterCount={book()?.chapters.length ?? 0}

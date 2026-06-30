@@ -11,7 +11,7 @@ interface CoverCardProps {
 
 export default function CoverCard(props: CoverCardProps) {
   return (
-    <div class="flex min-h-[80svh] flex-col items-center justify-center gap-6 px-4">
+    <div class="snap-page flex h-dvh flex-col items-center justify-center gap-6 px-6">
       <Show
         fallback={
           <div class="flex h-64 w-44 items-center justify-center rounded-2xl bg-surface shadow-xl">

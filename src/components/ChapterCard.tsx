@@ -32,15 +32,24 @@ export default function ChapterCard(props: ChapterCardProps) {
   });
 
   return (
-    <div class="min-h-[80svh] overflow-y-auto px-4 py-8">
+    <div class="snap-page flex h-dvh flex-col overflow-hidden">
       <Show when={props.title}>
-        <h2 class="mb-6 font-bold text-ink text-xl">{props.title}</h2>
+        <h2 class="shrink-0 px-6 pt-6 pb-2 font-bold text-ink text-xl">
+          {props.title}
+        </h2>
       </Show>
       <div
-        class="prose prose-ink max-w-none"
-        innerHTML={props.html}
-        ref={ref}
-      />
+        class="min-h-0 flex-1 overflow-y-auto px-6 py-4"
+        classList={{
+          "pt-6": !props.title,
+        }}
+      >
+        <div
+          class="reader-content prose prose-ink max-w-none"
+          innerHTML={props.html}
+          ref={ref}
+        />
+      </div>
     </div>
   );
 }

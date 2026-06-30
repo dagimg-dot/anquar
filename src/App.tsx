@@ -31,7 +31,7 @@ function App() {
         </defs>
       </svg>
 
-      <main class="mx-auto max-w-lg px-4 pt-8 pb-24">
+      <main class="h-dvh overflow-hidden">
         <Show
           fallback={<FilePicker onBookLoaded={(id) => setBookId(id)} />}
           when={bookId()}

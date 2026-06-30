@@ -82,6 +82,37 @@ html {
     color 0.3s;
 }
 
+/* --- Scroll-snap feed (TikTok-style) --- */
+.snap-container {
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+}
+
+.snap-container::-webkit-scrollbar {
+  display: none;
+}
+
+.snap-page {
+  height: 100dvh;
+  overflow: hidden;
+  scroll-snap-align: start;
+}
+
+/* --- Reader content pagination --- */
+.reader-content {
+  font-size: var(--reader-font-size, 1rem);
+  line-height: var(--reader-line-height, 1.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .snap-container {
+    scroll-snap-type: y proximity;
+  }
+}
+
 /* --- Animated gradient orbs --- */
 @keyframes float-1 {
   0%,
