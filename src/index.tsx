@@ -1,6 +1,7 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
 import App from "./App.tsx";
+import { ReaderSettingsProvider } from "./lib/reader-settings.tsx";
 import { ThemeProvider } from "./theme/ThemeContext.tsx";
 import "./index.css";
 
@@ -13,7 +14,9 @@ if (!root) {
 render(
   () => (
     <ThemeProvider>
-      <App />
+      <ReaderSettingsProvider>
+        <App />
+      </ReaderSettingsProvider>
     </ThemeProvider>
   ),
   root
