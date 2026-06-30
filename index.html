@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,11 +7,32 @@
       name="description"
       content="Guilt-free doomscrolling — books in a TikTok-style feed"
     >
-    <meta name="theme-color" content="#ffffff">
+    <meta
+      name="theme-color"
+      content="#1a1a2e"
+      media="(prefers-color-scheme: dark)"
+    >
+    <meta
+      name="theme-color"
+      content="#fcfcfc"
+      media="(prefers-color-scheme: light)"
+    >
     <link rel="icon" href="/favicon.ico" sizes="48x48">
     <link rel="icon" href="/favicon.svg" sizes="any" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png">
     <link rel="manifest" href="/manifest.webmanifest">
+    <script>
+    "use strict";
+    (() => {
+      const t = localStorage.theme;
+      const m = window.matchMedia("(prefers-color-scheme: dark)");
+      const isDark = t === "dark" || (!t && m.matches) || t !== "light";
+      document.documentElement.setAttribute(
+        "data-theme",
+        isDark ? "dark" : "light"
+      );
+    })();
+    </script>
     <title>buktok</title>
   </head>
   <body>

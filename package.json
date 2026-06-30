@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "phosphor-solid": "^1.1.5",
     "solid-js": "^1.9.13"
   },
   "devDependencies": {
