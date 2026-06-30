@@ -25,6 +25,7 @@ Guilt-free doomscrolling — a Solid.js PWA that turns books into a TikTok-style
 ## PR / Commit
 
 - Commit messages must be concise, describing what changed and why in present tense.
+- Use semantic prefixes: `feat:`, `fix:`, `chore:`, `refactor:`.
 - No `Co-authored-by:` or attribution footers.
 - Run `bun run check` before committing.
 - Keep commits atomic — one logical change per commit.
