@@ -1,4 +1,5 @@
 /* @refresh reload */
+import { Route, Router } from "@solidjs/router";
 import { render } from "solid-js/web";
 import App from "./App.tsx";
 import { ThemeProvider } from "./theme/ThemeContext.tsx";
@@ -13,7 +14,10 @@ if (!root) {
 render(
   () => (
     <ThemeProvider>
-      <App />
+      <Router>
+        <Route component={App} path="/" />
+        <Route component={App} path="/book/:id" />
+      </Router>
     </ThemeProvider>
   ),
   root

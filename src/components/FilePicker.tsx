@@ -1,12 +1,9 @@
+import { useNavigate } from "@solidjs/router";
 import { BookOpen, Clock, Plus } from "phosphor-solid";
 import { createSignal, For, onMount, Show } from "solid-js";
 import toast from "solid-toast";
 import { listBooks, saveBook } from "../lib/db.ts";
 import { useEpubParser } from "../lib/epub.ts";
-
-interface FilePickerProps {
-  onBookLoaded: (bookId: string) => void;
-}
 
 interface SavedBook {
   addedAt: string;
@@ -18,7 +15,8 @@ interface SavedBook {
   title: string;
 }
 
-export default function FilePicker(props: FilePickerProps) {
+export default function FilePicker() {
+  const navigate = useNavigate();
   const { parse, parsing, error } = useEpubParser();
   const [dragOver, setDragOver] = createSignal(false);
   const [books, setBooks] = createSignal<SavedBook[]>([]);
@@ -47,7 +45,7 @@ export default function FilePicker(props: FilePickerProps) {
       toast.success(`${result.metadata.title} imported successfully`);
       const saved = await listBooks();
       setBooks(saved);
-      props.onBookLoaded(bookId);
+      navigate(`/book/${bookId}`);
     } catch (err) {
       console.error("Failed to parse EPUB:", err);
     }
@@ -160,7 +158,7 @@ export default function FilePicker(props: FilePickerProps) {
               {(book) => (
                 <button
                   class="group flex flex-col overflow-hidden rounded-xl bg-surface text-left shadow-sm transition-all hover:shadow-md"
-                  onClick={() => props.onBookLoaded(book.id)}
+                  onClick={() => navigate(`/book/${book.id}`)}
                   type="button"
                 >
                   <Show

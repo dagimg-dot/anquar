@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@lingo-reader/epub-parser": "^0.4.6",
+    "@solidjs/router": "^0.16.1",
     "dexie": "^4.4.4",
     "phosphor-solid": "^1.1.5",
     "solid-js": "^1.9.13",
