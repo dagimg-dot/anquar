@@ -14,6 +14,77 @@ interface PaginatedChapterProps {
   title?: string;
 }
 
+const INLINE = new Set([
+  "span",
+  "a",
+  "em",
+  "strong",
+  "b",
+  "i",
+  "u",
+  "code",
+  "br",
+  "img",
+]);
+
+const WRAPPERS = new Set([
+  "div",
+  "section",
+  "article",
+  "main",
+  "header",
+  "footer",
+]);
+
+// Flatten block-level content: walk all descendants, collect leaf blocks
+function collectBlocks(el: HTMLElement): HTMLElement[] {
+  const blocks: HTMLElement[] = [];
+  for (const child of Array.from(el.children) as HTMLElement[]) {
+    const tag = child.tagName.toLowerCase();
+    if (child.children.length === 0 && !child.textContent?.trim()) {
+      continue;
+    }
+    if (INLINE.has(tag) || !WRAPPERS.has(tag)) {
+      blocks.push(child);
+    } else if (child.children.length <= 2) {
+      blocks.push(...collectBlocks(child));
+    } else {
+      blocks.push(child);
+    }
+  }
+  return blocks;
+}
+
+// Fill a single page by cloning blocks until overflow
+function fillPage(
+  blocks: HTMLElement[],
+  startIdx: number,
+  availHeight: number,
+  styles: string,
+  parent: Node
+): { html: string; nextIdx: number } {
+  const pageDiv = document.createElement("div");
+  pageDiv.style.cssText = styles;
+  parent.appendChild(pageDiv);
+
+  let overflow = false;
+  let i = startIdx;
+
+  for (; i < blocks.length; i++) {
+    const clone = blocks[i].cloneNode(true) as HTMLElement;
+    pageDiv.appendChild(clone);
+    if (pageDiv.scrollHeight > availHeight && i > startIdx) {
+      pageDiv.removeChild(clone);
+      overflow = true;
+      break;
+    }
+  }
+
+  const html = pageDiv.innerHTML;
+  pageDiv.remove();
+  return { html, nextIdx: overflow ? i : blocks.length };
+}
+
 export default function PaginatedChapter(props: PaginatedChapterProps) {
   // biome-ignore lint/suspicious/noUnassignedVariables: assigned by ref
   let measurerRef: HTMLDivElement | undefined;
@@ -52,7 +123,6 @@ export default function PaginatedChapter(props: PaginatedChapterProps) {
     const pageHeight = window.innerHeight;
     const padRem = settings().hPadding;
 
-    // Set measurer styles to match snap-page dimensions exactly
     measurer.style.cssText = `
       position: fixed;
       left: -9999px;
@@ -66,46 +136,6 @@ export default function PaginatedChapter(props: PaginatedChapterProps) {
     `;
     measurer.innerHTML = props.html;
 
-    // Flatten block-level content: walk all descendants, collect leaf blocks
-    function collectBlocks(el: HTMLElement): HTMLElement[] {
-      const blocks: HTMLElement[] = [];
-      const INLINE = new Set([
-        "span",
-        "a",
-        "em",
-        "strong",
-        "b",
-        "i",
-        "u",
-        "code",
-        "br",
-        "img",
-      ]);
-      const WRAPPERS = new Set([
-        "div",
-        "section",
-        "article",
-        "main",
-        "header",
-        "footer",
-      ]);
-
-      for (const child of Array.from(el.children) as HTMLElement[]) {
-        const tag = child.tagName.toLowerCase();
-        if (child.children.length === 0 && !child.textContent?.trim()) {
-          continue;
-        }
-        if (INLINE.has(tag) || !WRAPPERS.has(tag)) {
-          blocks.push(child);
-        } else if (child.children.length <= 2) {
-          blocks.push(...collectBlocks(child));
-        } else {
-          blocks.push(child);
-        }
-      }
-      return blocks;
-    }
-
     const allBlocks = collectBlocks(measurer);
     if (allBlocks.length === 0) {
       setPages([props.html]);
@@ -113,51 +143,37 @@ export default function PaginatedChapter(props: PaginatedChapterProps) {
       return;
     }
 
-    const result: string[] = [];
     // Account for inner wrapper paddingTop (1rem = 16px)
     // and add 4px buffer for sub-pixel rendering safety
     const baseHeight = pageHeight - 16 - 4;
+    const pageStyles = `
+      position: fixed;
+      left: -9999px;
+      top: 0;
+      width: ${window.innerWidth}px;
+      font-size: ${settings().fontSize}%;
+      line-height: ${settings().lineHeight};
+      --reader-h-padding: ${padRem}rem;
+      padding: 0;
+      margin: 0;
+    `;
 
-    for (let i = 0; i < allBlocks.length; ) {
-      // First page has the chapter title, which takes ~60px
+    const result: string[] = [];
+    let i = 0;
+
+    while (i < allBlocks.length) {
       const isFirstPage = result.length === 0;
       const titleOffset = isFirstPage && props.title ? 60 : 0;
       const availHeight = baseHeight - titleOffset;
-
-      const pageDiv = document.createElement("div");
-      pageDiv.style.cssText = `
-        position: fixed;
-        left: -9999px;
-        top: 0;
-        width: ${window.innerWidth}px;
-        font-size: ${settings().fontSize}%;
-        line-height: ${settings().lineHeight};
-        --reader-h-padding: ${padRem}rem;
-        padding: 0;
-        margin: 0;
-      `;
-      measurer.parentNode?.appendChild(pageDiv);
-
-      let overflow = false;
-
-      for (let j = i; j < allBlocks.length; j++) {
-        const clone = allBlocks[j].cloneNode(true) as HTMLElement;
-        pageDiv.appendChild(clone);
-
-        if (pageDiv.scrollHeight > availHeight && j > i) {
-          pageDiv.removeChild(clone);
-          i = j;
-          overflow = true;
-          break;
-        }
-      }
-
-      if (!overflow) {
-        i = allBlocks.length;
-      }
-
-      result.push(pageDiv.innerHTML);
-      pageDiv.remove();
+      const { html, nextIdx } = fillPage(
+        allBlocks,
+        i,
+        availHeight,
+        pageStyles,
+        measurer.parentNode ?? document.body
+      );
+      result.push(html);
+      i = nextIdx;
     }
 
     if (result.length === 0) {
