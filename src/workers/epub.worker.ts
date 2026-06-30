@@ -3,6 +3,7 @@ import JSZip from "jszip";
 import type { WorkerMessage, WorkerResponse } from "../lib/types.ts";
 
 const IMG_SRC_REGEX = /src="([^"]+)"/;
+const IMG_BLOB_REGEX = /<img[^>]+src="(blob:[^"]+)"/g;
 
 function uint8ArrayToDataUrl(bytes: Uint8Array, mimeType: string): string {
   const base64 = btoa(
@@ -122,6 +123,40 @@ function resolveCss(
   );
 }
 
+async function resolveImagesInHtml(html: string): Promise<string> {
+  const imageCache = new Map<string, string>();
+  const matches = html.matchAll(IMG_BLOB_REGEX);
+
+  for (const match of matches) {
+    const blobUrl = match[1];
+    if (imageCache.has(blobUrl)) {
+      continue;
+    }
+
+    try {
+      const response = await fetch(blobUrl);
+      const contentType = response.headers.get("content-type");
+      if (!contentType?.startsWith("image/")) {
+        continue;
+      }
+
+      const blob = await response.blob();
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const dataUrl = uint8ArrayToDataUrl(bytes, contentType);
+      imageCache.set(blobUrl, dataUrl);
+    } catch {
+      // Image fetch failed
+    }
+  }
+
+  let resolved = html;
+  for (const [blobUrl, dataUrl] of imageCache) {
+    resolved = resolved.replaceAll(blobUrl, dataUrl);
+  }
+
+  return resolved;
+}
+
 self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
   const { type } = event.data;
 
@@ -146,7 +181,13 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
         .map(async (item, index) => {
           const { html, css } = await epub.loadChapter(item.id);
           const resolvedCss = await resolveCss(css);
-          return { id: item.id, order: index, html, css: resolvedCss };
+          const resolvedHtml = await resolveImagesInHtml(html);
+          return {
+            id: item.id,
+            order: index,
+            html: resolvedHtml,
+            css: resolvedCss,
+          };
         })
     );
 
