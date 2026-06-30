@@ -96,16 +96,30 @@ html {
 }
 
 .snap-page {
+  box-sizing: border-box;
   height: 100dvh;
   overflow: hidden;
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
 
-/* --- Reader content pagination --- */
+/* --- Reader content --- */
 .reader-content {
   font-size: var(--reader-font-size, 1rem);
   line-height: var(--reader-line-height, 1.7);
+}
+
+.reader-content p,
+.reader-content div:not(.image),
+.reader-content h1,
+.reader-content h2,
+.reader-content h3,
+.reader-content h4,
+.reader-content h5,
+.reader-content h6,
+.reader-content li {
+  padding-right: var(--reader-h-padding, 1.5rem);
+  padding-left: var(--reader-h-padding, 1.5rem);
 }
 
 @media (prefers-reduced-motion: reduce) {

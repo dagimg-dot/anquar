@@ -114,7 +114,6 @@ export default function PaginatedChapter(props: PaginatedChapterProps) {
     }
 
     const result: string[] = [];
-    const pageW = window.innerWidth - padRem * 16 * 2;
 
     for (let i = 0; i < allBlocks.length; ) {
       const pageDiv = document.createElement("div");
@@ -122,9 +121,10 @@ export default function PaginatedChapter(props: PaginatedChapterProps) {
         position: fixed;
         left: -9999px;
         top: 0;
-        width: ${pageW}px;
+        width: ${window.innerWidth}px;
         font-size: ${settings().fontSize}%;
         line-height: ${settings().lineHeight};
+        --reader-h-padding: ${padRem}rem;
         padding: 0;
         margin: 0;
       `;
@@ -171,12 +171,6 @@ export default function PaginatedChapter(props: PaginatedChapterProps) {
     requestAnimationFrame(paginate);
   });
 
-  const snapPageStyle = () =>
-    ({
-      background: themeColors().bgColor,
-      color: themeColors().textColor,
-    }) as unknown as Record<string, string>;
-
   return (
     <>
       <div class="hidden" ref={styleAnchor} />
@@ -200,7 +194,13 @@ export default function PaginatedChapter(props: PaginatedChapterProps) {
         {(pageHtml, idx) => (
           <div
             class="snap-page flex h-dvh flex-col overflow-hidden"
-            style={snapPageStyle()}
+            style={
+              {
+                background: themeColors().bgColor,
+                color: themeColors().textColor,
+                "--reader-h-padding": `${settings().hPadding}rem`,
+              } as unknown as Record<string, string>
+            }
           >
             <Show when={props.title && idx() === 0}>
               <h2 class="shrink-0 px-6 pt-6 pb-2 font-bold text-xl">
@@ -211,10 +211,9 @@ export default function PaginatedChapter(props: PaginatedChapterProps) {
               class="min-h-0 flex-1 overflow-hidden"
               style={
                 {
-                  paddingLeft: `${settings().hPadding}rem`,
-                  paddingRight: `${settings().hPadding}rem`,
                   fontSize: `${settings().fontSize}%`,
                   lineHeight: `${settings().lineHeight}`,
+                  paddingTop: "1rem",
                 } as unknown as Record<string, string>
               }
             >
