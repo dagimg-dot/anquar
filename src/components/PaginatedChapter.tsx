@@ -143,9 +143,9 @@ export default function PaginatedChapter(props: PaginatedChapterProps) {
       return;
     }
 
-    // Account for inner wrapper paddingTop (1rem = 16px)
-    // and add 4px buffer for sub-pixel rendering safety
-    const baseHeight = pageHeight - 16 - 4;
+    // Account for inner wrapper padding (1rem top, 1.5rem bottom = 40px)
+    // and a generous buffer to prevent content from being cut off
+    const baseHeight = pageHeight - 16 - 24 - 24;
     const pageStyles = `
       position: fixed;
       left: -9999px;
@@ -238,6 +238,7 @@ export default function PaginatedChapter(props: PaginatedChapterProps) {
                   fontSize: `${settings().fontSize}%`,
                   lineHeight: `${settings().lineHeight}`,
                   paddingTop: "1rem",
+                  paddingBottom: "1.5rem",
                 } as unknown as Record<string, string>
               }
             >
