@@ -54,7 +54,12 @@ export default function PaginatedChapter(props: PaginatedChapterProps) {
 							{props.title}
 						</h2>
 					</Show>
-					<div class="min-h-0 flex-1 overflow-hidden">
+					<div
+						class="flex min-h-0 flex-1 flex-col overflow-hidden"
+						classList={{
+							"justify-center": settings().verticalAlign === "center",
+						}}
+					>
 						<BlockRenderer
 							blocks={blocks}
 							theme={{

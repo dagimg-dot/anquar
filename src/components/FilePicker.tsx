@@ -41,7 +41,7 @@ export default function FilePicker() {
 			// Parse HTML to blocks in the main thread (DOMParser available here)
 			const chaptersWithBlocks = result.chapters.map((ch) => ({
 				...ch,
-				blocks: parseChapter(ch.html!),
+				blocks: parseChapter(ch.html ?? ""),
 			}));
 
 			// Extract CSS metadata (fonts, direction, writing-mode)

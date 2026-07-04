@@ -31,6 +31,7 @@ export interface ReaderSettings {
 	lineHeight: number;
 	textColor: string;
 	themeId: string;
+	verticalAlign?: "top" | "center";
 }
 
 const DEFAULTS: ReaderSettings = {
@@ -41,6 +42,7 @@ const DEFAULTS: ReaderSettings = {
 	lineHeight: 1.7,
 	textColor: "",
 	themeId: "light",
+	verticalAlign: "top",
 };
 
 export function getThemeColors(settings: ReaderSettings): {
@@ -92,6 +94,9 @@ export const ReaderSettingsProvider: ParentComponent<{ bookId?: string }> = (
 						lineHeight: record.lineHeight ?? DEFAULTS.lineHeight,
 						textColor: record.textColor ?? "",
 						themeId: record.themeId ?? DEFAULTS.themeId,
+						verticalAlign:
+							(record.verticalAlign as "top" | "center") ??
+							DEFAULTS.verticalAlign,
 					});
 				}
 				setLoaded(true);

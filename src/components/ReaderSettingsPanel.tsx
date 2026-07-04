@@ -116,6 +116,35 @@ export default function ReaderSettingsPanel() {
 				</button>
 			</div>
 
+			{/* Vertical alignment */}
+			<div class="flex items-center justify-between gap-3">
+				<span class="shrink-0 font-medium text-ink text-sm">Align</span>
+				<button
+					class="rounded-lg px-3 py-1.5 font-medium text-xs transition-colors"
+					classList={{
+						"bg-brand-500 text-white": settings().verticalAlign === "top",
+						"border border-border text-ink-soft":
+							settings().verticalAlign !== "top",
+					}}
+					onClick={() => setSettings({ verticalAlign: "top" })}
+					type="button"
+				>
+					Top
+				</button>
+				<button
+					class="rounded-lg px-3 py-1.5 font-medium text-xs transition-colors"
+					classList={{
+						"bg-brand-500 text-white": settings().verticalAlign === "center",
+						"border border-border text-ink-soft":
+							settings().verticalAlign !== "center",
+					}}
+					onClick={() => setSettings({ verticalAlign: "center" })}
+					type="button"
+				>
+					Center
+				</button>
+			</div>
+
 			{/* Theme */}
 			<div>
 				<span class="mb-2 block font-medium text-ink text-sm">Theme</span>

@@ -60,6 +60,7 @@ interface ReaderSettingsRecord {
 	lineHeight: number;
 	textColor: string;
 	themeId: string;
+	verticalAlign?: string;
 }
 
 class BukTokDB extends Dexie {

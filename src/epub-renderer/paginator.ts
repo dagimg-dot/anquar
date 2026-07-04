@@ -106,7 +106,7 @@ function extractText(inlines: Inline[]): string {
 	for (const inline of inlines) {
 		switch (inline.type) {
 			case "text":
-				text += inline.content + " ";
+				text += `${inline.content} `;
 				break;
 			case "strong":
 			case "bold":
