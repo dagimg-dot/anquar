@@ -109,24 +109,27 @@ function BlockComponent(props: { block: Block; ctx: RenderCtx }) {
 
 		case "heading": {
 			const h = s().heading?.[props.block.level];
-			const Tag = `h${props.block.level}` as const;
-			return (
-				<Tag
-					style={
-						{
-							"font-family": h?.fontFamily,
-							"font-size": h?.fontSize,
-							"font-weight": h?.fontWeight,
-							"line-height": h?.lineHeight,
-							"margin-top": h?.marginTop,
-							"margin-bottom": h?.marginBottom,
-							"text-align": h?.textAlign,
-						} as Record<string, string>
-					}
-				>
-					<InlineRenderer inlines={props.block.children} ctx={props.ctx} />
-				</Tag>
+			const level = props.block.level;
+			const headingStyle = {
+				"font-family": h?.fontFamily,
+				"font-size": h?.fontSize,
+				"font-weight": h?.fontWeight,
+				"line-height": h?.lineHeight,
+				"margin-top": h?.marginTop,
+				"margin-bottom": h?.marginBottom,
+				"text-align": h?.textAlign,
+			} as Record<string, string>;
+
+			const children = (
+				<InlineRenderer inlines={props.block.children} ctx={props.ctx} />
 			);
+
+			if (level === 1) return <h1 style={headingStyle}>{children}</h1>;
+			if (level === 2) return <h2 style={headingStyle}>{children}</h2>;
+			if (level === 3) return <h3 style={headingStyle}>{children}</h3>;
+			if (level === 4) return <h4 style={headingStyle}>{children}</h4>;
+			if (level === 5) return <h5 style={headingStyle}>{children}</h5>;
+			return <h6 style={headingStyle}>{children}</h6>;
 		}
 
 		case "image":
@@ -312,28 +315,27 @@ function TableRowComponent(props: {
 }
 
 function TableCellComponent(props: { cell: TableCell; ctx: RenderCtx }) {
-	const Tag = props.cell.header ? "th" : "td";
+	const isHeader = props.cell.header;
 	const padding = props.ctx.styles.table?.cellPadding ?? "0.5em";
+	const cellStyle = {
+		padding,
+		"font-weight": isHeader
+			? (props.ctx.styles.table?.headerWeight ?? "bold")
+			: "normal",
+		"text-align": (isHeader ? "left" : undefined) as string | undefined,
+		"border-bottom": `1px solid ${props.ctx.theme.textColor}22`,
+	} as Record<string, string>;
 
-	return (
-		<Tag
-			style={
-				{
-					padding,
-					"font-weight": props.cell.header
-						? (props.ctx.styles.table?.headerWeight ?? "bold")
-						: "normal",
-					"text-align": (props.cell.header ? "left" : undefined) as
-						| string
-						| undefined,
-					"border-bottom": `1px solid ${props.ctx.theme.textColor}22`,
-				} as Record<string, string>
-			}
-		>
-			<For each={props.cell.children}>
-				{(child) => <BlockComponent block={child} ctx={props.ctx} />}
-			</For>
-		</Tag>
+	const children = (
+		<For each={props.cell.children}>
+			{(child) => <BlockComponent block={child} ctx={props.ctx} />}
+		</For>
+	);
+
+	return isHeader ? (
+		<th style={cellStyle}>{children}</th>
+	) : (
+		<td style={cellStyle}>{children}</td>
 	);
 }
 

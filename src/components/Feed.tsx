@@ -79,7 +79,7 @@ export default function Feed() {
 					<For each={book()?.chapters}>
 						{(chapter) => (
 							<ChapterCard
-								blocks={chapter.blocks}
+								blocks={chapter.blocks!}
 								title={
 									book()?.toc.find((t) => t.href.includes(chapter.id))?.label
 								}

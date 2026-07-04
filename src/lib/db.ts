@@ -88,7 +88,9 @@ const db = new BukTokDB();
 
 export async function saveBook(
 	metadata: BookMetadata,
-	chapters: ChapterData[],
+	chapters: (ChapterData & {
+		blocks: import("../epub-renderer/types.ts").Block[];
+	})[],
 	toc: TocEntry[],
 	coverImage?: string,
 	cssMeta?: EpubCssMeta,
