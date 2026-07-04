@@ -29,6 +29,7 @@ Guilt-free doomscrolling — a Solid.js PWA that turns books into a TikTok-style
 - No `Co-authored-by:` or attribution footers.
 - Run `bun run check` before committing.
 - Keep commits atomic — one logical change per commit.
+- **Never commit without explicit user approval.** Wait for confirmation before committing anything.
 
 ## Safety
 

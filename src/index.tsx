@@ -8,17 +8,17 @@ import "./index.css";
 const root = document.getElementById("root");
 
 if (!root) {
-  throw new Error("Root element not found");
+	throw new Error("Root element not found");
 }
 
 render(
-  () => (
-    <ThemeProvider>
-      <Router>
-        <Route component={App} path="/" />
-        <Route component={App} path="/book/:id" />
-      </Router>
-    </ThemeProvider>
-  ),
-  root
+	() => (
+		<ThemeProvider>
+			<Router>
+				<Route component={App} path="/" />
+				<Route component={App} path="/book/:id" />
+			</Router>
+		</ThemeProvider>
+	),
+	root,
 );
