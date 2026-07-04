@@ -128,9 +128,11 @@ function parseBlocks(parent: Element): Block[] {
 }
 
 function parseBlock(el: Element, tag: string): Block | null {
+	const cssClass = el.getAttribute("class") ?? undefined;
+
 	switch (tag) {
 		case "p":
-			return { type: "paragraph", children: parseInlineChildren(el) };
+			return { type: "paragraph", children: parseInlineChildren(el), cssClass };
 
 		case "h1":
 		case "h2":
@@ -142,18 +144,29 @@ function parseBlock(el: Element, tag: string): Block | null {
 				type: "heading",
 				level: Number(tag[1]) as 1 | 2 | 3 | 4 | 5 | 6,
 				children: parseInlineChildren(el),
+				cssClass,
 			};
 
 		case "ul":
-			return { type: "list", ordered: false, items: parseListItems(el) };
+			return {
+				type: "list",
+				ordered: false,
+				items: parseListItems(el),
+				cssClass,
+			};
 		case "ol":
-			return { type: "list", ordered: true, items: parseListItems(el) };
+			return {
+				type: "list",
+				ordered: true,
+				items: parseListItems(el),
+				cssClass,
+			};
 
 		case "blockquote":
-			return { type: "blockquote", children: parseBlocks(el) };
+			return { type: "blockquote", children: parseBlocks(el), cssClass };
 
 		case "pre":
-			return { type: "pre", content: el.textContent ?? "" };
+			return { type: "pre", content: el.textContent ?? "", cssClass };
 
 		case "hr":
 			return { type: "horizontalRule" };

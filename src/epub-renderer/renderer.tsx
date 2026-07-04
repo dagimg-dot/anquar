@@ -2,6 +2,7 @@ import { For, onMount } from "solid-js";
 import { mergeTypography, type TypographyConfig } from "./styles";
 import type {
 	Block,
+	ClassMap,
 	EpubCssMeta,
 	Inline,
 	ListItem,
@@ -19,6 +20,8 @@ export interface RendererProps {
 	settings: { fontSize: number; lineHeight: number; hPadding: number };
 	epubMeta?: EpubCssMeta;
 	epubFontsEnabled?: boolean;
+	classMap?: ClassMap;
+	epubCssEnabled?: boolean;
 }
 
 // Track injected @font-face to avoid duplicates
@@ -30,6 +33,8 @@ export function BlockRenderer(props: RendererProps) {
 		styles: styles(),
 		theme: props.theme,
 		settings: props.settings,
+		classMap: props.classMap,
+		epubCssEnabled: props.epubCssEnabled ?? false,
 	});
 
 	const useEpubDir = props.epubMeta?.direction && !styles().textAlign;
@@ -89,28 +94,47 @@ export function BlockRenderer(props: RendererProps) {
 
 // --- Block components ---
 
+function getBlockCss(
+	block: Block,
+	base: Record<string, string | undefined>,
+	ctx: RenderCtx,
+): Record<string, string | undefined> {
+	if (
+		!ctx.epubCssEnabled ||
+		!ctx.classMap ||
+		!("cssClass" in block) ||
+		!block.cssClass
+	) {
+		return base;
+	}
+	const hints = ctx.classMap[`.${block.cssClass}`];
+	if (!hints) return base;
+	return { ...hints, ...base };
+}
+
 function BlockComponent(props: { block: Block; ctx: RenderCtx }) {
 	const s = () => props.ctx.styles;
 
 	switch (props.block.type) {
-		case "paragraph":
+		case "paragraph": {
+			const baseP = {
+				"margin-bottom": s().paragraph?.marginBottom,
+				"text-indent": s().paragraph?.textIndent,
+				"font-size": `${props.ctx.settings.fontSize}%`,
+				"line-height": `${props.ctx.settings.lineHeight}`,
+			};
+			const pStyle = getBlockCss(props.block, baseP, props.ctx);
 			return (
-				<p
-					style={{
-						"margin-bottom": s().paragraph?.marginBottom,
-						"text-indent": s().paragraph?.textIndent,
-						"font-size": `${props.ctx.settings.fontSize}%`,
-						"line-height": props.ctx.settings.lineHeight,
-					}}
-				>
+				<p style={pStyle as Record<string, string>}>
 					<InlineRenderer inlines={props.block.children} ctx={props.ctx} />
 				</p>
 			);
+		}
 
 		case "heading": {
 			const h = s().heading?.[props.block.level];
 			const level = props.block.level;
-			const headingStyle = {
+			const baseH = {
 				"font-family": h?.fontFamily,
 				"font-size": h?.fontSize,
 				"font-weight": h?.fontWeight,
@@ -118,18 +142,24 @@ function BlockComponent(props: { block: Block; ctx: RenderCtx }) {
 				"margin-top": h?.marginTop,
 				"margin-bottom": h?.marginBottom,
 				"text-align": h?.textAlign,
-			} as Record<string, string>;
+			};
+			const hStyle = getBlockCss(props.block, baseH, props.ctx);
 
 			const children = (
 				<InlineRenderer inlines={props.block.children} ctx={props.ctx} />
 			);
 
-			if (level === 1) return <h1 style={headingStyle}>{children}</h1>;
-			if (level === 2) return <h2 style={headingStyle}>{children}</h2>;
-			if (level === 3) return <h3 style={headingStyle}>{children}</h3>;
-			if (level === 4) return <h4 style={headingStyle}>{children}</h4>;
-			if (level === 5) return <h5 style={headingStyle}>{children}</h5>;
-			return <h6 style={headingStyle}>{children}</h6>;
+			if (level === 1)
+				return <h1 style={hStyle as Record<string, string>}>{children}</h1>;
+			if (level === 2)
+				return <h2 style={hStyle as Record<string, string>}>{children}</h2>;
+			if (level === 3)
+				return <h3 style={hStyle as Record<string, string>}>{children}</h3>;
+			if (level === 4)
+				return <h4 style={hStyle as Record<string, string>}>{children}</h4>;
+			if (level === 5)
+				return <h5 style={hStyle as Record<string, string>}>{children}</h5>;
+			return <h6 style={hStyle as Record<string, string>}>{children}</h6>;
 		}
 
 		case "image":
@@ -281,6 +311,8 @@ interface RenderCtx {
 	styles: TypographyConfig;
 	theme: { textColor: string; bgColor: string };
 	settings: { fontSize: number; lineHeight: number; hPadding: number };
+	classMap?: ClassMap;
+	epubCssEnabled: boolean;
 }
 
 function ListItemComponent(props: { item: ListItem; ctx: RenderCtx }) {

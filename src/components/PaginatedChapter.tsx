@@ -2,11 +2,12 @@ import { createEffect, createSignal, For, onMount, Show } from "solid-js";
 import { paginate } from "../epub-renderer/paginator";
 import { BlockRenderer } from "../epub-renderer/renderer";
 import type { TypographyConfig } from "../epub-renderer/styles";
-import type { Block } from "../epub-renderer/types";
+import type { Block, ClassMap } from "../epub-renderer/types";
 import { useReaderSettings } from "../lib/reader-settings.tsx";
 
 interface PaginatedChapterProps {
 	blocks: Block[];
+	classMap?: ClassMap;
 	title?: string;
 	typography?: Partial<TypographyConfig>;
 }
@@ -68,6 +69,8 @@ export default function PaginatedChapter(props: PaginatedChapterProps) {
 								hPadding: settings().hPadding,
 							}}
 							typography={props.typography}
+							classMap={props.classMap}
+							epubCssEnabled={settings().epubCssEnabled ?? false}
 						/>
 					</div>
 				</div>

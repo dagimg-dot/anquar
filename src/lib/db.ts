@@ -54,6 +54,7 @@ interface BookmarkRecord {
 interface ReaderSettingsRecord {
 	bgColor: string;
 	bookId: string;
+	epubCssEnabled?: boolean;
 	fontSize: number;
 	hPadding: number;
 	lineHeight: number;

@@ -27,13 +27,18 @@ export interface ListItem {
 }
 
 export type Block =
-	| { type: "paragraph"; children: Inline[] }
-	| { type: "heading"; level: 1 | 2 | 3 | 4 | 5 | 6; children: Inline[] }
-	| { type: "image"; src: string; alt: string }
-	| { type: "list"; ordered: boolean; items: ListItem[] }
-	| { type: "blockquote"; children: Block[] }
-	| { type: "code"; language?: string; content: string }
-	| { type: "pre"; content: string }
+	| { type: "paragraph"; children: Inline[]; cssClass?: string }
+	| {
+			type: "heading";
+			level: 1 | 2 | 3 | 4 | 5 | 6;
+			children: Inline[];
+			cssClass?: string;
+	  }
+	| { type: "image"; src: string; alt: string; cssClass?: string }
+	| { type: "list"; ordered: boolean; items: ListItem[]; cssClass?: string }
+	| { type: "blockquote"; children: Block[]; cssClass?: string }
+	| { type: "code"; language?: string; content: string; cssClass?: string }
+	| { type: "pre"; content: string; cssClass?: string }
 	| { type: "horizontalRule" }
 	| { type: "table"; rows: TableRow[] };
 
@@ -52,8 +57,11 @@ export interface EpubFontFace {
 	weight?: string;
 }
 
+export type ClassMap = Record<string, Record<string, string>>;
+
 export interface EpubCssMeta {
 	fonts: EpubFontFace[];
+	classMap?: ClassMap;
 	bodyFontFamily?: string;
 	direction?: "ltr" | "rtl";
 	writingMode?: string;

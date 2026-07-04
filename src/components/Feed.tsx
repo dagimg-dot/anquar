@@ -1,4 +1,5 @@
 import { createSignal, For, onMount, Show } from "solid-js";
+import type { EpubCssMeta } from "../epub-renderer/types.ts";
 import { getBook, listBooks } from "../lib/db.ts";
 import type { BookMetadata, ChapterData, TocEntry } from "../lib/types.ts";
 import { useTikTokScroll } from "../lib/useTikTokScroll.ts";
@@ -8,6 +9,7 @@ import ChapterCard from "./PaginatedChapter.tsx";
 interface BookState {
 	chapters: ChapterData[];
 	coverImage: string | null;
+	cssMeta?: EpubCssMeta;
 	id: string;
 	metadata: BookMetadata;
 	toc: TocEntry[];
@@ -39,6 +41,7 @@ export default function Feed() {
 						chapters: fullBook.chapters,
 						toc: fullBook.toc,
 						coverImage: latest.coverImage ?? null,
+						cssMeta: fullBook.cssMeta,
 					});
 				}
 			}
@@ -80,6 +83,7 @@ export default function Feed() {
 						{(chapter) => (
 							<ChapterCard
 								blocks={chapter.blocks!}
+								classMap={book()?.cssMeta?.classMap}
 								title={
 									book()?.toc.find((t) => t.href.includes(chapter.id))?.label
 								}

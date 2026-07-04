@@ -98,6 +98,24 @@ export default function ReaderSettingsPanel() {
 				</div>
 			</div>
 
+			{/* Book styles toggle */}
+			<div class="flex items-center justify-between gap-3">
+				<span class="shrink-0 font-medium text-ink text-sm">Book styles</span>
+				<button
+					class="rounded-lg px-3 py-1.5 font-medium text-xs transition-colors"
+					classList={{
+						"bg-brand-500 text-white": settings().epubCssEnabled,
+						"border border-border text-ink-soft": !settings().epubCssEnabled,
+					}}
+					onClick={() =>
+						setSettings({ epubCssEnabled: !settings().epubCssEnabled })
+					}
+					type="button"
+				>
+					{settings().epubCssEnabled ? "ON" : "OFF"}
+				</button>
+			</div>
+
 			{/* Theme */}
 			<div>
 				<span class="mb-2 block font-medium text-ink text-sm">Theme</span>
