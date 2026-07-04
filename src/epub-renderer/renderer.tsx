@@ -81,7 +81,10 @@ export function BlockRenderer(props: RendererProps) {
 					"letter-spacing": styles().letterSpacing,
 					color: props.theme.textColor,
 					background: props.theme.bgColor,
-					"--reader-h-padding": `${props.settings.hPadding}rem`,
+					"padding-left": `${props.settings.hPadding}rem`,
+					"padding-right": `${props.settings.hPadding}rem`,
+					"padding-top": "1.5rem",
+					"padding-bottom": "1.5rem",
 				} as Record<string, string>
 			}
 		>
