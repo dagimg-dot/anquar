@@ -1,5 +1,5 @@
 import { useLocation, useNavigate, useParams } from "@solidjs/router";
-import { CaretLeft } from "phosphor-solid";
+import { CaretLeft, GearSix } from "phosphor-solid";
 import { createSignal, Show } from "solid-js";
 import AppleToaster from "./components/AppleToaster.tsx";
 import BottomNav from "./components/BottomNav.tsx";
@@ -13,6 +13,7 @@ function App() {
 	const params = useParams();
 	const location = useLocation();
 	const navigate = useNavigate();
+	const [showHud, setShowHud] = createSignal(false);
 	const [showSettings, setShowSettings] = createSignal(false);
 
 	const isReaderPage = () => location.pathname.startsWith("/book/");
@@ -23,7 +24,10 @@ function App() {
 		const w = window.innerWidth;
 		const middleThird = x > w / 3 && x < (w * 2) / 3;
 		if (middleThird) {
-			setShowSettings((p) => !p);
+			setShowHud((p) => !p);
+			if (showSettings()) {
+				setShowSettings(false);
+			}
 		}
 	}
 
@@ -53,14 +57,14 @@ function App() {
 			<main class="h-dvh overflow-hidden">
 				<Show fallback={<FilePicker />} when={isReaderPage() && bookId()}>
 					<ReaderSettingsProvider bookId={bookId() as string}>
-						{/* biome-ignore lint/a11y/useSemanticElements: tap zone for settings */}
+						{/* biome-ignore lint/a11y/useSemanticElements: tap zone for hud */}
 						{/* biome-ignore lint/a11y/useFocusableInteractive: intentionally not focusable */}
 						<div
 							class="h-dvh"
 							onClick={handleScreenTap}
 							onKeyDown={(e) => {
 								if (e.key === "Enter" || e.key === " ") {
-									setShowSettings((p) => !p);
+									setShowHud((p) => !p);
 								}
 							}}
 							role="button"
@@ -68,18 +72,34 @@ function App() {
 						>
 							<Feed />
 
-							{/* Back button - top left */}
-							<button
-								aria-label="Back to library"
-								class="fixed top-4 left-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-surface/80 text-ink shadow-lg backdrop-blur-sm transition-colors hover:bg-surface"
-								onClick={(e) => {
-									e.stopPropagation();
-									navigate("/");
-								}}
-								type="button"
-							>
-								<CaretLeft size={20} weight="bold" />
-							</button>
+							{/* HUD overlay */}
+							<Show when={showHud()}>
+								{/* Back button - top left */}
+								<button
+									aria-label="Back to library"
+									class="fixed top-4 left-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-surface/80 text-ink shadow-lg backdrop-blur-sm transition-colors hover:bg-surface"
+									onClick={(e) => {
+										e.stopPropagation();
+										navigate("/");
+									}}
+									type="button"
+								>
+									<CaretLeft size={20} weight="bold" />
+								</button>
+
+								{/* Settings icon - bottom right */}
+								<button
+									aria-label="Reading settings"
+									class="fixed right-4 bottom-24 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-surface/80 text-ink shadow-lg backdrop-blur-sm transition-colors hover:bg-surface"
+									onClick={(e) => {
+										e.stopPropagation();
+										setShowSettings((p) => !p);
+									}}
+									type="button"
+								>
+									<GearSix size={24} weight="bold" />
+								</button>
+							</Show>
 
 							{/* Settings panel */}
 							<div
