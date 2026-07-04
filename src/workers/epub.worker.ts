@@ -1,5 +1,7 @@
 import { initEpubFile } from "@lingo-reader/epub-parser";
 import JSZip from "jszip";
+import { extractCssMeta } from "../epub-renderer/css-meta.ts";
+import { parseChapter } from "../epub-renderer/parser.ts";
 import type { WorkerMessage, WorkerResponse } from "../lib/types.ts";
 import { extractCoverImage } from "./cover.ts";
 import { resolveCss } from "./css.ts";
@@ -24,6 +26,8 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
 		const toc = epub.getToc();
 		const coverImage = await extractCoverImage(epub, zip);
 
+		const allCssTexts: string[] = [];
+
 		const chapters = await Promise.all(
 			spine
 				.filter((item) => item.linear !== "no")
@@ -31,14 +35,35 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
 					const { html, css } = await epub.loadChapter(item.id);
 					const resolvedCss = await resolveCss(css);
 					const resolvedHtml = await resolveImagesInHtml(html);
+
+					// Collect CSS texts for metadata extraction
+					for (const sheet of resolvedCss) {
+						allCssTexts.push(sheet.href);
+					}
+
+					// Parse HTML into structured blocks
+					const blocks = parseChapter(resolvedHtml);
+
 					return {
 						id: item.id,
 						order: index,
-						html: resolvedHtml,
+						blocks,
 						css: resolvedCss,
 					};
 				}),
 		);
+
+		// Extract CSS metadata from the first chapter's HTML
+		let cssMeta: import("../epub-renderer/types.ts").EpubCssMeta | undefined;
+		if (chapters.length > 0) {
+			const firstSpine = spine.find((item) => item.linear !== "no");
+			if (firstSpine) {
+				const { html } = await epub.loadChapter(firstSpine.id);
+				const resolvedHtml = await resolveImagesInHtml(html);
+				const doc = new DOMParser().parseFromString(resolvedHtml, "text/html");
+				cssMeta = extractCssMeta(allCssTexts, doc);
+			}
+		}
 
 		epub.destroy();
 
@@ -70,6 +95,7 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
 				})),
 				chapters,
 				coverImage,
+				cssMeta,
 			},
 		};
 

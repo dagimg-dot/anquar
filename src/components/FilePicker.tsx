@@ -40,6 +40,7 @@ export default function FilePicker() {
 				result.chapters,
 				result.toc,
 				result.coverImage ?? undefined,
+				result.cssMeta,
 			);
 			toast.success(`${result.metadata.title} imported successfully`);
 			const saved = await listBooks();

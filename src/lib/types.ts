@@ -1,3 +1,5 @@
+import type { Block, EpubCssMeta } from "../epub-renderer/types";
+
 export interface BookMetadata {
 	author: string;
 	description?: string;
@@ -22,7 +24,7 @@ export interface TocEntry {
 
 export interface ChapterData {
 	css: Array<{ id: string; href: string }>;
-	html: string;
+	blocks: Block[];
 	id: string;
 	order: number;
 }
@@ -33,6 +35,7 @@ export interface ParsedBook {
 	metadata: BookMetadata;
 	spine: SpineItem[];
 	toc: TocEntry[];
+	cssMeta?: EpubCssMeta;
 }
 
 export type WorkerMessage = { type: "PARSE"; file: File } | { type: "ABORT" };

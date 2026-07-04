@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from "dexie";
+import type { EpubCssMeta } from "../epub-renderer/types.ts";
 import type { ReaderSettings } from "./reader-settings.tsx";
 import type { BookMetadata, ChapterData, TocEntry } from "./types.ts";
 
@@ -7,6 +8,7 @@ interface BookRecord {
 	author: string;
 	chapterCount: number;
 	coverImage?: string;
+	cssMeta?: string;
 	description?: string;
 	id: string;
 	language: string;
@@ -17,8 +19,8 @@ interface BookRecord {
 
 interface ChapterRecord {
 	bookId: string;
+	blocks: string;
 	css: string;
-	html: string;
 	id: string;
 	order: number;
 }
@@ -89,6 +91,7 @@ export async function saveBook(
 	chapters: ChapterData[],
 	toc: TocEntry[],
 	coverImage?: string,
+	cssMeta?: EpubCssMeta,
 ): Promise<string> {
 	const id =
 		self.crypto?.randomUUID?.() ??
@@ -103,6 +106,7 @@ export async function saveBook(
 			description: metadata.description,
 			publisher: metadata.publisher,
 			coverImage,
+			cssMeta: cssMeta ? JSON.stringify(cssMeta) : undefined,
 			chapterCount: chapters.length,
 			addedAt: new Date().toISOString(),
 		});
@@ -112,7 +116,7 @@ export async function saveBook(
 				id: `${id}-${ch.id}`,
 				bookId: id,
 				order: ch.order,
-				html: ch.html,
+				blocks: JSON.stringify(ch.blocks),
 				css: JSON.stringify(ch.css),
 			})),
 		);
@@ -144,10 +148,17 @@ export async function getBook(id: string) {
 
 	return {
 		...book,
+		cssMeta: book.cssMeta
+			? (JSON.parse(
+					book.cssMeta,
+				) as import("../epub-renderer/types.ts").EpubCssMeta)
+			: undefined,
 		chapters: chapters.map((ch) => ({
 			id: ch.id.replace(`${id}-`, ""),
 			order: ch.order,
-			html: ch.html,
+			blocks: JSON.parse(
+				ch.blocks,
+			) as import("../epub-renderer/types.ts").Block[],
 			css: JSON.parse(ch.css) as Array<{ id: string; href: string }>,
 		})),
 		toc: toc.map((t) => ({

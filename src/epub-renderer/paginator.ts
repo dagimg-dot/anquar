@@ -5,6 +5,7 @@ import type { Block, Inline } from "./types";
 export interface PaginatorConfig {
 	pageHeight: number;
 	pageWidth: number;
+	titleHeight?: number;
 	typography?: Partial<TypographyConfig>;
 	fontSize: number;
 	lineHeight: number;
@@ -25,7 +26,9 @@ export interface PageResult {
 export function paginate(blocks: Block[], config: PaginatorConfig): PageResult {
 	const styles = mergeTypography(config.typography);
 	const heights = measureBlockHeights(blocks, config, styles);
-	const splits = splitIntoPages(blocks.length, heights, config.pageHeight);
+	// Subtract title height — it takes space on the first snap-page
+	const pageHeight = config.pageHeight - (config.titleHeight ?? 0);
+	const splits = splitIntoPages(blocks.length, heights, pageHeight);
 	const pages = splits.map((indices) => indices.map((i) => blocks[i]));
 	return { pages, totalPages: pages.length };
 }
