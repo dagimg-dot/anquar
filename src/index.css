@@ -101,6 +101,8 @@ html {
 	overflow: hidden;
 	scroll-snap-align: start;
 	scroll-snap-stop: always;
+	content-visibility: auto;
+	contain-intrinsic-size: auto 100dvh;
 }
 
 /* --- Reader content --- */

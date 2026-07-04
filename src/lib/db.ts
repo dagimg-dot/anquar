@@ -177,6 +177,27 @@ export function listBooks() {
 	return db.books.orderBy("addedAt").reverse().toArray();
 }
 
+export async function getChaptersRange(
+	bookId: string,
+	offset: number,
+	limit: number,
+) {
+	const chapters = await db.chapters
+		.where("bookId")
+		.equals(bookId)
+		.sortBy("order");
+
+	const slice = chapters.slice(offset, offset + limit);
+	return slice.map((ch) => ({
+		id: ch.id.replace(`${bookId}-`, ""),
+		order: ch.order,
+		blocks: JSON.parse(
+			ch.blocks,
+		) as import("../epub-renderer/types.ts").Block[],
+		css: JSON.parse(ch.css) as Array<{ id: string; href: string }>,
+	}));
+}
+
 export async function saveProgress(
 	bookId: string,
 	chapterIndex: number,

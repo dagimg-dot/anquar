@@ -1,23 +1,28 @@
 import { createSignal, For, onMount, Show } from "solid-js";
 import type { EpubCssMeta } from "../epub-renderer/types.ts";
 import { getBook, listBooks } from "../lib/db.ts";
-import type { BookMetadata, ChapterData, TocEntry } from "../lib/types.ts";
+import type { BookMetadata, TocEntry } from "../lib/types.ts";
+import { useLazyChapters } from "../lib/useLazyChapters.ts";
 import { useTikTokScroll } from "../lib/useTikTokScroll.ts";
 import CoverCard from "./CoverCard.tsx";
 import ChapterCard from "./PaginatedChapter.tsx";
 
-interface BookState {
-	chapters: ChapterData[];
+interface BookMeta {
 	coverImage: string | null;
 	cssMeta?: EpubCssMeta;
 	id: string;
 	metadata: BookMetadata;
 	toc: TocEntry[];
+	totalChapters: number;
 }
 
 export default function Feed() {
-	const [book, setBook] = createSignal<BookState | null>(null);
-	const [loading, setLoading] = createSignal(true);
+	const [bookMeta, setBookMeta] = createSignal<BookMeta | null>(null);
+	const [metaLoaded, setMetaLoaded] = createSignal(false);
+
+	const { chapters, allLoaded, observeSentinel } = useLazyChapters(
+		() => bookMeta()?.id ?? "",
+	);
 
 	let containerRef: HTMLDivElement | undefined;
 	useTikTokScroll(() => containerRef);
@@ -29,7 +34,7 @@ export default function Feed() {
 				const latest = books[0];
 				const fullBook = await getBook(latest.id);
 				if (fullBook) {
-					setBook({
+					setBookMeta({
 						id: latest.id,
 						metadata: {
 							title: latest.title,
@@ -38,17 +43,17 @@ export default function Feed() {
 							description: latest.description,
 							publisher: latest.publisher,
 						},
-						chapters: fullBook.chapters,
 						toc: fullBook.toc,
 						coverImage: latest.coverImage ?? null,
 						cssMeta: fullBook.cssMeta,
+						totalChapters: fullBook.chapters.length,
 					});
 				}
 			}
 		} catch (err) {
 			console.error("Failed to load book:", err);
 		} finally {
-			setLoading(false);
+			setMetaLoaded(true);
 		}
 	});
 
@@ -59,7 +64,7 @@ export default function Feed() {
 					<div class="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
 				</div>
 			}
-			when={!loading()}
+			when={metaLoaded()}
 		>
 			<Show
 				fallback={
@@ -69,27 +74,32 @@ export default function Feed() {
 						</For>
 					</div>
 				}
-				when={book()}
+				when={bookMeta()}
 			>
 				<div class="snap-container h-dvh overflow-y-auto" ref={containerRef}>
 					<CoverCard
-						author={book()?.metadata.author ?? ""}
-						chapterCount={book()?.chapters.length ?? 0}
-						coverImage={book()?.coverImage}
-						title={book()?.metadata.title ?? ""}
+						author={bookMeta()?.metadata.author ?? ""}
+						chapterCount={bookMeta()?.totalChapters ?? 0}
+						coverImage={bookMeta()?.coverImage}
+						title={bookMeta()?.metadata.title ?? ""}
 					/>
 
-					<For each={book()?.chapters}>
+					<For each={chapters()}>
 						{(chapter) => (
 							<ChapterCard
 								blocks={chapter.blocks ?? []}
-								classMap={book()?.cssMeta?.classMap}
+								classMap={bookMeta()?.cssMeta?.classMap}
 								title={
-									book()?.toc.find((t) => t.href.includes(chapter.id))?.label
+									bookMeta()?.toc.find((t) => t.href.includes(chapter.id))
+										?.label
 								}
 							/>
 						)}
 					</For>
+
+					<Show when={!allLoaded()}>
+						<div ref={observeSentinel} class="h-16" />
+					</Show>
 				</div>
 			</Show>
 		</Show>
