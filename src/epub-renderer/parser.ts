@@ -321,7 +321,8 @@ function parseInlineChildren(parent: Element): Inline[] {
 }
 
 function collapseWhitespace(text: string): string {
-	return text.replace(/\s+/g, " ").trim();
+	// Collapse internal whitespace but preserve spaces between inline elements
+	return text.replace(/\s+/g, " ");
 }
 
 export function parseHtml(html: string): Chapter {

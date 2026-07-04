@@ -65,7 +65,7 @@ describe("headings", () => {
 						type: "emphasis",
 						children: [{ type: "text", content: "Chapter" }],
 					},
-					{ type: "text", content: "1" },
+					{ type: "text", content: " 1" },
 				],
 			},
 		]);
@@ -153,7 +153,7 @@ describe("inline formatting", () => {
 
 	it("merges adjacent text nodes", () => {
 		expect(inlines("<p>Hello <strong>world</strong></p>")).toEqual([
-			{ type: "text", content: "Hello" },
+			{ type: "text", content: "Hello " },
 			{
 				type: "strong",
 				children: [{ type: "text", content: "world" }],
@@ -166,9 +166,9 @@ describe("inline formatting", () => {
 			inlines("<p><strong>Bold</strong> and <em>italic</em> text</p>"),
 		).toEqual([
 			{ type: "strong", children: [{ type: "text", content: "Bold" }] },
-			{ type: "text", content: "and" },
+			{ type: "text", content: " and " },
 			{ type: "emphasis", children: [{ type: "text", content: "italic" }] },
-			{ type: "text", content: "text" },
+			{ type: "text", content: " text" },
 		]);
 	});
 });
@@ -321,7 +321,7 @@ describe("whitespace handling", () => {
 
 	it("handles leading/trailing whitespace", () => {
 		expect(inlines("<p>  Hello world  </p>")).toEqual([
-			{ type: "text", content: "Hello world" },
+			{ type: "text", content: " Hello world " },
 		]);
 	});
 
