@@ -55,7 +55,7 @@ export default function Saved() {
 	});
 
 	return (
-		<div class="py-4">
+		<div class="py-4 pb-24">
 			<Show when={groups().length > 0}>
 				<For each={groups()}>
 					{(group) => (

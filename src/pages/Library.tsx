@@ -66,7 +66,7 @@ export default function Library() {
 	});
 
 	return (
-		<div class="py-4">
+		<div class="py-4 pb-24">
 			<input
 				class="w-full py-3 px-5 border-0 border-b border-border bg-transparent text-ink text-lg outline-none placeholder:text-ink-soft"
 				type="text"

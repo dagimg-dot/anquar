@@ -89,7 +89,7 @@ export default function SettingsTab() {
 	};
 
 	return (
-		<div class="py-4">
+		<div class="py-4 pb-24">
 			{/* Appearance */}
 			<div class="px-5 mb-7">
 				<div class="text-xs font-semibold text-brand-500 uppercase tracking-widest mb-3">
