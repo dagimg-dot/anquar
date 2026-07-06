@@ -9,7 +9,12 @@ const NAV_ITEMS = [
 	{ label: "Settings", icon: GearSix },
 ] as const;
 
-export default function BottomNav() {
+interface BottomNavProps {
+	activeTab: string;
+	setActiveTab: (tab: string) => void;
+}
+
+export default function BottomNav(props: BottomNavProps) {
 	useTheme();
 	const [scrolled, setScrolled] = createSignal(false);
 
@@ -35,7 +40,13 @@ export default function BottomNav() {
 				<div class="relative z-10 flex items-center justify-around px-2 py-1">
 					{NAV_ITEMS.map((item) => (
 						<button
-							class="flex flex-col items-center gap-0.5 rounded-xl px-4 py-2 text-ink-soft transition-colors hover:text-brand-400"
+							class="flex flex-col items-center gap-0.5 rounded-xl px-4 py-2 transition-colors"
+							classList={{
+								"text-brand-500": props.activeTab === item.label.toLowerCase(),
+								"text-ink-soft hover:text-brand-400":
+									props.activeTab !== item.label.toLowerCase(),
+							}}
+							onClick={() => props.setActiveTab(item.label.toLowerCase())}
 							type="button"
 						>
 							<item.icon aria-hidden="true" size={24} />
