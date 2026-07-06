@@ -1,7 +1,13 @@
 import Dexie, { type EntityTable } from "dexie";
 import type { EpubCssMeta } from "../epub-renderer/types.ts";
 import type { ReaderSettings } from "./reader-settings.tsx";
-import type { BookMetadata, ChapterData, TocEntry } from "./types.ts";
+import type {
+	BookMetadata,
+	ChapterData,
+	ReadingStats,
+	TocEntry,
+	WeeklyHeatmapEntry,
+} from "./types.ts";
 
 interface BookRecord {
 	addedAt: string;
@@ -63,6 +69,14 @@ interface ReaderSettingsRecord {
 	verticalAlign?: string;
 }
 
+interface DailyRollupRecord {
+	buktokCount: number;
+	date: string;
+	id?: number;
+	bookId: string;
+	sessionCount: number;
+}
+
 class BukTokDB extends Dexie {
 	books!: EntityTable<BookRecord, "id">;
 	chapters!: EntityTable<ChapterRecord, "id">;
@@ -70,6 +84,7 @@ class BukTokDB extends Dexie {
 	progress!: EntityTable<ProgressRecord, "bookId">;
 	bookmarks!: EntityTable<BookmarkRecord, "id">;
 	readerSettings!: EntityTable<ReaderSettingsRecord, "bookId">;
+	dailyRollups!: EntityTable<DailyRollupRecord, "id">;
 
 	constructor() {
 		super("buktok");
@@ -83,6 +98,95 @@ class BukTokDB extends Dexie {
 		this.version(2).stores({
 			readerSettings: "bookId",
 		});
+		this.version(3).stores({
+			dailyRollups: "++id, bookId, date",
+		});
+	}
+
+	async upsertDailyRollup(
+		bookId: string,
+		date: string,
+		buktokDelta: number,
+		sessionDelta = 0,
+	) {
+		const existing = await this.dailyRollups
+			.where("bookId")
+			.equals(bookId)
+			.and((r) => r.date === date)
+			.first();
+		if (existing?.id != null) {
+			await this.dailyRollups.update(existing.id, {
+				buktokCount: existing.buktokCount + buktokDelta,
+				sessionCount: existing.sessionCount + sessionDelta,
+			});
+		} else {
+			await this.dailyRollups.add({
+				bookId,
+				date,
+				buktokCount: buktokDelta,
+				sessionCount: sessionDelta,
+			});
+		}
+	}
+
+	async getReadingStats(periodDays = 30): Promise<ReadingStats> {
+		const cutoff = new Date();
+		cutoff.setDate(cutoff.getDate() - periodDays);
+		const cutoffStr = cutoff.toISOString().split("T")[0];
+		const rollups = await this.dailyRollups
+			.where("date")
+			.aboveOrEqual(cutoffStr)
+			.toArray();
+
+		const total = rollups.reduce((sum, r) => sum + r.buktokCount, 0);
+		const avgPerDay = periodDays > 0 ? Math.round(total / periodDays) : 0;
+		const sessions = rollups.reduce((sum, r) => sum + r.sessionCount, 0);
+
+		const weekly: WeeklyHeatmapEntry[] = [];
+		const today = new Date();
+		for (let i = 6; i >= 0; i--) {
+			const d = new Date(today);
+			d.setDate(d.getDate() - i);
+			const dateStr = d.toISOString().split("T")[0];
+			const dayRollup = rollups.find((r) => r.date === dateStr);
+			weekly.push({
+				day: d.toLocaleDateString("en", { weekday: "short" }),
+				count: dayRollup?.buktokCount ?? 0,
+			});
+		}
+
+		return {
+			total,
+			avgPerDay,
+			streak: await this.getStreak(),
+			sessions,
+			weekly,
+		};
+	}
+
+	async getStreak(): Promise<number> {
+		let streak = 0;
+		const today = new Date();
+		for (let i = 0; i < 365; i++) {
+			const d = new Date(today);
+			d.setDate(d.getDate() - i);
+			const dateStr = d.toISOString().split("T")[0];
+			const rollup = await this.dailyRollups
+				.where("date")
+				.equals(dateStr)
+				.first();
+			if (rollup && rollup.buktokCount > 0) {
+				streak++;
+			} else if (i > 0) {
+				break;
+			}
+		}
+		return streak;
+	}
+
+	async getWeeklyHeatmap(): Promise<WeeklyHeatmapEntry[]> {
+		const stats = await this.getReadingStats(7);
+		return stats.weekly;
 	}
 }
 
@@ -229,6 +333,7 @@ export async function deleteBook(bookId: string) {
 		db.progress,
 		db.bookmarks,
 		db.readerSettings,
+		db.dailyRollups,
 	] as const;
 	await db.transaction("rw", tables, async () => {
 		await db.books.delete(bookId);
@@ -236,7 +341,8 @@ export async function deleteBook(bookId: string) {
 		await db.toc.where("bookId").equals(bookId).delete();
 		await db.progress.delete(bookId);
 		await db.bookmarks.where("bookId").equals(bookId).delete();
-		await db.readerSettings.delete(bookId);
+		await db.readerSettings.where("bookId").equals(bookId).delete();
+		await db.dailyRollups.where("bookId").equals(bookId).delete();
 	});
 }
 
