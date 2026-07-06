@@ -1,13 +1,21 @@
 import { useLocation, useNavigate, useParams } from "@solidjs/router";
 import { CaretLeft, GearSix } from "phosphor-solid";
-import { createSignal, Show } from "solid-js";
+import { createSignal, Match, Show, Switch } from "solid-js";
+import toast from "solid-toast";
 import AppleToaster from "./components/AppleToaster.tsx";
 import BottomNav from "./components/BottomNav.tsx";
 import Feed from "./components/Feed.tsx";
-import FilePicker from "./components/FilePicker.tsx";
 import ReaderSettingsPanel from "./components/ReaderSettingsPanel.tsx";
+import { extractCssMeta } from "./epub-renderer/css-meta.ts";
+import { parseChapter } from "./epub-renderer/parser.ts";
+import { saveBook } from "./lib/db.ts";
+import { useEpubParser } from "./lib/epub.ts";
 import { ReaderSettingsProvider } from "./lib/reader-settings.tsx";
 import PWABadge from "./PWABadge.tsx";
+import FeedPage from "./pages/Feed.tsx";
+import Library from "./pages/Library.tsx";
+import Saved from "./pages/Saved.tsx";
+import SettingsTab from "./pages/SettingsTab.tsx";
 
 function App() {
 	const params = useParams();
@@ -15,9 +23,52 @@ function App() {
 	const navigate = useNavigate();
 	const [showHud, setShowHud] = createSignal(false);
 	const [showSettings, setShowSettings] = createSignal(false);
+	const [activeTab, setActiveTab] = createSignal("feed");
 
 	const isReaderPage = () => location.pathname.startsWith("/book/");
 	const bookId = () => params.id || null;
+
+	let fabInputRef: HTMLInputElement | undefined;
+	const { parse } = useEpubParser();
+
+	async function handleFabImport(file: File) {
+		if (!file.name.endsWith(".epub")) return;
+		try {
+			const result = await parse(file);
+			const chaptersWithBlocks = result.chapters.map((ch) => ({
+				...ch,
+				blocks: parseChapter(ch.html ?? ""),
+			}));
+			let cssMeta: import("./epub-renderer/types.ts").EpubCssMeta | undefined;
+			if (result.firstHtml && result.allCssTexts) {
+				const doc = new DOMParser().parseFromString(
+					result.firstHtml,
+					"text/html",
+				);
+				cssMeta = extractCssMeta(result.allCssTexts, doc);
+			}
+			const bookId = await saveBook(
+				result.metadata,
+				chaptersWithBlocks,
+				result.toc,
+				result.coverImage ?? undefined,
+				cssMeta,
+			);
+			toast.success(`${result.metadata.title} imported successfully`);
+			navigate(`/book/${bookId}`);
+		} catch (err) {
+			console.error("Import failed:", err);
+		}
+	}
+
+	function onFabFileChange(e: Event) {
+		const input = e.target as HTMLInputElement;
+		const file = input.files?.[0];
+		if (file) {
+			handleFabImport(file);
+			input.value = "";
+		}
+	}
 
 	function handleScreenTap(e: MouseEvent) {
 		const x = e.clientX;
@@ -55,7 +106,25 @@ function App() {
 			</svg>
 
 			<main class="h-dvh overflow-hidden">
-				<Show fallback={<FilePicker />} when={isReaderPage() && bookId()}>
+				<Show
+					fallback={
+						<Switch>
+							<Match when={activeTab() === "feed"}>
+								<FeedPage />
+							</Match>
+							<Match when={activeTab() === "library"}>
+								<Library />
+							</Match>
+							<Match when={activeTab() === "saved"}>
+								<Saved />
+							</Match>
+							<Match when={activeTab() === "settings"}>
+								<SettingsTab />
+							</Match>
+						</Switch>
+					}
+					when={isReaderPage() && bookId()}
+				>
 					<ReaderSettingsProvider bookId={bookId() as string}>
 						{/* biome-ignore lint/a11y/useSemanticElements: tap zone for hud */}
 						{/* biome-ignore lint/a11y/useFocusableInteractive: intentionally not focusable */}
@@ -120,7 +189,23 @@ function App() {
 			</main>
 
 			<Show when={!isReaderPage()}>
-				<BottomNav />
+				<BottomNav activeTab={activeTab()} setActiveTab={setActiveTab} />
+			</Show>
+			<Show when={!isReaderPage()}>
+				<input
+					type="file"
+					accept=".epub"
+					class="hidden"
+					ref={fabInputRef}
+					onChange={onFabFileChange}
+				/>
+				<button
+					class="fixed right-4 bottom-24 z-40 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-500 text-2xl font-bold text-white shadow-lg"
+					onClick={() => fabInputRef?.click()}
+					type="button"
+				>
+					+
+				</button>
 			</Show>
 			<AppleToaster />
 			<PWABadge />

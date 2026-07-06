@@ -84,7 +84,10 @@ export const ReaderSettingsProvider: ParentComponent<{ bookId?: string }> = (
 	createEffect(() => {
 		const bid = props.bookId;
 		if (bid) {
-			loadReaderSettings(bid).then((record) => {
+			loadReaderSettings(bid).then(async (record) => {
+				if (!record) {
+					record = await loadReaderSettings("global");
+				}
 				if (record) {
 					setSettings({
 						bgColor: record.bgColor ?? "",
