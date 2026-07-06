@@ -107,7 +107,10 @@ function App() {
 
 			<main
 				class="h-dvh"
-				classList={{ "overflow-hidden": isReaderPage(), "overflow-y-auto": !isReaderPage() }}
+				classList={{
+					"overflow-hidden": isReaderPage(),
+					"overflow-y-auto": !isReaderPage(),
+				}}
 			>
 				<Show
 					fallback={
@@ -199,7 +202,9 @@ function App() {
 					type="file"
 					accept=".epub"
 					class="hidden"
-					ref={(el) => { fabInputRef = el }}
+					ref={(el) => {
+						fabInputRef = el;
+					}}
 					onChange={onFabFileChange}
 				/>
 				<button
@@ -208,8 +213,15 @@ function App() {
 					type="button"
 					aria-label="Import EPUB"
 				>
-					<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" class="h-6 w-6" aria-hidden="true">
-						<path d="M12 4v16m-8-8h16"/>
+					<svg
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+						stroke-width="2.5"
+						class="h-6 w-6"
+						aria-hidden="true"
+					>
+						<path d="M12 4v16m-8-8h16" />
 					</svg>
 				</button>
 			</Show>

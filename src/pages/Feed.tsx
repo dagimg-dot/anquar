@@ -1,5 +1,6 @@
 import { useNavigate } from "@solidjs/router";
 import { createSignal, onMount, Show } from "solid-js";
+import AppHeader from "../components/AppHeader";
 import FinishedList from "../components/FinishedList";
 import InProgressRow from "../components/InProgressRow";
 import NowReading from "../components/NowReading";
@@ -85,48 +86,55 @@ export default function FeedPage() {
 	});
 
 	return (
-		<div class="py-4 pb-24">
-			<Show
-				when={!loading()}
-				fallback={
-					<div class="flex items-center justify-center py-20">
-						<div class="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
-					</div>
-				}
-			>
-				<Show when={lastBook()}>
-					<NowReading
-						book={lastBook() as NonNullable<ReturnType<typeof lastBook>>}
-						onClick={() => {
-							const book = lastBook();
-							if (book) navigate(`/book/${book.id}`);
-						}}
-					/>
-				</Show>
-				<Show when={inProgressBooks().length > 0}>
-					<InProgressRow books={inProgressBooks()} />
-				</Show>
-				<ReadingPulse />
-				<FinishedList />
-				<Show when={!lastBook() && inProgressBooks().length === 0}>
-					<div class="text-center py-20 px-10">
-						<div class="w-14 h-14 rounded-full bg-surface flex items-center justify-center mx-auto mb-4">
-							<svg
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-								stroke-width="1.5"
-								aria-hidden="true"
-								class="w-6 h-6 text-ink-soft"
-							>
-								<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-							</svg>
+		<>
+			<AppHeader />
+			<div class="pb-24">
+				<Show
+					when={!loading()}
+					fallback={
+						<div class="flex items-center justify-center py-20">
+							<div class="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
 						</div>
-						<div class="text-lg font-semibold text-ink mb-1">No books yet</div>
-						<div class="text-sm text-ink-soft leading-normal">Import an EPUB to start reading</div>
-					</div>
+					}
+				>
+					<Show when={lastBook()}>
+						<NowReading
+							book={lastBook() as NonNullable<ReturnType<typeof lastBook>>}
+							onClick={() => {
+								const book = lastBook();
+								if (book) navigate(`/book/${book.id}`);
+							}}
+						/>
+					</Show>
+					<Show when={inProgressBooks().length > 0}>
+						<InProgressRow books={inProgressBooks()} />
+					</Show>
+					<ReadingPulse />
+					<FinishedList />
+					<Show when={!lastBook() && inProgressBooks().length === 0}>
+						<div class="text-center py-20 px-10">
+							<div class="w-14 h-14 rounded-full bg-surface flex items-center justify-center mx-auto mb-4">
+								<svg
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+									stroke-width="1.5"
+									aria-hidden="true"
+									class="w-6 h-6 text-ink-soft"
+								>
+									<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+								</svg>
+							</div>
+							<div class="text-lg font-semibold text-ink mb-1">
+								No books yet
+							</div>
+							<div class="text-sm text-ink-soft leading-normal">
+								Import an EPUB to start reading
+							</div>
+						</div>
+					</Show>
 				</Show>
-			</Show>
-		</div>
+			</div>
+		</>
 	);
 }
