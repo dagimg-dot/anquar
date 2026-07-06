@@ -68,7 +68,7 @@ export default function Feed() {
 		>
 			<Show
 				fallback={
-					<div class="h-dvh space-y-4 p-4">
+					<div class="space-y-4 p-4">
 						<For each={Array.from({ length: 5 }, (_, i) => i)}>
 							{() => <div class="h-dvh animate-pulse rounded-2xl bg-surface" />}
 						</For>
