@@ -40,7 +40,7 @@ export default function BottomNav(props: BottomNavProps) {
 				<div class="relative z-10 flex items-center justify-around px-2 py-1">
 					{NAV_ITEMS.map((item) => (
 						<button
-							class="flex flex-col items-center gap-0.5 rounded-xl px-4 py-2 transition-colors"
+							class="flex flex-col items-center gap-0.5 rounded-xl px-4 py-2 transition-all duration-300 active:scale-90"
 							classList={{
 								"text-brand-500": props.activeTab === item.label.toLowerCase(),
 								"text-ink-soft hover:text-brand-400":

@@ -91,7 +91,7 @@ export default function Library() {
 						{(book) => (
 							<button
 								type="button"
-								class="block w-full p-0 m-0 border-0 bg-none text-left cursor-pointer font-[inherit] text-[color:inherit]"
+								class="block w-full p-0 m-0 border-0 bg-none text-left cursor-pointer font-[inherit] text-[color:inherit] active:scale-95 transition-transform duration-300"
 								onClick={() => navigate(`/book/${book.id}`)}
 							>
 								<BookCover

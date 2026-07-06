@@ -146,7 +146,7 @@ function App() {
 								{/* Back button - top left */}
 								<button
 									aria-label="Back to library"
-									class="fixed top-4 left-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-surface/80 text-ink shadow-lg backdrop-blur-sm transition-colors hover:bg-surface"
+									class="fixed top-4 left-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-surface/80 text-ink shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-surface active:scale-90"
 									onClick={(e) => {
 										e.stopPropagation();
 										navigate("/");
@@ -159,7 +159,7 @@ function App() {
 								{/* Settings icon - bottom right */}
 								<button
 									aria-label="Reading settings"
-									class="fixed right-4 bottom-24 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-surface/80 text-ink shadow-lg backdrop-blur-sm transition-colors hover:bg-surface"
+									class="fixed right-4 bottom-24 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-surface/80 text-ink shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-surface active:scale-90"
 									onClick={(e) => {
 										e.stopPropagation();
 										setShowSettings((p) => !p);
@@ -191,7 +191,7 @@ function App() {
 			<Show when={!isReaderPage()}>
 				<BottomNav activeTab={activeTab()} setActiveTab={setActiveTab} />
 			</Show>
-			<Show when={!isReaderPage()}>
+			<Show when={!isReaderPage() && activeTab() === "feed"}>
 				<input
 					type="file"
 					accept=".epub"
@@ -200,7 +200,7 @@ function App() {
 					onChange={onFabFileChange}
 				/>
 				<button
-					class="fixed right-4 bottom-24 z-40 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-500 text-2xl font-bold text-white shadow-lg"
+					class="fixed right-4 bottom-24 z-40 flex h-13 w-13 items-center justify-center rounded-2xl bg-brand-500 text-2xl font-bold text-white shadow-lg cursor-pointer border-none transition-all duration-[400ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.92]"
 					onClick={() => fabInputRef?.click()}
 					type="button"
 				>

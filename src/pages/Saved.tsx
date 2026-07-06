@@ -63,7 +63,7 @@ export default function Saved() {
 							{/* biome-ignore lint/a11y/useKeyWithClickEvents: interactive header for navigation */}
 							{/* biome-ignore lint/a11y/noStaticElementInteractions: interactive header for navigation */}
 							<div
-								class="flex items-center gap-3 py-3 px-5 cursor-pointer"
+								class="flex items-center gap-3 py-3 px-5 cursor-pointer transition-opacity duration-150 active:opacity-70"
 								onClick={() => navigate(`/saved/${group.bookId}`)}
 							>
 								<BookCover src={group.book.coverImage} class="w-10 h-14" />

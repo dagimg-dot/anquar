@@ -106,7 +106,7 @@ export default function SettingsTab() {
 				<div class="flex gap-2">
 					<button
 						type="button"
-						class="flex-1 flex flex-col items-center gap-1 py-3 px-3 rounded-xl bg-surface border border-border text-ink-soft text-sm font-medium cursor-pointer transition-all duration-200"
+						class="flex-1 flex flex-col items-center gap-1 py-3 px-3 rounded-xl bg-surface border border-border text-ink-soft text-sm font-medium cursor-pointer transition-all duration-300 active:scale-95"
 						classList={{
 							"!bg-brand-500/12 !border-brand-500 !text-brand-500":
 								mode() === "system",
@@ -128,7 +128,7 @@ export default function SettingsTab() {
 					</button>
 					<button
 						type="button"
-						class="flex-1 flex flex-col items-center gap-1 py-3 px-3 rounded-xl bg-surface border border-border text-ink-soft text-sm font-medium cursor-pointer transition-all duration-200"
+						class="flex-1 flex flex-col items-center gap-1 py-3 px-3 rounded-xl bg-surface border border-border text-ink-soft text-sm font-medium cursor-pointer transition-all duration-300 active:scale-95"
 						classList={{
 							"!bg-brand-500/12 !border-brand-500 !text-brand-500":
 								mode() === "dark",
@@ -149,7 +149,7 @@ export default function SettingsTab() {
 					</button>
 					<button
 						type="button"
-						class="flex-1 flex flex-col items-center gap-1 py-3 px-3 rounded-xl bg-surface border border-border text-ink-soft text-sm font-medium cursor-pointer transition-all duration-200"
+						class="flex-1 flex flex-col items-center gap-1 py-3 px-3 rounded-xl bg-surface border border-border text-ink-soft text-sm font-medium cursor-pointer transition-all duration-300 active:scale-95"
 						classList={{
 							"!bg-brand-500/12 !border-brand-500 !text-brand-500":
 								mode() === "light",
@@ -190,7 +190,7 @@ export default function SettingsTab() {
 						{(s) => (
 							<button
 								type="button"
-								class="flex-1 flex items-center justify-center py-2.5 px-3 rounded-xl bg-surface border border-border text-ink-soft text-sm font-medium cursor-pointer transition-all duration-200"
+								class="flex-1 flex items-center justify-center py-2.5 px-3 rounded-xl bg-surface border border-border text-ink-soft text-sm font-medium cursor-pointer transition-all duration-300 active:scale-95"
 								classList={{
 									"!bg-brand-500/12 !border-brand-500 !text-brand-500":
 										fontSize() === s,
@@ -215,7 +215,7 @@ export default function SettingsTab() {
 						{(s) => (
 							<button
 								type="button"
-								class="flex-1 flex items-center justify-center py-2.5 px-3 rounded-xl bg-surface border border-border text-ink-soft text-sm font-medium cursor-pointer transition-all duration-200"
+								class="flex-1 flex items-center justify-center py-2.5 px-3 rounded-xl bg-surface border border-border text-ink-soft text-sm font-medium cursor-pointer transition-all duration-300 active:scale-95"
 								classList={{
 									"!bg-brand-500/12 !border-brand-500 !text-brand-500":
 										lineSpacing() === s,
@@ -240,7 +240,7 @@ export default function SettingsTab() {
 						{(a) => (
 							<button
 								type="button"
-								class="flex-1 flex items-center justify-center py-2.5 px-3 rounded-xl bg-surface border border-border text-ink-soft text-sm font-medium cursor-pointer transition-all duration-200"
+								class="flex-1 flex items-center justify-center py-2.5 px-3 rounded-xl bg-surface border border-border text-ink-soft text-sm font-medium cursor-pointer transition-all duration-300 active:scale-95"
 								classList={{
 									"!bg-brand-500/12 !border-brand-500 !text-brand-500":
 										alignment() === a,
@@ -275,7 +275,7 @@ export default function SettingsTab() {
 						{(g) => (
 							<button
 								type="button"
-								class="flex-1 flex items-center justify-center py-2.5 rounded-xl bg-surface border border-border text-base font-semibold cursor-pointer transition-all duration-200"
+								class="flex-1 flex items-center justify-center py-2.5 rounded-xl bg-surface border border-border text-base font-semibold cursor-pointer transition-all duration-300 active:scale-95"
 								classList={{
 									"!bg-brand-500/12 !border-brand-500 !text-brand-500":
 										goal() === g,
@@ -312,7 +312,7 @@ export default function SettingsTab() {
 					/>
 					<button
 						type="button"
-						class="w-10 h-10 rounded-xl bg-surface border border-border text-ink-soft shrink-0 cursor-pointer flex items-center justify-center transition-all duration-200 active:bg-surface"
+						class="w-10 h-10 rounded-xl bg-surface border border-border text-ink-soft shrink-0 cursor-pointer flex items-center justify-center transition-all duration-300 active:scale-90"
 						classList={{ "!text-brand-500 !border-brand-500": showKey() }}
 						onClick={() => setShowKey(!showKey())}
 						aria-label="Toggle visibility"
@@ -331,7 +331,7 @@ export default function SettingsTab() {
 					</button>
 					<button
 						type="button"
-						class="w-10 h-10 rounded-xl bg-surface border border-border shrink-0 cursor-pointer flex items-center justify-center transition-all duration-200"
+						class="w-10 h-10 rounded-xl bg-surface border border-border shrink-0 cursor-pointer flex items-center justify-center transition-all duration-300 active:scale-90"
 						classList={{
 							"!bg-brand-500 !text-white !border-brand-500": saved(),
 							"text-ink-soft": !saved(),
@@ -386,7 +386,7 @@ export default function SettingsTab() {
 					</div>
 					<button
 						type="button"
-						class="py-2 px-4 rounded-xl bg-[oklch(0.5_0.18_30/0.12)] border border-[oklch(0.5_0.18_30/0.25)] text-[oklch(0.6_0.2_30)] text-sm font-semibold shrink-0 cursor-pointer transition-colors duration-200 active:bg-[oklch(0.5_0.18_30/0.2)]"
+						class="py-2 px-4 rounded-xl bg-[oklch(0.5_0.18_30/0.12)] border border-[oklch(0.5_0.18_30/0.25)] text-[oklch(0.6_0.2_30)] text-sm font-semibold shrink-0 cursor-pointer transition-colors duration-300 active:bg-[oklch(0.5_0.18_30/0.2)]"
 						onClick={clearLibrary}
 					>
 						Clear

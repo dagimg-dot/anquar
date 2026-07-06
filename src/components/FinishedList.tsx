@@ -40,7 +40,7 @@ export default function FinishedList() {
 					{(book) => (
 						<button
 							type="button"
-							class="flex items-center gap-3 py-2 px-5 cursor-pointer bg-transparent border-none w-full text-left [font:inherit] [color:inherit]"
+							class="flex items-center gap-3 py-2 px-5 cursor-pointer bg-transparent border-none w-full text-left [font:inherit] [color:inherit] transition-colors duration-100 active:bg-surface"
 							onClick={() => navigate(`/book/${book.id}`)}
 							onKeyDown={(e) => {
 								if (e.key === "Enter" || e.key === " ")

@@ -27,7 +27,7 @@ export default function InProgressRow(props: InProgressRowProps) {
 					{(book) => (
 						<button
 							type="button"
-							class="w-[120px] cursor-pointer bg-transparent border-none p-0 text-left [font:inherit] [color:inherit]"
+							class="w-[120px] cursor-pointer bg-transparent border-none p-0 text-left [font:inherit] [color:inherit] active:scale-95 transition-transform duration-300"
 							onClick={() => navigate(`/book/${book.id}`)}
 						>
 							<BookCover
