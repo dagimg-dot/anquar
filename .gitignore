@@ -24,5 +24,6 @@ dist-ssr
 *.sw?
 
 docs/
+design/
 
 .sisyphus/
