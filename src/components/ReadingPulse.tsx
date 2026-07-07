@@ -1,8 +1,10 @@
-import { createSignal, For, onMount } from "solid-js";
+import { createMemo, createSignal, For, onMount } from "solid-js";
 import { db } from "../lib/db";
 import type { ReadingStats } from "../lib/types";
 import SectionHeader from "./SectionHeader";
 import StatCard from "./StatCard";
+
+const DAILY_GOAL = 30;
 
 export default function ReadingPulse() {
 	const [stats, setStats] = createSignal<ReadingStats | null>(null);
@@ -10,6 +12,12 @@ export default function ReadingPulse() {
 	onMount(async () => {
 		const readingStats = await db.getReadingStats(30);
 		setStats(readingStats);
+	});
+
+	const todayCount = createMemo(() => {
+		const weekly = stats()?.weekly;
+		if (!weekly?.length) return 0;
+		return weekly[weekly.length - 1]?.count ?? 0;
 	});
 
 	return (
@@ -23,36 +31,41 @@ export default function ReadingPulse() {
 					</span>
 				</div>
 				<div class="mb-4">
-					<div class="text-sm text-ink-soft mb-1.5">Today's buktoks</div>
+					<div class="flex items-baseline justify-between mb-1.5">
+						<div class="text-sm text-ink-soft">Today's buktoks</div>
+						<div class="text-xs font-semibold tabular-nums text-ink-soft">
+							{todayCount()} / {DAILY_GOAL}
+						</div>
+					</div>
 					<div class="h-1.5 rounded-[3px] bg-[oklch(0_0_0_/_0.08)] overflow-hidden">
 						<div
 							class="h-full rounded-[3px] bg-brand-500 transition-[width] duration-300 ease-in-out"
 							style={{
-								width: `${Math.min(100, ((stats()?.avgPerDay || 0) / 30) * 100)}%`,
+								width: `${Math.min(100, (todayCount() / DAILY_GOAL) * 100)}%`,
 							}}
 						/>
 					</div>
 				</div>
-				<div class="mb-4">
+				{/* Weekly heatmap — single loop so dots and labels stay aligned */}
+				<div class="flex items-end justify-between mb-4">
 					<For each={stats()?.weekly || []}>
 						{(day) => (
-							<div
-								class="w-7 h-7 rounded-full bg-brand-500 inline-block mr-1"
-								style={{
-									opacity: day.count > 0 ? Math.min(1, day.count / 50) : 0.15,
-								}}
-							/>
-						)}
-					</For>
-					<div class="flex gap-1 mt-1">
-						<For each={stats()?.weekly || []}>
-							{(day) => (
-								<span class="w-7 text-[10px] text-ink-soft text-center">
+							<div class="flex flex-col items-center gap-1">
+								<div
+									class="w-7 h-7 rounded-full bg-brand-500"
+									style={{
+										opacity:
+											day.count > 0
+												? String(Math.min(1, day.count / 10))
+												: "0.15",
+									}}
+								/>
+								<span class="text-[10px] text-ink-soft text-center">
 									{day.day}
 								</span>
-							)}
-						</For>
-					</div>
+							</div>
+						)}
+					</For>
 				</div>
 			</div>
 			<div class="flex gap-2 px-5 mt-3">
