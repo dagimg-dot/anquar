@@ -109,21 +109,21 @@ html {
 	contain-intrinsic-size: auto 100dvh;
 }
 
-/* --- Reader content --- */
-.reader-content {
-	font-size: var(--reader-font-size, 1rem);
-	line-height: var(--reader-line-height, 1.7);
+@media (prefers-reduced-motion: reduce) {
+	.snap-container {
+		scroll-snap-type: y proximity;
+	}
 }
 
-.reader-content p,
-.reader-content div:not(.image),
-.reader-content h1,
-.reader-content h2,
-.reader-content h3,
-.reader-content h4,
-.reader-content h5,
-.reader-content h6,
-.reader-content li {
+/* --- Reader content --- */
+.reader-content > .block-renderer > p,
+.reader-content > .block-renderer > h1,
+.reader-content > .block-renderer > h2,
+.reader-content > .block-renderer > h3,
+.reader-content > .block-renderer > h4,
+.reader-content > .block-renderer > h5,
+.reader-content > .block-renderer > h6,
+.reader-content > .block-renderer > li {
 	padding-right: var(--reader-h-padding, 1.5rem);
 	padding-left: var(--reader-h-padding, 1.5rem);
 }
@@ -131,12 +131,6 @@ html {
 .reader-content img {
 	max-width: 100%;
 	height: auto;
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.snap-container {
-		scroll-snap-type: y proximity;
-	}
 }
 
 /* --- Animated gradient orbs --- */
@@ -356,11 +350,9 @@ html {
 		transition: opacity 100ms ease;
 		animation: none;
 	}
-
 	.apple-toast-enter {
 		opacity: 0;
 	}
-
 	.apple-toast-exit {
 		opacity: 1;
 	}

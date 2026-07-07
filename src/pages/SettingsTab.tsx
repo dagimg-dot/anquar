@@ -1,5 +1,6 @@
 import { createSignal, For } from "solid-js";
 import AppHeader from "../components/AppHeader";
+import IconButton from "../components/IconButton";
 import SettingsSection, {
 	SettingsOption,
 	SettingsOptionGroup,
@@ -112,6 +113,7 @@ export default function SettingsTab() {
 						>
 							<svg
 								aria-hidden="true"
+								class="w-4 h-4 shrink-0"
 								fill="none"
 								viewBox="0 0 24 24"
 								stroke="currentColor"
@@ -128,6 +130,7 @@ export default function SettingsTab() {
 						>
 							<svg
 								aria-hidden="true"
+								class="w-4 h-4 shrink-0"
 								fill="none"
 								viewBox="0 0 24 24"
 								stroke="currentColor"
@@ -143,6 +146,7 @@ export default function SettingsTab() {
 						>
 							<svg
 								aria-hidden="true"
+								class="w-4 h-4 shrink-0"
 								fill="none"
 								viewBox="0 0 24 24"
 								stroke="currentColor"
@@ -215,7 +219,7 @@ export default function SettingsTab() {
 						label="Daily buktok goal"
 						desc="Sets your target in the Reading Pulse"
 					/>
-					<SettingsOptionGroup class="goal-options">
+					<SettingsOptionGroup>
 						<For each={[...GOALS]}>
 							{(g) => (
 								<SettingsOption
@@ -233,22 +237,25 @@ export default function SettingsTab() {
 						label="API key"
 						desc="Your Gemini or OpenAI key (stored locally)"
 					/>
-					<div class="settings-api-field">
+					<div class="flex gap-2">
 						<input
 							type={showKey() ? "text" : "password"}
-							class="settings-input"
+							class="flex-1 py-2.5 px-3.5 rounded-xl bg-surface border border-border text-ink text-sm font-mono outline-none transition-colors duration-200 focus:border-brand-500 placeholder:text-ink-muted"
 							placeholder="sk-..."
 							value={apiKey()}
 							onInput={(e) => setApiKey(e.currentTarget.value)}
 						/>
-						<button
-							type="button"
-							class={`settings-icon-btn${showKey() ? " active" : ""}`}
+						<IconButton
 							onClick={() => setShowKey(!showKey())}
-							aria-label="Toggle visibility"
+							ariaLabel="Toggle visibility"
+							classList={{
+								"!text-brand-500": showKey(),
+								"!border-brand-500": showKey(),
+							}}
 						>
 							<svg
 								aria-hidden="true"
+								class="w-[18px] h-[18px]"
 								viewBox="0 0 24 24"
 								fill="none"
 								stroke="currentColor"
@@ -257,15 +264,19 @@ export default function SettingsTab() {
 								<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
 								<circle cx="12" cy="12" r="3" />
 							</svg>
-						</button>
-						<button
-							type="button"
-							class={`settings-icon-btn settings-icon-btn-check${saved() ? " saved" : ""}`}
+						</IconButton>
+						<IconButton
 							onClick={saveApiKey}
-							aria-label="Save key"
+							ariaLabel="Save key"
+							classList={{
+								"!bg-brand-500": saved(),
+								"!text-white": saved(),
+								"!border-brand-500": saved(),
+							}}
 						>
 							<svg
 								aria-hidden="true"
+								class="w-[18px] h-[18px]"
 								viewBox="0 0 24 24"
 								fill="none"
 								stroke="currentColor"
@@ -273,25 +284,23 @@ export default function SettingsTab() {
 							>
 								<polyline points="20 6 9 17 4 12" />
 							</svg>
-						</button>
+						</IconButton>
 					</div>
-					<div style="margin-top: 12px;">
+					<div class="mt-3">
 						<SettingsRowInfo
 							label="Model"
 							desc="gemini-2.0-flash, gpt-4o, etc."
 						/>
 					</div>
-					<div class="settings-api-field">
-						<select
-							class="settings-select"
-							value={model()}
-							onChange={(e) => saveModel(e.currentTarget.value)}
-						>
-							<For each={[...MODELS]}>
-								{(m) => <option value={m}>{m}</option>}
-							</For>
-						</select>
-					</div>
+					<select
+						class="w-full py-2.5 px-3.5 rounded-xl bg-surface border border-border text-ink text-sm outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2712%27%20height%3D%2712%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%23666%27%20stroke-width%3D%272%27%3E%3Cpath%20d%3D%27m6%209%206%206%206-6%27%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_12px_center] transition-colors duration-200 focus:border-brand-500"
+						value={model()}
+						onChange={(e) => saveModel(e.currentTarget.value)}
+					>
+						<For each={[...MODELS]}>
+							{(m) => <option value={m}>{m}</option>}
+						</For>
+					</select>
 				</SettingsSection>
 
 				<SettingsSection title="Data">
@@ -301,7 +310,7 @@ export default function SettingsTab() {
 					>
 						<button
 							type="button"
-							class="settings-danger-btn"
+							class="py-2 px-4 rounded-xl bg-[oklch(0.5_0.18_30/0.12)] border border-[oklch(0.5_0.18_30/0.25)] text-[oklch(0.6_0.2_30)] text-sm font-semibold shrink-0 cursor-pointer transition-colors duration-300 active:bg-[oklch(0.5_0.18_30/0.2)]"
 							onClick={clearLibrary}
 						>
 							Clear
@@ -309,7 +318,9 @@ export default function SettingsTab() {
 					</SettingsRowInfo>
 				</SettingsSection>
 
-				<div class="settings-footer">buktok · v0.1.0</div>
+				<div class="text-center py-8 px-5 text-xs text-ink-muted">
+					buktok · v0.1.0
+				</div>
 			</div>
 		</>
 	);
