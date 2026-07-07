@@ -70,14 +70,27 @@ export default function Library() {
 		<>
 			<AppHeader />
 			<div class="pb-24">
-				<input
-					class="w-full py-3 px-5 border-0 border-b border-border bg-transparent text-ink text-lg outline-none placeholder:text-ink-soft"
-					type="text"
-					placeholder="Search books..."
-					value={search()}
-					onInput={(e) => setSearch(e.currentTarget.value)}
-				/>
-				<div class="flex gap-2 py-3 px-5 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
+				<div class="relative mx-5 mb-4">
+					<svg
+						class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-ink-muted"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+						stroke-width="2"
+						aria-hidden="true"
+					>
+						<circle cx="11" cy="11" r="8" />
+						<path d="m21 21-4.35-4.35" />
+					</svg>
+					<input
+						class="w-full rounded-xl bg-surface-elevated border border-border py-3 pr-4 pl-11 text-sm text-ink outline-none placeholder:text-ink-muted transition-colors duration-200 focus:border-brand-500"
+						type="search"
+						placeholder="Search your library…"
+						value={search()}
+						onInput={(e) => setSearch(e.currentTarget.value)}
+					/>
+				</div>
+				<div class="flex gap-2 pb-4 px-5 overflow-x-auto [&::-webkit-scrollbar]:hidden">
 					<For each={FILTERS}>
 						{(f) => (
 							<FilterChip
