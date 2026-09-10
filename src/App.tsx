@@ -6,8 +6,6 @@ import AppleToaster from "./components/AppleToaster.tsx";
 import BottomNav from "./components/BottomNav.tsx";
 import Feed from "./components/Feed.tsx";
 import ReaderSettingsPanel from "./components/ReaderSettingsPanel.tsx";
-import { extractCssMeta } from "./epub-renderer/css-meta.ts";
-import { parseChapter } from "./epub-renderer/parser.ts";
 import { saveBook } from "./lib/db.ts";
 import { useEpubParser } from "./lib/epub.ts";
 import { ReaderSettingsProvider } from "./lib/reader-settings.tsx";
@@ -35,26 +33,8 @@ function App() {
 		if (!file.name.endsWith(".epub")) return;
 		try {
 			const result = await parse(file);
-			const chaptersWithBlocks = result.chapters.map((ch) => ({
-				...ch,
-				blocks: parseChapter(ch.html ?? ""),
-			}));
-			let cssMeta: import("./epub-renderer/types.ts").EpubCssMeta | undefined;
-			if (result.firstHtml && result.allCssTexts) {
-				const doc = new DOMParser().parseFromString(
-					result.firstHtml,
-					"text/html",
-				);
-				cssMeta = extractCssMeta(result.allCssTexts, doc);
-			}
-			const bookId = await saveBook(
-				result.metadata,
-				chaptersWithBlocks,
-				result.toc,
-				result.coverImage ?? undefined,
-				cssMeta,
-			);
-			toast.success(`${result.metadata.title} imported successfully`);
+			const bookId = await saveBook(result);
+			toast.success(`${result.title} imported successfully`);
 			navigate(`/book/${bookId}`);
 		} catch (err) {
 			console.error("Import failed:", err);
@@ -147,9 +127,7 @@ function App() {
 						>
 							<Feed />
 
-							{/* HUD overlay */}
 							<Show when={showHud()}>
-								{/* Back button - top left */}
 								<button
 									aria-label="Back to library"
 									class="fixed top-4 left-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-surface/80 text-ink shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-surface active:scale-90"
@@ -162,7 +140,6 @@ function App() {
 									<CaretLeft size={20} weight="bold" />
 								</button>
 
-								{/* Settings icon - bottom right */}
 								<button
 									aria-label="Reading settings"
 									class="fixed right-4 bottom-24 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-surface/80 text-ink shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-surface active:scale-90"
@@ -176,7 +153,6 @@ function App() {
 								</button>
 							</Show>
 
-							{/* Settings panel */}
 							<div
 								class="fixed inset-x-0 bottom-24 z-40 mx-auto max-w-md px-4 transition-all duration-200"
 								classList={{
