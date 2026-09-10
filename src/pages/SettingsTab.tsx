@@ -88,9 +88,10 @@ export default function SettingsTab() {
 		) {
 			await db.books.clear();
 			await db.chapters.clear();
-			await db.toc.clear();
 			await db.progress.clear();
 			await db.bookmarks.clear();
+			await db.readerSettings.clear();
+			await db.images.clear();
 			await db.dailyRollups.clear();
 			window.location.reload();
 		}

@@ -3,7 +3,8 @@ import { createSignal, For, onMount, Show } from "solid-js";
 import AppHeader from "../components/AppHeader";
 import BookCover from "../components/BookCover";
 import HighlightCard from "../components/HighlightCard";
-import { db, getBook } from "../lib/db";
+import { coverUrl } from "../lib/covers";
+import { db, getBookMeta } from "../lib/db";
 
 interface BookmarkItem {
 	bookId: string;
@@ -17,7 +18,7 @@ interface BookmarkItem {
 
 interface BookGroup {
 	bookId: string;
-	book: NonNullable<Awaited<ReturnType<typeof getBook>>>;
+	book: { coverImage?: string; title: string };
 	bookmarks: BookmarkItem[];
 }
 
@@ -36,11 +37,14 @@ export default function Saved() {
 			}
 			const result: BookGroup[] = [];
 			for (const [bookId, bms] of Object.entries(grouped)) {
-				const book = await getBook(bookId);
+				const book = await getBookMeta(bookId);
 				if (book) {
 					result.push({
 						bookId,
-						book,
+						book: {
+							title: book.title,
+							coverImage: coverUrl(book.id, book.coverImage),
+						},
 						bookmarks: bms.sort(
 							(a, b) =>
 								new Date(b.createdAt).getTime() -

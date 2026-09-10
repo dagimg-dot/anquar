@@ -4,6 +4,7 @@ import AppHeader from "../components/AppHeader";
 import BookCover from "../components/BookCover";
 import CoverGrid from "../components/CoverGrid";
 import FilterChip from "../components/FilterChip";
+import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
 
 interface BookWithProgress {
@@ -12,7 +13,6 @@ interface BookWithProgress {
 	chapterCount: number;
 	coverImage?: string;
 	id: string;
-	language: string;
 	progressPercent: number;
 	title: string;
 }
@@ -34,6 +34,7 @@ export default function Library() {
 					const progress = await getProgress(book.id);
 					return {
 						...book,
+						coverImage: coverUrl(book.id, book.coverImage),
 						progressPercent: progress?.progressPercent || 0,
 					};
 				}),

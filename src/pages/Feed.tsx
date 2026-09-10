@@ -5,7 +5,8 @@ import FinishedList from "../components/FinishedList";
 import InProgressRow from "../components/InProgressRow";
 import NowReading from "../components/NowReading";
 import ReadingPulse from "../components/ReadingPulse";
-import { getBook, getProgress, listBooks } from "../lib/db";
+import { coverUrl } from "../lib/covers";
+import { getProgress, listBooks } from "../lib/db";
 
 export default function FeedPage() {
 	const navigate = useNavigate();
@@ -21,7 +22,6 @@ export default function FeedPage() {
 			id: string;
 			title: string;
 			author: string;
-			coverImage?: string;
 			progress: number;
 		}[]
 	>([]);
@@ -42,17 +42,14 @@ export default function FeedPage() {
 			})[0];
 
 			if (lastOpened) {
-				const fullBook = await getBook(lastOpened.id);
-				if (fullBook) {
-					const progress = await getProgress(lastOpened.id);
-					setLastBook({
-						id: lastOpened.id,
-						title: lastOpened.title,
-						author: lastOpened.author,
-						coverImage: lastOpened.coverImage,
-						progress: progress?.progressPercent ?? 0,
-					});
-				}
+				const progress = await getProgress(lastOpened.id);
+				setLastBook({
+					id: lastOpened.id,
+					title: lastOpened.title,
+					author: lastOpened.author,
+					coverImage: coverUrl(lastOpened.id, lastOpened.coverImage),
+					progress: progress?.progressPercent ?? 0,
+				});
 			}
 
 			const inProgress: {
@@ -74,7 +71,7 @@ export default function FeedPage() {
 						id: book.id,
 						title: book.title,
 						author: book.author,
-						coverImage: book.coverImage,
+						coverImage: coverUrl(book.id, book.coverImage),
 						progress: progress.progressPercent,
 					});
 				}

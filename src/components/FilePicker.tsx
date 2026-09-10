@@ -2,8 +2,7 @@ import { useNavigate } from "@solidjs/router";
 import { BookOpen, Clock, Plus } from "phosphor-solid";
 import { createSignal, For, onMount, Show } from "solid-js";
 import toast from "solid-toast";
-import { extractCssMeta } from "../epub-renderer/css-meta.ts";
-import { parseChapter } from "../epub-renderer/parser.ts";
+import { coverUrl } from "../lib/covers.ts";
 import { listBooks, saveBook } from "../lib/db.ts";
 import { useEpubParser } from "../lib/epub.ts";
 
@@ -11,7 +10,7 @@ interface SavedBook {
 	addedAt: string;
 	author: string;
 	chapterCount: number;
-	coverImage?: string;
+	coverImage?: Blob;
 	id: string;
 	lastOpenedAt?: string;
 	title: string;
@@ -37,31 +36,8 @@ export default function FilePicker() {
 
 		try {
 			const result = await parse(file);
-
-			// Parse HTML to blocks in the main thread (DOMParser available here)
-			const chaptersWithBlocks = result.chapters.map((ch) => ({
-				...ch,
-				blocks: parseChapter(ch.html ?? ""),
-			}));
-
-			// Extract CSS metadata (fonts, direction, writing-mode)
-			let cssMeta: import("../epub-renderer/types.ts").EpubCssMeta | undefined;
-			if (result.firstHtml && result.allCssTexts) {
-				const doc = new DOMParser().parseFromString(
-					result.firstHtml,
-					"text/html",
-				);
-				cssMeta = extractCssMeta(result.allCssTexts, doc);
-			}
-
-			const bookId = await saveBook(
-				result.metadata,
-				chaptersWithBlocks,
-				result.toc,
-				result.coverImage ?? undefined,
-				cssMeta,
-			);
-			toast.success(`${result.metadata.title} imported successfully`);
+			const bookId = await saveBook(result);
+			toast.success(`${result.title} imported successfully`);
 			const saved = await listBooks();
 			setBooks(saved);
 			navigate(`/book/${bookId}`);
@@ -186,13 +162,13 @@ export default function FilePicker() {
 												<BookOpen class="h-12 w-12 text-ink-soft" size={48} />
 											</div>
 										}
-										when={book.coverImage}
+										when={coverUrl(book.id, book.coverImage)}
 									>
 										<img
 											alt={book.title}
 											class="aspect-[3/4] w-full object-cover"
 											height={256}
-											src={book.coverImage ?? ""}
+											src={coverUrl(book.id, book.coverImage)}
 											width={192}
 										/>
 									</Show>

@@ -1,5 +1,6 @@
 import { useNavigate } from "@solidjs/router";
 import { createSignal, For, onMount, Show } from "solid-js";
+import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
 import BookCover from "./BookCover";
 import SectionHeader from "./SectionHeader";
@@ -19,11 +20,16 @@ export default function FinishedList() {
 	onMount(async () => {
 		try {
 			const allBooks = await listBooks();
-			const finished = [];
+			const finished: FinishedBook[] = [];
 			for (const book of allBooks) {
 				const progress = await getProgress(book.id);
 				if (progress && progress.progressPercent >= 100) {
-					finished.push(book);
+					finished.push({
+						id: book.id,
+						title: book.title,
+						author: book.author,
+						coverImage: coverUrl(book.id, book.coverImage),
+					});
 				}
 			}
 			setBooks(finished);
