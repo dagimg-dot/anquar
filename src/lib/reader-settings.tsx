@@ -25,7 +25,6 @@ export const READER_THEMES: ReaderTheme[] = [
 
 export interface ReaderSettings {
 	bgColor: string;
-	epubCssEnabled?: boolean;
 	fontSize: number;
 	hPadding: number;
 	lineHeight: number;
@@ -36,7 +35,6 @@ export interface ReaderSettings {
 
 const DEFAULTS: ReaderSettings = {
 	bgColor: "",
-	epubCssEnabled: false,
 	fontSize: 100,
 	hPadding: 1.5,
 	lineHeight: 1.7,
@@ -91,7 +89,6 @@ export const ReaderSettingsProvider: ParentComponent<{ bookId?: string }> = (
 				if (record) {
 					setSettings({
 						bgColor: record.bgColor ?? "",
-						epubCssEnabled: record.epubCssEnabled ?? false,
 						fontSize: record.fontSize ?? DEFAULTS.fontSize,
 						hPadding: record.hPadding ?? DEFAULTS.hPadding,
 						lineHeight: record.lineHeight ?? DEFAULTS.lineHeight,
