@@ -23,6 +23,23 @@ export const READER_THEMES: ReaderTheme[] = [
 	{ id: "amoled", label: "AMOLED", textColor: "#ffffff", bgColor: "#000000" },
 ];
 
+// 1.4 is the lower bound for the narrow measure of a phone; 1.6 is the
+// recommended body-text value and clears the 1.5 WCAG 1.4.12 baseline; past
+// 2.0 lines stop reading as one paragraph.
+export const LINE_HEIGHTS = [
+	{ label: "Tight", value: 1.4 },
+	{ label: "Normal", value: 1.6 },
+	{ label: "Relaxed", value: 1.8 },
+	{ label: "Loose", value: 2.0 },
+] as const;
+
+/** Snaps a stored value onto the current scale, which has changed before. */
+function nearestLineHeight(value: number): number {
+	return LINE_HEIGHTS.map((lh) => lh.value).reduce((best, v) =>
+		Math.abs(v - value) < Math.abs(best - value) ? v : best,
+	);
+}
+
 export interface ReaderSettings {
 	bgColor: string;
 	fontSize: number;
@@ -37,7 +54,7 @@ const DEFAULTS: ReaderSettings = {
 	bgColor: "",
 	fontSize: 100,
 	hPadding: 1.5,
-	lineHeight: 1.7,
+	lineHeight: 1.6,
 	textColor: "",
 	themeId: "light",
 	verticalAlign: "top",
@@ -91,7 +108,9 @@ export const ReaderSettingsProvider: ParentComponent<{ bookId?: string }> = (
 						bgColor: record.bgColor ?? "",
 						fontSize: record.fontSize ?? DEFAULTS.fontSize,
 						hPadding: record.hPadding ?? DEFAULTS.hPadding,
-						lineHeight: record.lineHeight ?? DEFAULTS.lineHeight,
+						lineHeight: nearestLineHeight(
+							record.lineHeight ?? DEFAULTS.lineHeight,
+						),
 						textColor: record.textColor ?? "",
 						themeId: record.themeId ?? DEFAULTS.themeId,
 						verticalAlign:

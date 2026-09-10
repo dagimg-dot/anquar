@@ -1,17 +1,10 @@
-import { READER_THEMES, useReaderSettings } from "../lib/reader-settings.tsx";
+import {
+	LINE_HEIGHTS,
+	READER_THEMES,
+	useReaderSettings,
+} from "../lib/reader-settings.tsx";
 
 const FONT_SIZES = [75, 90, 100, 115, 130, 150, 175, 200] as const;
-const LINE_HEIGHTS = [1.3, 1.5, 1.7, 1.9, 2.1] as const;
-
-function lineHeightLabel(lh: number): string {
-	if (lh === 1.3) {
-		return "Compact";
-	}
-	if (lh === 1.7) {
-		return "Default";
-	}
-	return `${lh}`;
-}
 
 export default function ReaderSettingsPanel() {
 	const { settings, setSettings } = useReaderSettings();
@@ -37,7 +30,6 @@ export default function ReaderSettingsPanel() {
 
 	return (
 		<div class="flex flex-col gap-4 rounded-2xl bg-surface p-4 shadow-xl">
-			{/* Font size */}
 			<div class="flex items-center justify-between gap-3">
 				<span class="shrink-0 font-medium text-ink text-sm">Size</span>
 				<div class="flex items-center gap-2">
@@ -77,28 +69,26 @@ export default function ReaderSettingsPanel() {
 				</div>
 			</div>
 
-			{/* Line spacing */}
-			<div class="flex items-center justify-between gap-3">
-				<span class="shrink-0 font-medium text-ink text-sm">Spacing</span>
-				<div class="flex items-center gap-1">
+			<div>
+				<span class="mb-2 block font-medium text-ink text-sm">Spacing</span>
+				<div class="flex gap-1">
 					{LINE_HEIGHTS.map((lh) => (
 						<button
-							class="rounded-lg px-3 py-1.5 font-medium text-xs transition-colors"
+							class="flex-1 rounded-lg px-2 py-1.5 font-medium text-xs transition-colors"
 							classList={{
-								"bg-brand-500 text-white": settings().lineHeight === lh,
+								"bg-brand-500 text-white": settings().lineHeight === lh.value,
 								"border border-border text-ink hover:bg-surface":
-									settings().lineHeight !== lh,
+									settings().lineHeight !== lh.value,
 							}}
-							onClick={() => setSettings({ lineHeight: lh })}
+							onClick={() => setSettings({ lineHeight: lh.value })}
 							type="button"
 						>
-							{lineHeightLabel(lh)}
+							{lh.label}
 						</button>
 					))}
 				</div>
 			</div>
 
-			{/* Vertical alignment */}
 			<div class="flex items-center justify-between gap-3">
 				<span class="shrink-0 font-medium text-ink text-sm">Align</span>
 				<button
@@ -127,7 +117,6 @@ export default function ReaderSettingsPanel() {
 				</button>
 			</div>
 
-			{/* Theme */}
 			<div>
 				<span class="mb-2 block font-medium text-ink text-sm">Theme</span>
 				<div class="flex gap-2">
@@ -159,7 +148,6 @@ export default function ReaderSettingsPanel() {
 				</div>
 			</div>
 
-			{/* Custom colors */}
 			<div class="flex gap-3">
 				<label class="flex flex-1 items-center gap-2">
 					<span class="shrink-0 font-medium text-ink text-xs">Text</span>
