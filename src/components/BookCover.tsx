@@ -24,7 +24,7 @@ export default function BookCover(rawProps: BookCoverProps) {
 			<div
 				class={[
 					"book-cover",
-					"relative aspect-[3/4] overflow-hidden rounded-xl bg-[oklch(0.15_0.02_280)]",
+					"relative aspect-[3/4] overflow-hidden rounded-xl bg-[oklch(0.22_0.02_163)]",
 					local.class,
 				]
 					.filter(Boolean)
@@ -40,7 +40,7 @@ export default function BookCover(rawProps: BookCoverProps) {
 					/>
 				</Show>
 				<Show when={!local.src}>
-					<div class="w-full h-full bg-[linear-gradient(135deg,oklch(0.25_0.05_250),oklch(0.2_0.04_280))]" />
+					<div class="w-full h-full bg-[linear-gradient(135deg,oklch(0.34_0.06_158),oklch(0.24_0.04_168))]" />
 				</Show>
 				<Show when={local.progress > 0}>
 					<div class="absolute bottom-[6px] left-[6px] right-[6px] h-[3px] rounded-sm bg-[oklch(0_0_0/0.25)] overflow-hidden z-10">

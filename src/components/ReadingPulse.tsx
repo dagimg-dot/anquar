@@ -37,7 +37,7 @@ export default function ReadingPulse() {
 							{todayCount()} / {DAILY_GOAL}
 						</div>
 					</div>
-					<div class="h-1.5 rounded-[3px] bg-[oklch(0_0_0_/_0.08)] overflow-hidden">
+					<div class="h-1.5 rounded-[3px] bg-border overflow-hidden">
 						<div
 							class="h-full rounded-[3px] bg-brand-500 transition-[width] duration-300 ease-in-out"
 							style={{
