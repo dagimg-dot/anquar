@@ -1,6 +1,7 @@
 import { useParams } from "@solidjs/router";
 import type {
 	Block,
+	HeadingBlock,
 	HeadingLevel,
 	ImageBlock,
 	ListBlock,
@@ -113,13 +114,38 @@ function ListCard(props: { block: ListBlock }) {
 	);
 }
 
-function BlockCard(props: { block: Block; bookId: string }) {
+/**
+ * One card per block, except that a run of headings shares a card — deeply
+ * nested editions open a chapter with Part / Book / Section / Title in a row,
+ * which is four swipes past no reading at all.
+ */
+function toCards(blocks: Block[]): Block[][] {
+	const cards: Block[][] = [];
+	for (const block of blocks) {
+		const last = cards[cards.length - 1];
+		if (block.type === "heading" && last?.[0].type === "heading") {
+			last.push(block);
+		} else {
+			cards.push([block]);
+		}
+	}
+	return cards;
+}
+
+const asText = (b: Block) => (b.type === "text" ? b : undefined);
+const asList = (b: Block) => (b.type === "list" ? b : undefined);
+const asImage = (b: Block) => (b.type === "image" ? b : undefined);
+const asHeadings = (blocks: Block[]) =>
+	blocks[0].type === "heading" ? (blocks as HeadingBlock[]) : undefined;
+
+function BlockCard(props: { blocks: Block[]; bookId: string }) {
 	const { settings, themeColors } = useReaderSettings();
+
+	const block = () => props.blocks[0];
 
 	// Headings and images are focal cards: they read best centred, whatever
 	// alignment the reader picked for prose.
-	const isFocal = () =>
-		props.block.type === "heading" || props.block.type === "image";
+	const isFocal = () => block().type === "heading" || block().type === "image";
 
 	return (
 		<section
@@ -138,34 +164,40 @@ function BlockCard(props: { block: Block; bookId: string }) {
 		>
 			<div
 				class="mx-auto flex w-full flex-col items-center"
-				classList={{ "max-w-prose": props.block.type !== "image" }}
+				classList={{ "max-w-prose": block().type !== "image" }}
 			>
 				<Switch>
-					<Match when={props.block.type === "text" && props.block}>
-						{(block) => (
+					<Match when={asText(block())}>
+						{(text) => (
 							<p class="w-full text-pretty">
-								<StyledRuns runs={block().runs} />
+								<StyledRuns runs={text().runs} />
 							</p>
 						)}
 					</Match>
 
-					<Match when={props.block.type === "heading" && props.block}>
-						{(block) => (
-							<h2
-								class="w-full text-balance text-center font-semibold tracking-tight"
-								style={{ "font-size": HEADING_SIZE[block().level] }}
-							>
-								<StyledRuns runs={block().runs} />
-							</h2>
+					<Match when={asHeadings(props.blocks)}>
+						{(headings) => (
+							<div class="flex w-full flex-col items-center gap-[0.45em]">
+								<For each={headings()}>
+									{(h) => (
+										<h2
+											class="w-full text-balance text-center font-semibold tracking-tight"
+											style={{ "font-size": HEADING_SIZE[h.level] }}
+										>
+											<StyledRuns runs={h.runs} />
+										</h2>
+									)}
+								</For>
+							</div>
 						)}
 					</Match>
 
-					<Match when={props.block.type === "list" && props.block}>
-						{(block) => <ListCard block={block()} />}
+					<Match when={asList(block())}>
+						{(list) => <ListCard block={list()} />}
 					</Match>
 
-					<Match when={props.block.type === "image" && props.block}>
-						{(block) => <ImageCard block={block()} bookId={props.bookId} />}
+					<Match when={asImage(block())}>
+						{(image) => <ImageCard block={image()} bookId={props.bookId} />}
 					</Match>
 				</Switch>
 			</div>
@@ -182,7 +214,9 @@ export default function Feed() {
 		() => bookMeta()?.id ?? "",
 	);
 
-	const blocks = createMemo(() => chapters().flatMap((ch) => ch.blocks));
+	const cards = createMemo(() =>
+		toCards(chapters().flatMap((ch) => ch.blocks)),
+	);
 
 	const [container, setContainer] = createSignal<HTMLDivElement>();
 	useTikTokScroll(container);
@@ -239,8 +273,8 @@ export default function Feed() {
 							title={meta().title}
 						/>
 
-						<For each={blocks()}>
-							{(block) => <BlockCard block={block} bookId={meta().id} />}
+						<For each={cards()}>
+							{(card) => <BlockCard blocks={card} bookId={meta().id} />}
 						</For>
 
 						<Show when={!allLoaded()}>
