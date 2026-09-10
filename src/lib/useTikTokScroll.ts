@@ -1,13 +1,17 @@
-import { onCleanup, onMount } from "solid-js";
+import { createEffect, onCleanup } from "solid-js";
 
 export function useTikTokScroll(ref: () => HTMLElement | undefined) {
-	onMount(() => {
+	// An effect, not onMount: the scroll container is behind a <Show> that
+	// only resolves once the book has loaded from IndexedDB.
+	createEffect(() => {
 		const el = ref();
 		if (!el) {
 			return;
 		}
 
+		// Re-bound after the guard so the nested handlers see a non-null element.
 		const container = el;
+
 		let isAnimating = false;
 		let touchStartY = 0;
 		let touchStartTime = 0;
