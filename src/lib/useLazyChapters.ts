@@ -8,6 +8,7 @@ const BATCH_SIZE = 3;
 export interface FeedChapter {
 	index: number;
 	title: string;
+	frontMatter: boolean;
 	blocks: Block[];
 }
 
@@ -27,36 +28,30 @@ export function useLazyChapters(getBookId: () => string) {
 		inFlight = true;
 		setLoading(true);
 		try {
-			// Front matter yields no cards, so keep pulling batches until one
-			// carries readable content — otherwise the sentinel never re-fires.
-			let ready: FeedChapter[] = [];
-			while (ready.length === 0) {
-				const batch = await getChaptersRange(bookId, nextOrder, BATCH_SIZE);
-				if (batch.length === 0) {
-					setAllLoaded(true);
-					return;
-				}
-
-				nextOrder = batch[batch.length - 1].index + 1;
-				if (batch.length < BATCH_SIZE) setAllLoaded(true);
-
-				ready = batch
-					.filter((ch) => !ch.frontMatter)
-					.map((ch) => ({
-						index: ch.index,
-						title: ch.title,
-						// chunkBook, rather than chunkBlocks, so the chapter gets its
-						// heading card under the same de-duplication rule as the CLI.
-						blocks: chunkBook(
-							{ title: "", author: "", chapters: [ch] },
-							DEFAULT_CHUNK_CONFIG,
-						),
-					}));
-
-				if (allLoaded()) break;
+			const batch = await getChaptersRange(bookId, nextOrder, BATCH_SIZE);
+			if (batch.length === 0) {
+				setAllLoaded(true);
+				return;
 			}
 
-			if (ready.length > 0) setChapters((prev) => [...prev, ...ready]);
+			nextOrder = batch[batch.length - 1].index + 1;
+			if (batch.length < BATCH_SIZE) setAllLoaded(true);
+
+			// Front matter stays in the feed — it is only ever a guess, and a wrong
+			// one should cost a swipe rather than hide part of the book.
+			const ready = batch.map((ch) => ({
+				index: ch.index,
+				title: ch.title,
+				frontMatter: ch.frontMatter,
+				// chunkBook, rather than chunkBlocks, so the chapter gets its
+				// heading card under the same rule as the CLI.
+				blocks: chunkBook(
+					{ title: "", author: "", chapters: [ch] },
+					DEFAULT_CHUNK_CONFIG,
+				),
+			}));
+
+			setChapters((prev) => [...prev, ...ready]);
 		} finally {
 			inFlight = false;
 			setLoading(false);
