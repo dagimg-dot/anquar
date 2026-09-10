@@ -1,38 +1,45 @@
 import { BookOpen } from "phosphor-solid";
 import { Show } from "solid-js";
+import { useReaderSettings } from "../lib/reader-settings.tsx";
 
 interface CoverCardProps {
 	author: string;
 	chapterCount: number;
-	coverImage?: string | null;
+	coverUrl?: string;
 	onStartReading?: () => void;
 	title: string;
 }
 
 export default function CoverCard(props: CoverCardProps) {
+	const { themeColors } = useReaderSettings();
+
 	return (
-		<div class="snap-page flex h-dvh flex-col items-center justify-center gap-6 px-6">
+		<div
+			class="snap-page flex h-dvh flex-col items-center justify-center gap-6 px-6"
+			style={{
+				background: themeColors().bgColor,
+				color: themeColors().textColor,
+			}}
+		>
 			<Show
 				fallback={
-					<div class="flex h-64 w-44 items-center justify-center rounded-2xl bg-surface shadow-xl">
-						<BookOpen class="h-16 w-16 text-ink-soft" size={64} />
+					<div class="flex h-64 w-44 items-center justify-center rounded-2xl bg-black/5 shadow-xl">
+						<BookOpen class="h-16 w-16 opacity-40" size={64} />
 					</div>
 				}
-				when={props.coverImage}
+				when={props.coverUrl}
 			>
 				<img
 					alt={props.title}
 					class="h-64 w-44 rounded-2xl object-cover shadow-xl"
-					height={256}
-					src={props.coverImage ?? ""}
-					width={176}
+					src={props.coverUrl}
 				/>
 			</Show>
 
 			<div class="text-center">
-				<h1 class="font-bold text-2xl text-ink">{props.title}</h1>
-				<p class="mt-2 text-ink-soft">{props.author}</p>
-				<p class="mt-1 text-ink-soft text-sm">{props.chapterCount} chapters</p>
+				<h1 class="text-balance font-bold text-2xl">{props.title}</h1>
+				<p class="mt-2 opacity-70">{props.author}</p>
+				<p class="mt-1 text-sm opacity-50">{props.chapterCount} chapters</p>
 			</div>
 
 			<Show when={props.onStartReading}>
