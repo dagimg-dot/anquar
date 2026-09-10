@@ -1,6 +1,5 @@
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, type Plugin } from "vite";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { VitePWA } from "vite-plugin-pwa";
 import solid from "vite-plugin-solid";
 
@@ -33,13 +32,6 @@ export default defineConfig({
 		tailwindcss(),
 		solid(),
 		manifestContentType(),
-		nodePolyfills({
-			include: ["buffer", "events", "stream", "util"],
-			globals: {
-				process: true,
-				Buffer: true,
-			},
-		}),
 		VitePWA({
 			registerType: "prompt",
 			injectRegister: false,
