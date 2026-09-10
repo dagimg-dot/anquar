@@ -1,42 +1,26 @@
+import type { Block, ParsedBook } from "anquar-core";
 import Dexie, { type EntityTable } from "dexie";
-import type { EpubCssMeta } from "../epub-renderer/types.ts";
+import { releaseCoverUrl } from "./covers.ts";
 import type { ReaderSettings } from "./reader-settings.tsx";
-import type {
-	BookMetadata,
-	ChapterData,
-	ReadingStats,
-	TocEntry,
-	WeeklyHeatmapEntry,
-} from "./types.ts";
+import type { ReadingStats, WeeklyHeatmapEntry } from "./types.ts";
 
 interface BookRecord {
 	addedAt: string;
 	author: string;
 	chapterCount: number;
-	coverImage?: string;
-	cssMeta?: string;
-	description?: string;
 	id: string;
-	language: string;
 	lastOpenedAt?: string;
-	publisher?: string;
 	title: string;
+	coverImage?: Blob;
 }
 
 interface ChapterRecord {
 	bookId: string;
 	blocks: string;
-	css: string;
+	frontMatter: boolean;
 	id: string;
 	order: number;
-}
-
-interface TocRecord {
-	bookId: string;
-	href: string;
-	id: string;
-	label: string;
-	parentId?: string;
+	title: string;
 }
 
 interface ProgressRecord {
@@ -60,13 +44,18 @@ interface BookmarkRecord {
 interface ReaderSettingsRecord {
 	bgColor: string;
 	bookId: string;
-	epubCssEnabled?: boolean;
 	fontSize: number;
 	hPadding: number;
 	lineHeight: number;
 	textColor: string;
 	themeId: string;
 	verticalAlign?: string;
+}
+
+interface ImageRecord {
+	bookId: string;
+	data: Blob;
+	id: string;
 }
 
 interface DailyRollupRecord {
@@ -80,27 +69,47 @@ interface DailyRollupRecord {
 class BukTokDB extends Dexie {
 	books!: EntityTable<BookRecord, "id">;
 	chapters!: EntityTable<ChapterRecord, "id">;
-	toc!: EntityTable<TocRecord, "id">;
 	progress!: EntityTable<ProgressRecord, "bookId">;
 	bookmarks!: EntityTable<BookmarkRecord, "id">;
 	readerSettings!: EntityTable<ReaderSettingsRecord, "bookId">;
 	dailyRollups!: EntityTable<DailyRollupRecord, "id">;
+	images!: EntityTable<ImageRecord, "id">;
 
 	constructor() {
 		super("buktok");
-		this.version(1).stores({
+		this.version(4).stores({
 			books: "id, title, author, addedAt, lastOpenedAt",
 			chapters: "id, bookId, order",
-			toc: "id, bookId, href",
 			progress: "bookId, lastReadAt",
 			bookmarks: "++id, bookId, chapterIndex, createdAt",
-		});
-		this.version(2).stores({
 			readerSettings: "bookId",
-		});
-		this.version(3).stores({
 			dailyRollups: "++id, bookId, date",
 		});
+
+		// v5 moved chapters to anquar-core's flat block model, which cannot be
+		// read back as the old nested tree. Libraries have to be re-imported;
+		// dailyRollups is spared so the reading streak survives.
+		this.version(5)
+			.stores({
+				books: "id, title, author, addedAt, lastOpenedAt",
+				chapters: "id, bookId, order, [bookId+order]",
+				progress: "bookId, lastReadAt",
+				bookmarks: "++id, bookId, chapterIndex, createdAt",
+				readerSettings: "bookId",
+				dailyRollups: "++id, bookId, date",
+				images: "id, bookId",
+			})
+			.upgrade(async (tx) => {
+				for (const name of [
+					"books",
+					"chapters",
+					"progress",
+					"bookmarks",
+					"readerSettings",
+				]) {
+					await tx.table(name).clear();
+				}
+			});
 	}
 
 	async upsertDailyRollup(
@@ -137,11 +146,36 @@ class BukTokDB extends Dexie {
 			.where("date")
 			.aboveOrEqual(cutoffStr)
 			.toArray();
-
 		const total = rollups.reduce((sum, r) => sum + r.buktokCount, 0);
-		const avgPerDay = periodDays > 0 ? Math.round(total / periodDays) : 0;
-		const sessions = rollups.reduce((sum, r) => sum + r.sessionCount, 0);
+		return {
+			total,
+			avgPerDay: periodDays > 0 ? Math.round(total / periodDays) : 0,
+			sessions: rollups.reduce((sum, r) => sum + r.sessionCount, 0),
+			streak: await this.getStreak(),
+			weekly: await this.getWeeklyHeatmap(rollups),
+		};
+	}
 
+	private async getStreak(): Promise<number> {
+		let streak = 0;
+		const today = new Date();
+		for (let i = 0; i < 365; i++) {
+			const d = new Date(today);
+			d.setDate(d.getDate() - i);
+			const dateStr = d.toISOString().split("T")[0];
+			const rollup = await this.dailyRollups
+				.where("date")
+				.equals(dateStr)
+				.first();
+			if (rollup && rollup.buktokCount > 0) streak++;
+			else if (i > 0) break;
+		}
+		return streak;
+	}
+
+	private async getWeeklyHeatmap(
+		rollups: DailyRollupRecord[],
+	): Promise<WeeklyHeatmapEntry[]> {
 		const weekly: WeeklyHeatmapEntry[] = [];
 		const today = new Date();
 		for (let i = 6; i >= 0; i--) {
@@ -154,127 +188,73 @@ class BukTokDB extends Dexie {
 				count: dayRollup?.buktokCount ?? 0,
 			});
 		}
-
-		return {
-			total,
-			avgPerDay,
-			streak: await this.getStreak(),
-			sessions,
-			weekly,
-		};
-	}
-
-	async getStreak(): Promise<number> {
-		let streak = 0;
-		const today = new Date();
-		for (let i = 0; i < 365; i++) {
-			const d = new Date(today);
-			d.setDate(d.getDate() - i);
-			const dateStr = d.toISOString().split("T")[0];
-			const rollup = await this.dailyRollups
-				.where("date")
-				.equals(dateStr)
-				.first();
-			if (rollup && rollup.buktokCount > 0) {
-				streak++;
-			} else if (i > 0) {
-				break;
-			}
-		}
-		return streak;
-	}
-
-	async getWeeklyHeatmap(): Promise<WeeklyHeatmapEntry[]> {
-		const stats = await this.getReadingStats(7);
-		return stats.weekly;
+		return weekly;
 	}
 }
 
 const db = new BukTokDB();
 
-export async function saveBook(
-	metadata: BookMetadata,
-	chapters: (ChapterData & {
-		blocks: import("../epub-renderer/types.ts").Block[];
-	})[],
-	toc: TocEntry[],
-	coverImage?: string,
-	cssMeta?: EpubCssMeta,
-): Promise<string> {
+/** Image bytes live in their own table; inline they would balloon the JSON. */
+function withoutImageBytes(key: string, value: unknown): unknown {
+	return key === "data" ? undefined : value;
+}
+
+export function imageKey(bookId: string, blockId: string): string {
+	return `${bookId}::${blockId}`;
+}
+
+export async function saveBook(book: ParsedBook): Promise<string> {
 	const id =
 		self.crypto?.randomUUID?.() ??
 		`${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
-	await db.transaction("rw", db.books, db.chapters, db.toc, async () => {
+	const images: ImageRecord[] = [];
+	for (const chapter of book.chapters) {
+		for (const block of chapter.blocks) {
+			if (block.type !== "image" || !block.data) continue;
+			images.push({
+				id: imageKey(id, block.id),
+				bookId: id,
+				data: new Blob([block.data.slice()]),
+			});
+		}
+	}
+
+	await db.transaction("rw", db.books, db.chapters, db.images, async () => {
 		await db.books.put({
 			id,
-			title: metadata.title,
-			author: metadata.author,
-			language: metadata.language,
-			description: metadata.description,
-			publisher: metadata.publisher,
-			coverImage,
-			cssMeta: cssMeta ? JSON.stringify(cssMeta) : undefined,
-			chapterCount: chapters.length,
+			title: book.title,
+			author: book.author,
+			chapterCount: book.chapters.length,
 			addedAt: new Date().toISOString(),
+			coverImage: book.coverImage
+				? new Blob([book.coverImage.slice()])
+				: undefined,
 		});
 
 		await db.chapters.bulkPut(
-			chapters.map((ch) => ({
-				id: `${id}-${ch.id}`,
+			book.chapters.map((ch) => ({
+				id: `${id}-${ch.index}`,
 				bookId: id,
-				order: ch.order,
-				blocks: JSON.stringify(ch.blocks),
-				css: JSON.stringify(ch.css),
+				order: ch.index,
+				title: ch.title,
+				frontMatter: ch.frontMatter,
+				blocks: JSON.stringify(ch.blocks, withoutImageBytes),
 			})),
 		);
 
-		await db.toc.bulkPut(
-			toc.map((entry) => ({
-				id: `${id}-${entry.href}`,
-				bookId: id,
-				label: entry.label,
-				href: entry.href,
-			})),
-		);
+		await db.images.bulkPut(images);
 	});
 
 	return id;
 }
 
-export async function getBook(id: string) {
-	const book = await db.books.get(id);
-	if (!book) {
-		return null;
-	}
+export function getBookMeta(id: string) {
+	return db.books.get(id);
+}
 
-	const chapters = await db.chapters.where("bookId").equals(id).sortBy("order");
-
-	const toc = await db.toc.where("bookId").equals(id).toArray();
-
-	const progress = await db.progress.get(id);
-
-	return {
-		...book,
-		cssMeta: book.cssMeta
-			? (JSON.parse(
-					book.cssMeta,
-				) as import("../epub-renderer/types.ts").EpubCssMeta)
-			: undefined,
-		chapters: chapters.map((ch) => ({
-			id: ch.id.replace(`${id}-`, ""),
-			order: ch.order,
-			blocks: JSON.parse(
-				ch.blocks,
-			) as import("../epub-renderer/types.ts").Block[],
-			css: JSON.parse(ch.css) as Array<{ id: string; href: string }>,
-		})),
-		toc: toc.map((t) => ({
-			label: t.label,
-			href: t.href,
-		})),
-		progress,
-	};
+export async function getImageBlob(imageId: string) {
+	return (await db.images.get(imageId))?.data;
 }
 
 export function listBooks() {
@@ -283,22 +263,20 @@ export function listBooks() {
 
 export async function getChaptersRange(
 	bookId: string,
-	offset: number,
+	fromOrder: number,
 	limit: number,
 ) {
 	const chapters = await db.chapters
-		.where("bookId")
-		.equals(bookId)
-		.sortBy("order");
+		.where("[bookId+order]")
+		.between([bookId, fromOrder], [bookId, Number.POSITIVE_INFINITY])
+		.limit(limit)
+		.toArray();
 
-	const slice = chapters.slice(offset, offset + limit);
-	return slice.map((ch) => ({
-		id: ch.id.replace(`${bookId}-`, ""),
-		order: ch.order,
-		blocks: JSON.parse(
-			ch.blocks,
-		) as import("../epub-renderer/types.ts").Block[],
-		css: JSON.parse(ch.css) as Array<{ id: string; href: string }>,
+	return chapters.map((ch) => ({
+		index: ch.order,
+		title: ch.title,
+		frontMatter: ch.frontMatter ?? false,
+		blocks: JSON.parse(ch.blocks) as Block[],
 	}));
 }
 
@@ -315,10 +293,7 @@ export async function saveProgress(
 		progressPercent,
 		lastReadAt: new Date().toISOString(),
 	});
-
-	await db.books.update(bookId, {
-		lastOpenedAt: new Date().toISOString(),
-	});
+	await db.books.update(bookId, { lastOpenedAt: new Date().toISOString() });
 }
 
 export function getProgress(bookId: string) {
@@ -326,23 +301,24 @@ export function getProgress(bookId: string) {
 }
 
 export async function deleteBook(bookId: string) {
+	releaseCoverUrl(bookId);
 	const tables = [
 		db.books,
 		db.chapters,
-		db.toc,
 		db.progress,
 		db.bookmarks,
 		db.readerSettings,
 		db.dailyRollups,
+		db.images,
 	] as const;
 	await db.transaction("rw", tables, async () => {
 		await db.books.delete(bookId);
 		await db.chapters.where("bookId").equals(bookId).delete();
-		await db.toc.where("bookId").equals(bookId).delete();
 		await db.progress.delete(bookId);
 		await db.bookmarks.where("bookId").equals(bookId).delete();
 		await db.readerSettings.where("bookId").equals(bookId).delete();
 		await db.dailyRollups.where("bookId").equals(bookId).delete();
+		await db.images.where("bookId").equals(bookId).delete();
 	});
 }
 
