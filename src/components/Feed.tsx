@@ -123,11 +123,10 @@ function BlockCard(props: { block: Block; bookId: string }) {
 
 	return (
 		<section
-			class="snap-page flex h-dvh flex-col overflow-hidden"
+			class="snap-page flex h-dvh flex-col overflow-hidden py-[9dvh]"
 			classList={{
 				"justify-center": isFocal() || settings().verticalAlign === "center",
-				"justify-start pt-[16dvh]":
-					!isFocal() && settings().verticalAlign !== "center",
+				"justify-start": !isFocal() && settings().verticalAlign !== "center",
 			}}
 			style={{
 				background: themeColors().bgColor,
@@ -139,9 +138,7 @@ function BlockCard(props: { block: Block; bookId: string }) {
 		>
 			<div
 				class="mx-auto flex w-full flex-col items-center"
-				classList={{
-					"max-w-prose pb-[12dvh]": props.block.type !== "image",
-				}}
+				classList={{ "max-w-prose": props.block.type !== "image" }}
 			>
 				<Switch>
 					<Match when={props.block.type === "text" && props.block}>

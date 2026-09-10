@@ -57,7 +57,7 @@ const DEFAULTS: ReaderSettings = {
 	lineHeight: 1.6,
 	textColor: "",
 	themeId: "light",
-	verticalAlign: "top",
+	verticalAlign: "center",
 };
 
 export function getThemeColors(settings: ReaderSettings): {
