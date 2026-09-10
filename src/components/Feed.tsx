@@ -205,6 +205,41 @@ function BlockCard(props: { blocks: Block[]; bookId: string }) {
 	);
 }
 
+/**
+ * Offered only while the reader is still in front matter, the way Apple Books
+ * surfaces "return to where you began" only after you have jumped.
+ */
+function StartReadingPill(props: { onClick: () => void }) {
+	const { themeColors } = useReaderSettings();
+
+	return (
+		<button
+			class="-translate-x-1/2 fixed bottom-10 left-1/2 z-40 flex items-center gap-1.5 rounded-full px-4 py-2.5 font-medium text-sm shadow-lg transition-transform active:scale-95"
+			onClick={(e) => {
+				e.stopPropagation();
+				props.onClick();
+			}}
+			style={{
+				background: themeColors().textColor,
+				color: themeColors().bgColor,
+			}}
+			type="button"
+		>
+			Start reading
+			<svg
+				class="h-4 w-4"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+				stroke-width="2.5"
+				aria-hidden="true"
+			>
+				<path d="M12 5v14m0 0-6-6m6 6 6-6" />
+			</svg>
+		</button>
+	);
+}
+
 export default function Feed() {
 	const params = useParams();
 	const [bookMeta, setBookMeta] = createSignal<BookMeta | null>(null);
@@ -220,6 +255,35 @@ export default function Feed() {
 
 	const [container, setContainer] = createSignal<HTMLDivElement>();
 	useTikTokScroll(container);
+
+	// The cover occupies slot 0, so every card sits one slot further down.
+	const bodyStart = createMemo(() => {
+		const frontMatter = new Set(
+			chapters()
+				.filter((ch) => ch.frontMatter)
+				.map((ch) => ch.index),
+		);
+		if (frontMatter.size === 0) return 0;
+		const i = cards().findIndex(
+			(card) => !frontMatter.has(card[0].chapterIndex),
+		);
+		return i < 0 ? 0 : i + 1;
+	});
+
+	const [position, setPosition] = createSignal(0);
+	const inFrontMatter = () => bodyStart() > 0 && position() < bodyStart();
+
+	function trackPosition(e: Event) {
+		const el = e.currentTarget as HTMLElement;
+		setPosition(Math.round(el.scrollTop / window.innerHeight));
+	}
+
+	function startReading() {
+		container()?.scrollTo({
+			top: bodyStart() * window.innerHeight,
+			behavior: "smooth",
+		});
+	}
 
 	createEffect(async () => {
 		const routeId = params.id;
@@ -265,7 +329,11 @@ export default function Feed() {
 				when={bookMeta()}
 			>
 				{(meta) => (
-					<div class="snap-container h-dvh overflow-y-auto" ref={setContainer}>
+					<div
+						class="snap-container h-dvh overflow-y-auto"
+						onScroll={trackPosition}
+						ref={setContainer}
+					>
 						<CoverCard
 							author={meta().author}
 							chapterCount={meta().totalChapters}
@@ -279,6 +347,10 @@ export default function Feed() {
 
 						<Show when={!allLoaded()}>
 							<div class="h-16" ref={observeSentinel} />
+						</Show>
+
+						<Show when={inFrontMatter()}>
+							<StartReadingPill onClick={startReading} />
 						</Show>
 					</div>
 				)}
