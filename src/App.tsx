@@ -4,6 +4,7 @@ import { createSignal, Match, Show, Switch } from "solid-js";
 import toast from "solid-toast";
 import AppleToaster from "./components/AppleToaster.tsx";
 import BottomNav from "./components/BottomNav.tsx";
+import BottomSheet from "./components/BottomSheet.tsx";
 import Feed from "./components/Feed.tsx";
 import ReaderSettingsPanel from "./components/ReaderSettingsPanel.tsx";
 import { saveBook } from "./lib/db.ts";
@@ -153,18 +154,13 @@ function App() {
 								</button>
 							</Show>
 
-							<div
-								class="fixed inset-x-0 bottom-24 z-40 mx-auto max-w-md px-4 transition-all duration-200"
-								classList={{
-									"translate-y-0 opacity-100": showSettings(),
-									"translate-y-4 opacity-0 pointer-events-none":
-										!showSettings(),
-								}}
+							<BottomSheet
+								onClose={() => setShowSettings(false)}
+								open={showSettings()}
+								title="Themes & Settings"
 							>
-								<Show when={showSettings()}>
-									<ReaderSettingsPanel />
-								</Show>
-							</div>
+								<ReaderSettingsPanel />
+							</BottomSheet>
 						</div>
 					</ReaderSettingsProvider>
 				</Show>

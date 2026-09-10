@@ -1,3 +1,4 @@
+import { For } from "solid-js";
 import {
 	LINE_HEIGHTS,
 	READER_THEMES,
@@ -6,162 +7,139 @@ import {
 
 const FONT_SIZES = [75, 90, 100, 115, 130, 150, 175, 200] as const;
 
+function Divider() {
+	return <div class="my-4 h-px bg-border-light" />;
+}
+
+function Segmented<T>(props: {
+	onSelect: (value: T) => void;
+	options: readonly { label: string; value: T }[];
+	selected: T;
+}) {
+	return (
+		<div class="flex gap-0.5 rounded-[0.7rem] bg-surface-elevated p-[3px]">
+			<For each={props.options}>
+				{(option) => (
+					<button
+						class="flex-1 rounded-[0.55rem] py-[7px] font-medium text-[13px] transition-colors"
+						classList={{
+							"bg-canvas text-ink shadow-sm": props.selected === option.value,
+							"text-ink-soft": props.selected !== option.value,
+						}}
+						onClick={() => props.onSelect(option.value)}
+						type="button"
+					>
+						{option.label}
+					</button>
+				)}
+			</For>
+		</div>
+	);
+}
+
 export default function ReaderSettingsPanel() {
 	const { settings, setSettings } = useReaderSettings();
 
-	const fontSizeLabel = () => {
-		const idx = FONT_SIZES.indexOf(
-			settings().fontSize as (typeof FONT_SIZES)[number],
-		);
-		if (idx <= 1) {
-			return "XS";
+	const sizeIndex = () =>
+		FONT_SIZES.indexOf(settings().fontSize as (typeof FONT_SIZES)[number]);
+
+	const stepSize = (by: number) => {
+		const next = sizeIndex() + by;
+		if (next >= 0 && next < FONT_SIZES.length) {
+			setSettings({ fontSize: FONT_SIZES[next] });
 		}
-		if (idx <= 3) {
-			return "S";
-		}
-		if (idx <= 5) {
-			return "M";
-		}
-		if (idx <= 6) {
-			return "L";
-		}
-		return "XL";
 	};
 
 	return (
-		<div class="flex flex-col gap-4 rounded-2xl bg-surface p-4 shadow-xl">
-			<div class="flex items-center justify-between gap-3">
-				<span class="shrink-0 font-medium text-ink text-sm">Size</span>
-				<div class="flex items-center gap-2">
-					<button
-						aria-label="Decrease font size"
-						class="flex h-9 w-9 items-center justify-center rounded-full border border-border text-ink transition-colors hover:bg-surface"
-						onClick={() => {
-							const idx = FONT_SIZES.indexOf(
-								settings().fontSize as (typeof FONT_SIZES)[number],
-							);
-							if (idx > 0) {
-								setSettings({ fontSize: FONT_SIZES[idx - 1] });
-							}
-						}}
-						type="button"
-					>
-						<span class="text-lg">−</span>
-					</button>
-					<span class="min-w-[2rem] text-center font-medium text-ink text-sm tabular-nums">
-						{fontSizeLabel()}
-					</span>
-					<button
-						aria-label="Increase font size"
-						class="flex h-9 w-9 items-center justify-center rounded-full border border-border text-ink transition-colors hover:bg-surface"
-						onClick={() => {
-							const idx = FONT_SIZES.indexOf(
-								settings().fontSize as (typeof FONT_SIZES)[number],
-							);
-							if (idx < FONT_SIZES.length - 1) {
-								setSettings({ fontSize: FONT_SIZES[idx + 1] });
-							}
-						}}
-						type="button"
-					>
-						<span class="text-lg">+</span>
-					</button>
-				</div>
-			</div>
-
-			<div>
-				<span class="mb-2 block font-medium text-ink text-sm">Spacing</span>
-				<div class="flex gap-1">
-					{LINE_HEIGHTS.map((lh) => (
-						<button
-							class="flex-1 rounded-lg px-2 py-1.5 font-medium text-xs transition-colors"
-							classList={{
-								"bg-brand-500 text-white": settings().lineHeight === lh.value,
-								"border border-border text-ink hover:bg-surface":
-									settings().lineHeight !== lh.value,
-							}}
-							onClick={() => setSettings({ lineHeight: lh.value })}
-							type="button"
-						>
-							{lh.label}
-						</button>
-					))}
-				</div>
-			</div>
-
-			<div class="flex items-center justify-between gap-3">
-				<span class="shrink-0 font-medium text-ink text-sm">Align</span>
+		<div class="pb-1">
+			{/* Two weights of A, the way Apple Books steps type size. */}
+			<div class="flex gap-0.5 rounded-[0.7rem] bg-surface-elevated p-[3px]">
 				<button
-					class="rounded-lg px-3 py-1.5 font-medium text-xs transition-colors"
-					classList={{
-						"bg-brand-500 text-white": settings().verticalAlign === "top",
-						"border border-border text-ink-soft":
-							settings().verticalAlign !== "top",
-					}}
-					onClick={() => setSettings({ verticalAlign: "top" })}
+					aria-label="Smaller text"
+					class="flex flex-1 items-center justify-center rounded-[0.55rem] py-2 text-ink transition-colors active:bg-canvas disabled:opacity-30"
+					disabled={sizeIndex() <= 0}
+					onClick={() => stepSize(-1)}
 					type="button"
 				>
-					Top
+					<span class="text-[13px]">A</span>
 				</button>
+				<div class="my-1.5 w-px bg-border-light" />
 				<button
-					class="rounded-lg px-3 py-1.5 font-medium text-xs transition-colors"
-					classList={{
-						"bg-brand-500 text-white": settings().verticalAlign === "center",
-						"border border-border text-ink-soft":
-							settings().verticalAlign !== "center",
-					}}
-					onClick={() => setSettings({ verticalAlign: "center" })}
+					aria-label="Larger text"
+					class="flex flex-1 items-center justify-center rounded-[0.55rem] py-2 text-ink transition-colors active:bg-canvas disabled:opacity-30"
+					disabled={sizeIndex() >= FONT_SIZES.length - 1}
+					onClick={() => stepSize(1)}
 					type="button"
 				>
-					Center
+					<span class="text-[19px]">A</span>
 				</button>
 			</div>
 
-			<div>
-				<span class="mb-2 block font-medium text-ink text-sm">Theme</span>
-				<div class="flex gap-2">
-					{READER_THEMES.map((theme) => (
+			<Divider />
+
+			<div class="grid grid-cols-3 gap-2">
+				<For each={READER_THEMES}>
+					{(theme) => (
 						<button
-							aria-label={theme.label}
-							class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 transition-colors"
+							class="flex flex-col items-center gap-0.5 rounded-xl py-3 transition-transform active:scale-95"
 							classList={{
-								"border-brand-500": settings().themeId === theme.id,
-								"border-transparent": settings().themeId !== theme.id,
+								"ring-2 ring-ink": settings().themeId === theme.id,
+								"ring-1 ring-border-light": settings().themeId !== theme.id,
 							}}
 							onClick={() =>
 								setSettings({ themeId: theme.id, textColor: "", bgColor: "" })
 							}
-							title={theme.label}
+							style={{ background: theme.bgColor, color: theme.textColor }}
 							type="button"
 						>
-							<span
-								class="flex h-full w-full items-center justify-center rounded-full"
-								style={{ background: theme.bgColor }}
-							>
-								<span
-									class="h-3 w-1 rounded-full"
-									style={{ background: theme.textColor }}
-								/>
-							</span>
+							<span class="font-semibold text-xl leading-none">Aa</span>
+							<span class="text-[11px] opacity-70">{theme.label}</span>
 						</button>
-					))}
-				</div>
+					)}
+				</For>
 			</div>
+
+			<Divider />
+
+			<div class="mb-2 font-medium text-[13px] text-ink-soft">Spacing</div>
+			<Segmented
+				onSelect={(value) => setSettings({ lineHeight: value })}
+				options={LINE_HEIGHTS}
+				selected={settings().lineHeight}
+			/>
+
+			<div class="mt-4 mb-2 font-medium text-[13px] text-ink-soft">Align</div>
+			<Segmented
+				onSelect={(value) => setSettings({ verticalAlign: value })}
+				options={
+					[
+						{ label: "Top", value: "top" },
+						{ label: "Center", value: "center" },
+					] as const
+				}
+				selected={settings().verticalAlign ?? "center"}
+			/>
+
+			<Divider />
 
 			<div class="flex gap-3">
 				<label class="flex flex-1 items-center gap-2">
-					<span class="shrink-0 font-medium text-ink text-xs">Text</span>
+					<span class="shrink-0 font-medium text-[13px] text-ink-soft">
+						Text
+					</span>
 					<input
-						class="h-7 w-full cursor-pointer rounded border border-border"
+						class="h-8 w-full cursor-pointer rounded-lg border border-border-light"
 						onChange={(e) => setSettings({ textColor: e.target.value })}
 						type="color"
 						value={settings().textColor || "#1a1a1a"}
 					/>
 				</label>
 				<label class="flex flex-1 items-center gap-2">
-					<span class="shrink-0 font-medium text-ink text-xs">Bg</span>
+					<span class="shrink-0 font-medium text-[13px] text-ink-soft">
+						Page
+					</span>
 					<input
-						class="h-7 w-full cursor-pointer rounded border border-border"
+						class="h-8 w-full cursor-pointer rounded-lg border border-border-light"
 						onChange={(e) => setSettings({ bgColor: e.target.value })}
 						type="color"
 						value={settings().bgColor || "#ffffff"}
