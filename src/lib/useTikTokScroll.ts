@@ -1,5 +1,16 @@
 import { createEffect, onCleanup } from "solid-js";
 
+const SETTLE_MS = 120;
+
+/** A trackpad flick keeps emitting deltas long after the gesture is over. */
+const COOLDOWN_MS = 260;
+
+interface Metrics {
+	origin: number;
+	height: number;
+	count: number;
+}
+
 export function useTikTokScroll(ref: () => HTMLElement | undefined) {
 	// An effect, not onMount: the scroll container is behind a <Show> that
 	// only resolves once the book has loaded from IndexedDB.
@@ -11,99 +22,106 @@ export function useTikTokScroll(ref: () => HTMLElement | undefined) {
 
 		// Re-bound after the guard so the nested handlers see a non-null element.
 		const container = el;
+		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 		let isAnimating = false;
-		let touchStartY = 0;
-		let touchStartTime = 0;
+		let lockedUntil = 0;
+		let settleTimer: ReturnType<typeof setTimeout> | undefined;
 
-		function getPageHeight(): number {
-			return window.innerHeight;
+		/**
+		 * window.innerHeight is not a substitute for a measured card: cards are
+		 * sized in dvh, which holds the URL-bar-collapsed height while innerHeight
+		 * tracks the bar as it slides. An index times the wrong one lands between
+		 * two snap points, and mandatory snapping drags the feed the rest of the
+		 * way on its own.
+		 */
+		function measure(): Metrics | undefined {
+			const pages = container.querySelectorAll<HTMLElement>(".snap-page");
+			const first = pages[0];
+			if (!first) {
+				return undefined;
+			}
+
+			const rect = first.getBoundingClientRect();
+			if (rect.height < 1) {
+				return undefined;
+			}
+
+			return {
+				origin:
+					rect.top -
+					container.getBoundingClientRect().top +
+					container.scrollTop,
+				height: rect.height,
+				// Counted rather than divided out of scrollHeight, which also spans
+				// the lazy-load sentinel and would invent a page past the last card.
+				count: pages.length,
+			};
 		}
 
-		function getCurrentIndex(): number {
-			return Math.round(container.scrollTop / getPageHeight());
+		const indexAt = (m: Metrics) =>
+			Math.round((container.scrollTop - m.origin) / m.height);
+
+		const topOf = (m: Metrics, index: number) => m.origin + index * m.height;
+
+		function armSettle() {
+			clearTimeout(settleTimer);
+			settleTimer = setTimeout(() => {
+				isAnimating = false;
+				lockedUntil = Date.now() + COOLDOWN_MS;
+			}, SETTLE_MS);
 		}
 
-		function scrollToPage(index: number) {
-			const maxIndex = Math.max(
-				0,
-				Math.ceil(container.scrollHeight / getPageHeight()) - 1,
-			);
-			const target = Math.max(0, Math.min(maxIndex, index));
-			if (target === getCurrentIndex()) {
+		/** Lands on an exact snap point, so the browser has nothing to correct. */
+		function scrollToPage(m: Metrics, index: number) {
+			const top = topOf(m, index);
+			if (Math.abs(top - container.scrollTop) < 1) {
 				return;
 			}
 
 			isAnimating = true;
-			container.style.scrollSnapType = "none";
-			container.scrollTo({ top: target * getPageHeight(), behavior: "smooth" });
-
-			const onScrollEnd = () => {
-				container.style.scrollSnapType = "";
-				isAnimating = false;
-				container.removeEventListener("scrollend", onScrollEnd);
-			};
-			container.addEventListener("scrollend", onScrollEnd, { once: true });
-
-			setTimeout(() => {
-				if (isAnimating) {
-					container.style.scrollSnapType = "";
-					isAnimating = false;
-				}
-			}, 500);
+			container.scrollTo({
+				top,
+				behavior: reduceMotion.matches ? "auto" : "smooth",
+			});
+			armSettle();
 		}
 
+		// Touch is left to the browser: scroll-snap-stop: always already gives one
+		// card per swipe, and a handler only gets to react once that is under way.
 		function onWheel(e: WheelEvent) {
-			if (isAnimating) {
-				e.preventDefault();
-				return;
-			}
-
-			const direction = e.deltaY > 0 ? 1 : -1;
-			const nextIndex = getCurrentIndex() + direction;
-			const maxIndex = Math.max(
-				0,
-				Math.ceil(container.scrollHeight / getPageHeight()) - 1,
-			);
-			if (nextIndex < 0 || nextIndex > maxIndex) {
-				return;
-			}
-
 			e.preventDefault();
-			scrollToPage(nextIndex);
-		}
 
-		function onTouchStart(e: TouchEvent) {
-			touchStartY = e.touches[0].clientY;
-			touchStartTime = Date.now();
-		}
-
-		function onTouchEnd(e: TouchEvent) {
-			if (isAnimating) {
+			if (isAnimating || Date.now() < lockedUntil || Math.abs(e.deltaY) < 2) {
 				return;
 			}
 
-			const touchEndY = e.changedTouches[0].clientY;
-			const dy = touchStartY - touchEndY;
-			const dt = Date.now() - touchStartTime;
-			const velocity = Math.abs(dy) / dt;
-			const SWIPE_THRESHOLD = 30;
-			const VELOCITY_THRESHOLD = 0.3;
+			const m = measure();
+			if (!m) {
+				return;
+			}
 
-			if (Math.abs(dy) > SWIPE_THRESHOLD || velocity > VELOCITY_THRESHOLD) {
-				const direction = dy > 0 ? 1 : -1;
-				scrollToPage(getCurrentIndex() + direction);
+			const next = indexAt(m) + (e.deltaY > 0 ? 1 : -1);
+			if (next < 0 || next > m.count - 1) {
+				return;
+			}
+
+			scrollToPage(m, next);
+		}
+
+		function onScroll() {
+			if (isAnimating) {
+				armSettle();
 			}
 		}
 
 		container.addEventListener("wheel", onWheel, { passive: false });
-		container.addEventListener("touchstart", onTouchStart, { passive: true });
-		container.addEventListener("touchend", onTouchEnd, { passive: true });
+		container.addEventListener("scroll", onScroll, { passive: true });
 
 		onCleanup(() => {
+			clearTimeout(settleTimer);
 			container.removeEventListener("wheel", onWheel);
-			container.removeEventListener("touchstart", onTouchStart);
-			container.removeEventListener("touchend", onTouchEnd);
+			container.removeEventListener("scroll", onScroll);
 		});
 	});
 }

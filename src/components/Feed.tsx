@@ -273,16 +273,18 @@ export default function Feed() {
 	const [position, setPosition] = createSignal(0);
 	const inFrontMatter = () => bodyStart() > 0 && position() < bodyStart();
 
+	// clientHeight, not innerHeight: the container is sized in dvh like its cards.
 	function trackPosition(e: Event) {
 		const el = e.currentTarget as HTMLElement;
-		setPosition(Math.round(el.scrollTop / window.innerHeight));
+		if (el.clientHeight > 0) {
+			setPosition(Math.round(el.scrollTop / el.clientHeight));
+		}
 	}
 
 	function startReading() {
-		container()?.scrollTo({
-			top: bodyStart() * window.innerHeight,
-			behavior: "smooth",
-		});
+		const el = container();
+		const page = el?.querySelectorAll<HTMLElement>(".snap-page")[bodyStart()];
+		page?.scrollIntoView({ behavior: "smooth", block: "start" });
 	}
 
 	createEffect(async () => {
