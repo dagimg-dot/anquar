@@ -1,12 +1,9 @@
 import { useLocation, useNavigate, useParams } from "@solidjs/router";
-import { CaretLeft, GearSix } from "phosphor-solid";
 import { createSignal, Match, Show, Switch } from "solid-js";
 import toast from "solid-toast";
 import AppleToaster from "./components/AppleToaster.tsx";
 import BottomNav from "./components/BottomNav.tsx";
-import BottomSheet from "./components/BottomSheet.tsx";
 import Feed from "./components/Feed.tsx";
-import ReaderSettingsPanel from "./components/ReaderSettingsPanel.tsx";
 import { saveBook } from "./lib/db.ts";
 import { useEpubParser } from "./lib/epub.ts";
 import { ReaderSettingsProvider } from "./lib/reader-settings.tsx";
@@ -20,8 +17,6 @@ function App() {
 	const params = useParams();
 	const location = useLocation();
 	const navigate = useNavigate();
-	const [showHud, setShowHud] = createSignal(false);
-	const [showSettings, setShowSettings] = createSignal(false);
 	const [activeTab, setActiveTab] = createSignal("feed");
 
 	const isReaderPage = () => location.pathname.startsWith("/book/");
@@ -48,18 +43,6 @@ function App() {
 		if (file) {
 			handleFabImport(file);
 			input.value = "";
-		}
-	}
-
-	function handleScreenTap(e: MouseEvent) {
-		const x = e.clientX;
-		const w = window.innerWidth;
-		const middleThird = x > w / 3 && x < (w * 2) / 3;
-		if (middleThird) {
-			setShowHud((p) => !p);
-			if (showSettings()) {
-				setShowSettings(false);
-			}
 		}
 	}
 
@@ -113,55 +96,7 @@ function App() {
 					when={isReaderPage() && bookId()}
 				>
 					<ReaderSettingsProvider bookId={bookId() as string}>
-						{/* biome-ignore lint/a11y/useSemanticElements: tap zone for hud */}
-						{/* biome-ignore lint/a11y/useFocusableInteractive: intentionally not focusable */}
-						<div
-							class="h-dvh"
-							onClick={handleScreenTap}
-							onKeyDown={(e) => {
-								if (e.key === "Enter" || e.key === " ") {
-									setShowHud((p) => !p);
-								}
-							}}
-							role="button"
-							tabindex={-1}
-						>
-							<Feed />
-
-							<Show when={showHud()}>
-								<button
-									aria-label="Back to library"
-									class="fixed top-4 left-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-surface/80 text-ink shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-surface active:scale-90"
-									onClick={(e) => {
-										e.stopPropagation();
-										navigate("/");
-									}}
-									type="button"
-								>
-									<CaretLeft size={20} weight="bold" />
-								</button>
-
-								<button
-									aria-label="Reading settings"
-									class="fixed right-4 bottom-24 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-surface/80 text-ink shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-surface active:scale-90"
-									onClick={(e) => {
-										e.stopPropagation();
-										setShowSettings((p) => !p);
-									}}
-									type="button"
-								>
-									<GearSix size={24} weight="bold" />
-								</button>
-							</Show>
-
-							<BottomSheet
-								onClose={() => setShowSettings(false)}
-								open={showSettings()}
-								title="Themes & Settings"
-							>
-								<ReaderSettingsPanel />
-							</BottomSheet>
-						</div>
+						<Feed />
 					</ReaderSettingsProvider>
 				</Show>
 			</main>

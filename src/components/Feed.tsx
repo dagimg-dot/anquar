@@ -1,4 +1,4 @@
-import { useParams } from "@solidjs/router";
+import { useNavigate, useParams } from "@solidjs/router";
 import type {
 	Block,
 	HeadingBlock,
@@ -7,6 +7,7 @@ import type {
 	ListBlock,
 	StyleRun,
 } from "anquar-core";
+import { BookmarkSimple, CaretLeft } from "phosphor-solid";
 import {
 	createEffect,
 	createMemo,
@@ -14,17 +15,34 @@ import {
 	createSignal,
 	For,
 	Match,
+	onCleanup,
+	onMount,
 	Show,
 	Switch,
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
+import toast from "solid-toast";
+import { chapterLabel } from "../lib/chapters.ts";
 import { coverUrl } from "../lib/covers.ts";
-import { getBookMeta, imageKey, listBooks } from "../lib/db.ts";
+import {
+	addBookmark,
+	getBookMeta,
+	imageKey,
+	listBookmarks,
+	listBooks,
+	removeBookmark,
+} from "../lib/db.ts";
 import { imageUrl } from "../lib/images.ts";
-import { useReaderSettings } from "../lib/reader-settings.tsx";
+import { getAccentColors, useReaderSettings } from "../lib/reader-settings.tsx";
+import { readSelection } from "../lib/selection.ts";
 import { useLazyChapters } from "../lib/useLazyChapters.ts";
 import { useTikTokScroll } from "../lib/useTikTokScroll.ts";
+import BottomSheet from "./BottomSheet.tsx";
+import ContentsSheet from "./ContentsSheet.tsx";
 import CoverCard from "./CoverCard.tsx";
+import ExplainSheet from "./ExplainSheet.tsx";
+import ReaderRail from "./ReaderRail.tsx";
+import ReaderSettingsPanel from "./ReaderSettingsPanel.tsx";
 
 interface BookMeta {
 	author: string;
@@ -240,12 +258,33 @@ function StartReadingPill(props: { onClick: () => void }) {
 	);
 }
 
+type SheetName = "contents" | "explain" | "settings";
+
+/** Flattens a card back to plain text for saving, sharing and explaining. */
+function cardText(blocks: Block[]): string {
+	return blocks
+		.map((b) => {
+			if (b.type === "text" || b.type === "heading") {
+				return b.runs.map((r) => r.text).join("");
+			}
+			if (b.type === "list") {
+				return b.items.map((i) => i.runs.map((r) => r.text).join("")).join(" ");
+			}
+			return b.type === "image" ? (b.alt ?? "") : "";
+		})
+		.join(" ")
+		.trim();
+}
+
 export default function Feed() {
 	const params = useParams();
+	const navigate = useNavigate();
+	const { settings, themeColors } = useReaderSettings();
+
 	const [bookMeta, setBookMeta] = createSignal<BookMeta | null>(null);
 	const [metaLoaded, setMetaLoaded] = createSignal(false);
 
-	const { chapters, allLoaded, observeSentinel } = useLazyChapters(
+	const { chapters, allLoaded, loadUpTo, observeSentinel } = useLazyChapters(
 		() => bookMeta()?.id ?? "",
 	);
 
@@ -271,7 +310,153 @@ export default function Feed() {
 	});
 
 	const [position, setPosition] = createSignal(0);
+	const [shown, setShown] = createSignal(false);
+	const [selection, setSelection] = createSignal("");
+	const [sheet, setSheet] = createSignal<SheetName | null>(null);
+	const [explaining, setExplaining] = createSignal({
+		passage: "",
+		selection: "",
+	});
+	const [bookmarks, setBookmarks] = createSignal<
+		Awaited<ReturnType<typeof listBookmarks>>
+	>([]);
+
 	const inFrontMatter = () => bodyStart() > 0 && position() < bodyStart();
+
+	/** position() counts snap pages, and the cover holds page 0. */
+	const cardIndex = () => position() - 1;
+	const currentCard = () => cards()[cardIndex()];
+
+	let lastTap = 0;
+	let downX = 0;
+	let downY = 0;
+	let bloomEl: HTMLDivElement | undefined;
+
+	const reduceMotion = () =>
+		window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+	/**
+	 * A tap toggles the rail and it stays put — so scrolling deliberately does
+	 * not bring it back, or every swipe would undo the tap that dismissed it.
+	 * A selection is the one exception: it is intent, and Explain has to be
+	 * reachable without costing a tap that would clear the selection.
+	 */
+	const railShown = () => shown() || selection().length > 0;
+
+	// Where each chapter starts and how long it runs, so progress costs nothing
+	// to answer on a scroll frame.
+	const spans = createMemo(() => {
+		const map = new Map<number, { count: number; first: number }>();
+		cards().forEach((card, i) => {
+			const span = map.get(card[0].chapterIndex);
+			if (span) span.count += 1;
+			else map.set(card[0].chapterIndex, { count: 1, first: i });
+		});
+		return map;
+	});
+
+	const currentChapter = () => currentCard()?.[0].chapterIndex ?? 0;
+
+	/**
+	 * Measured against the whole book rather than the loaded part of it, which
+	 * grows as you read and would make the ring recede while you move forward.
+	 */
+	const progress = createMemo(() => {
+		const total = bookMeta()?.totalChapters ?? 0;
+		if (total === 0) return 0;
+		const span = spans().get(currentChapter());
+		const within =
+			span && span.count > 1 ? (cardIndex() - span.first) / span.count : 0;
+		// cardIndex() is -1 on the cover, which would read as negative progress.
+		return Math.min(1, Math.max(0, (currentChapter() + within) / total));
+	});
+
+	const savedHere = () => bookmarks().some((b) => b.cardIndex === cardIndex());
+
+	const chromeOpacity = () => {
+		if (railShown() || settings().railRest === "always") return 1;
+		return settings().railRest === "hidden" ? 0 : 0.3;
+	};
+
+	async function refreshBookmarks() {
+		const id = bookMeta()?.id;
+		if (id) setBookmarks(await listBookmarks(id));
+	}
+
+	async function toggleSave() {
+		const meta = bookMeta();
+		const card = currentCard();
+		if (!meta || !card) return;
+
+		const existing = bookmarks().find((b) => b.cardIndex === cardIndex());
+		if (existing?.id !== undefined) {
+			await removeBookmark(existing.id);
+			toast.success("Removed from shelf");
+		} else {
+			const chapterIndex = card[0].chapterIndex;
+			await addBookmark({
+				bookId: meta.id,
+				cardIndex: cardIndex(),
+				chapterIndex,
+				// Saved already groups by book, so the book title would say nothing.
+				label: chapterLabel(
+					chapters().find((c) => c.index === chapterIndex)?.title ?? "",
+					chapterIndex,
+				),
+				textSnippet: cardText(card).slice(0, 280),
+			});
+			toast.success("Saved to your shelf");
+		}
+		await refreshBookmarks();
+	}
+
+	function bloom() {
+		if (!bloomEl || reduceMotion()) return;
+		bloomEl.classList.remove("save-bloom");
+		void bloomEl.offsetWidth;
+		bloomEl.classList.add("save-bloom");
+	}
+
+	function scrollToCard(index: number) {
+		const pages = container()?.querySelectorAll<HTMLElement>(".snap-page");
+		pages?.[index + 1]?.scrollIntoView({
+			behavior: reduceMotion() ? "auto" : "smooth",
+			block: "start",
+		});
+	}
+
+	async function jumpToChapter(chapterIndex: number) {
+		setSheet(null);
+		await loadUpTo(chapterIndex);
+		const i = cards().findIndex((c) => c[0].chapterIndex === chapterIndex);
+		if (i >= 0) scrollToCard(i);
+	}
+
+	async function share(picked: string) {
+		const meta = bookMeta();
+		const card = currentCard();
+		if (!meta || !card) return;
+
+		const text = `"${picked || cardText(card)}"\n— ${meta.title}, ${meta.author}`;
+		if (navigator.share) {
+			// A dismissed share sheet rejects, and that is not a failure.
+			await navigator.share({ text }).catch(() => {});
+			return;
+		}
+		try {
+			await navigator.clipboard.writeText(text);
+			toast.success("Passage copied");
+		} catch {
+			toast.error("Could not share this passage");
+		}
+	}
+
+	function explain(picked: string) {
+		const card = currentCard();
+		if (!card) return;
+		setExplaining({ passage: picked || cardText(card), selection: picked });
+		setSheet("explain");
+	}
 
 	// clientHeight, not innerHeight: the container is sized in dvh like its cards.
 	function trackPosition(e: Event) {
@@ -281,11 +466,47 @@ export default function Feed() {
 		}
 	}
 
+	function onPointerUp(e: PointerEvent) {
+		if ((e.target as HTMLElement | null)?.closest(".rail")) return;
+		// A swipe also ends in a pointerup; only a stationary one is a tap.
+		if (Math.abs(e.clientX - downX) > 10 || Math.abs(e.clientY - downY) > 10) {
+			return;
+		}
+		if (readSelection(container())) return;
+
+		const now = Date.now();
+		if (now - lastTap < 320) {
+			lastTap = 0;
+			// The first tap of a double already toggled the rail; put it back,
+			// so saving a card never costs you the visibility you had.
+			setShown((v) => !v);
+			if (!savedHere()) {
+				void toggleSave();
+				bloom();
+			}
+			return;
+		}
+		lastTap = now;
+		setShown((v) => !v);
+	}
+
 	function startReading() {
 		const el = container();
 		const page = el?.querySelectorAll<HTMLElement>(".snap-page")[bodyStart()];
 		page?.scrollIntoView({ behavior: "smooth", block: "start" });
 	}
+
+	onMount(() => {
+		const onSelectionChange = () => setSelection(readSelection(container()));
+		document.addEventListener("selectionchange", onSelectionChange);
+		onCleanup(() =>
+			document.removeEventListener("selectionchange", onSelectionChange),
+		);
+	});
+
+	createEffect(() => {
+		if (bookMeta()) void refreshBookmarks();
+	});
 
 	createEffect(async () => {
 		const routeId = params.id;
@@ -331,30 +552,114 @@ export default function Feed() {
 				when={bookMeta()}
 			>
 				{(meta) => (
-					<div
-						class="snap-container h-dvh overflow-y-auto"
-						onScroll={trackPosition}
-						ref={setContainer}
-					>
-						<CoverCard
-							author={meta().author}
-							chapterCount={meta().totalChapters}
+					<>
+						<div
+							class="snap-container h-dvh overflow-y-auto"
+							onPointerDown={(e) => {
+								downX = e.clientX;
+								downY = e.clientY;
+							}}
+							onPointerUp={onPointerUp}
+							onScroll={trackPosition}
+							ref={setContainer}
+						>
+							<CoverCard
+								author={meta().author}
+								chapterCount={meta().totalChapters}
+								coverUrl={meta().coverUrl}
+								title={meta().title}
+							/>
+
+							<For each={cards()}>
+								{(card) => <BlockCard blocks={card} bookId={meta().id} />}
+							</For>
+
+							<Show when={!allLoaded()}>
+								<div class="h-16" ref={observeSentinel} />
+							</Show>
+						</div>
+
+						<button
+							aria-label="Back to library"
+							class="fixed top-0 left-0 z-40 m-3 flex h-[34px] items-center gap-1.5 rounded-xl px-2.5 font-semibold text-[12.5px] transition-opacity duration-[230ms] active:scale-95"
+							onClick={() => navigate("/")}
+							style={{
+								background: `color-mix(in oklab, ${themeColors().textColor} 8%, transparent)`,
+								color: themeColors().textColor,
+								"margin-top": "calc(env(safe-area-inset-top) + 0.75rem)",
+								opacity: chromeOpacity(),
+								"pointer-events": chromeOpacity() === 0 ? "none" : "auto",
+							}}
+							type="button"
+						>
+							<CaretLeft size={16} weight="bold" />
+							Library
+						</button>
+
+						<ReaderRail
 							coverUrl={meta().coverUrl}
-							title={meta().title}
+							onContents={() => setSheet("contents")}
+							onExplain={explain}
+							onSave={() => void toggleSave()}
+							onSettings={() => setSheet("settings")}
+							onShare={(picked) => void share(picked)}
+							progress={progress()}
+							rest={settings().railRest}
+							saved={savedHere()}
+							selection={selection()}
+							shown={railShown()}
 						/>
 
-						<For each={cards()}>
-							{(card) => <BlockCard blocks={card} bookId={meta().id} />}
-						</For>
-
-						<Show when={!allLoaded()}>
-							<div class="h-16" ref={observeSentinel} />
-						</Show>
+						<div
+							class="pointer-events-none fixed inset-0 z-30 flex items-center justify-center opacity-0"
+							ref={bloomEl}
+							style={{ color: getAccentColors(settings()).save }}
+						>
+							<BookmarkSimple size={130} weight="fill" />
+						</div>
 
 						<Show when={inFrontMatter()}>
 							<StartReadingPill onClick={startReading} />
 						</Show>
-					</div>
+
+						<BottomSheet
+							onClose={() => setSheet(null)}
+							open={sheet() === "contents"}
+							title="Contents"
+						>
+							<ContentsSheet
+								author={meta().author}
+								bookId={meta().id}
+								coverUrl={meta().coverUrl}
+								currentChapter={currentChapter()}
+								onJump={(i) => void jumpToChapter(i)}
+								progress={progress()}
+								savedCount={bookmarks().length}
+								title={meta().title}
+							/>
+						</BottomSheet>
+
+						<BottomSheet
+							onClose={() => setSheet(null)}
+							open={sheet() === "settings"}
+							title="Themes & Settings"
+						>
+							<ReaderSettingsPanel />
+						</BottomSheet>
+
+						<BottomSheet
+							onClose={() => setSheet(null)}
+							open={sheet() === "explain"}
+							title="Explain"
+						>
+							<ExplainSheet
+								author={meta().author}
+								passage={explaining().passage}
+								selection={explaining().selection}
+								title={meta().title}
+							/>
+						</BottomSheet>
+					</>
 				)}
 			</Show>
 		</Show>
