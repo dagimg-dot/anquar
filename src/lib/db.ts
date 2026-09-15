@@ -280,6 +280,15 @@ export async function getChaptersRange(
 	}));
 }
 
+export async function listChapterTitles(bookId: string) {
+	const rows = await db.chapters.where("bookId").equals(bookId).sortBy("order");
+	return rows.map((ch) => ({
+		frontMatter: ch.frontMatter ?? false,
+		index: ch.order,
+		title: ch.title,
+	}));
+}
+
 export async function saveProgress(
 	bookId: string,
 	chapterIndex: number,

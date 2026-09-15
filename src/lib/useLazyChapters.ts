@@ -19,13 +19,20 @@ export function useLazyChapters(getBookId: () => string) {
 
 	let observer: IntersectionObserver | undefined;
 	let nextOrder = 0;
-	let inFlight = false;
+	let pending: Promise<void> | null = null;
 
-	async function loadNextBatch() {
+	function loadNextBatch(): Promise<void> {
+		if (pending) return pending;
+		pending = runBatch().finally(() => {
+			pending = null;
+		});
+		return pending;
+	}
+
+	async function runBatch() {
 		const bookId = getBookId();
-		if (!bookId || inFlight || allLoaded()) return;
+		if (!bookId || allLoaded()) return;
 
-		inFlight = true;
 		setLoading(true);
 		try {
 			const batch = await getChaptersRange(bookId, nextOrder, BATCH_SIZE);
@@ -53,8 +60,16 @@ export function useLazyChapters(getBookId: () => string) {
 
 			setChapters((prev) => [...prev, ...ready]);
 		} finally {
-			inFlight = false;
 			setLoading(false);
+		}
+	}
+
+	/** Contents can jump anywhere; the feed only ever loads forwards. */
+	async function loadUpTo(chapterIndex: number) {
+		while (!allLoaded() && nextOrder <= chapterIndex) {
+			const before = nextOrder;
+			await loadNextBatch();
+			if (nextOrder === before) return;
 		}
 	}
 
@@ -80,5 +95,5 @@ export function useLazyChapters(getBookId: () => string) {
 
 	onCleanup(() => observer?.disconnect());
 
-	return { chapters, loading, allLoaded, observeSentinel };
+	return { chapters, loading, allLoaded, loadUpTo, observeSentinel };
 }
