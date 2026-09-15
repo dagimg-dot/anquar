@@ -1,6 +1,7 @@
 import { For } from "solid-js";
 import {
 	LINE_HEIGHTS,
+	RAIL_RESTS,
 	READER_THEMES,
 	useReaderSettings,
 } from "../lib/reader-settings.tsx";
@@ -118,6 +119,13 @@ export default function ReaderSettingsPanel() {
 					] as const
 				}
 				selected={settings().verticalAlign ?? "center"}
+			/>
+
+			<div class="mt-4 mb-2 font-medium text-[13px] text-ink-soft">Rail</div>
+			<Segmented
+				onSelect={(value) => setSettings({ railRest: value })}
+				options={RAIL_RESTS}
+				selected={settings().railRest}
 			/>
 
 			<Divider />

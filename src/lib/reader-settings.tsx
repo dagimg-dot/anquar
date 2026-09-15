@@ -40,11 +40,25 @@ function nearestLineHeight(value: number): number {
 	);
 }
 
+/**
+ * How present the action rail is between taps. Discoverability is a cost paid
+ * once and a rail over the page is a cost paid every session, so which way that
+ * trades is the reader's call, not ours.
+ */
+export const RAIL_RESTS = [
+	{ label: "Hidden", value: "hidden" },
+	{ label: "Ghost", value: "ghost" },
+	{ label: "Always", value: "always" },
+] as const;
+
+export type RailRest = (typeof RAIL_RESTS)[number]["value"];
+
 export interface ReaderSettings {
 	bgColor: string;
 	fontSize: number;
 	hPadding: number;
 	lineHeight: number;
+	railRest: RailRest;
 	textColor: string;
 	themeId: string;
 	verticalAlign?: "top" | "center";
@@ -55,10 +69,36 @@ const DEFAULTS: ReaderSettings = {
 	fontSize: 100,
 	hPadding: 1.5,
 	lineHeight: 1.6,
+	railRest: "ghost",
 	textColor: "",
 	themeId: "light",
 	verticalAlign: "center",
 };
+
+const isRailRest = (v: unknown): v is RailRest =>
+	RAIL_RESTS.some((r) => r.value === v);
+
+/**
+ * The rail sits on the reader's page, not the app's, so its accents have to
+ * clear five backgrounds the app theme knows nothing about. A custom page
+ * colour has no matching pair, so those fall back to the reader's own ink.
+ */
+const ACCENTS: Record<string, { ai: string; save: string }> = {
+	light: { save: "#2f6b4a", ai: "#5a4fcf" },
+	dark: { save: "#7fc79b", ai: "#a99bf5" },
+	sepia: { save: "#4a6b52", ai: "#6455a8" },
+	cream: { save: "#3f6b4f", ai: "#6a5acd" },
+	amoled: { save: "#7fc79b", ai: "#b6aaff" },
+};
+
+export function getAccentColors(settings: ReaderSettings): {
+	ai: string;
+	save: string;
+} {
+	const ink = getThemeColors(settings).textColor;
+	if (settings.bgColor || settings.textColor) return { save: ink, ai: ink };
+	return ACCENTS[settings.themeId] ?? { save: ink, ai: ink };
+}
 
 export function getThemeColors(settings: ReaderSettings): {
 	bgColor: string;
@@ -111,6 +151,9 @@ export const ReaderSettingsProvider: ParentComponent<{ bookId?: string }> = (
 						lineHeight: nearestLineHeight(
 							record.lineHeight ?? DEFAULTS.lineHeight,
 						),
+						railRest: isRailRest(record.railRest)
+							? record.railRest
+							: DEFAULTS.railRest,
 						textColor: record.textColor ?? "",
 						themeId: record.themeId ?? DEFAULTS.themeId,
 						verticalAlign:

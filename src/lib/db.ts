@@ -47,6 +47,7 @@ interface ReaderSettingsRecord {
 	fontSize: number;
 	hPadding: number;
 	lineHeight: number;
+	railRest?: string;
 	textColor: string;
 	themeId: string;
 	verticalAlign?: string;
