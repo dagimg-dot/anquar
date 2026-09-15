@@ -33,11 +33,14 @@ interface ProgressRecord {
 
 interface BookmarkRecord {
 	bookId: string;
+	/** Index of the card in the feed — the unit the reader actually saves. */
+	cardIndex?: number;
 	chapterIndex: number;
 	createdAt: string;
 	id?: number;
 	label: string;
 	textSnippet: string;
+	/** Left from the word-based reader; cards superseded it. */
 	wordOffset: number;
 }
 
@@ -330,6 +333,28 @@ export async function deleteBook(bookId: string) {
 		await db.dailyRollups.where("bookId").equals(bookId).delete();
 		await db.images.where("bookId").equals(bookId).delete();
 	});
+}
+
+export function listBookmarks(bookId: string) {
+	return db.bookmarks.where("bookId").equals(bookId).toArray();
+}
+
+export function addBookmark(entry: {
+	bookId: string;
+	cardIndex: number;
+	chapterIndex: number;
+	label: string;
+	textSnippet: string;
+}) {
+	return db.bookmarks.add({
+		...entry,
+		wordOffset: 0,
+		createdAt: new Date().toISOString(),
+	});
+}
+
+export function removeBookmark(id: number) {
+	return db.bookmarks.delete(id);
 }
 
 export function saveReaderSettings(bookId: string, settings: ReaderSettings) {
