@@ -29,7 +29,7 @@ export default function BottomNav(props: BottomNavProps) {
 	return (
 		<nav
 			class="fixed inset-x-0 bottom-0 z-50 pb-[env(safe-area-inset-bottom)]"
-			data-splash-rise
+			data-splash-slide
 		>
 			<div
 				class={[

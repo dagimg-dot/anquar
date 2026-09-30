@@ -145,6 +145,20 @@ function rise() {
 			],
 			{ duration: 320, delay: 300, easing: css(BRAKE), fill: "backwards" },
 		);
+	// What's docked to the bottom edge slides up from below it with the mark's flight, and doesn't fade: a
+	// half-transparent glass bar reads as dirty.
+	[...document.querySelectorAll("[data-splash-slide]")].forEach((el, i) => {
+		const below = innerHeight - el.getBoundingClientRect().top + 8;
+		el.animate(
+			[{ transform: `translateY(${below}px)` }, { transform: "none" }],
+			{
+				duration: T.land * 1000,
+				delay: 100 + 40 * i,
+				easing: css(BRAKE),
+				fill: "backwards",
+			},
+		);
+	});
 }
 
 function run(el: HTMLElement, boot: Boot) {

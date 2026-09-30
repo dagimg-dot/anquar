@@ -106,7 +106,8 @@ frame over: it holds 0.3 s while Android's splash fades (elsewhere the mark
 builds), steps the lines while the app loads, and once `splashReady()` is
 called (the Feed tab after `listBooks`, the reader once its book is loaded)
 lands the mark on the header's `[data-splash-land]` while
-`[data-splash-rise]` and `[data-splash-word]` come in. `SPLASH_CANVAS_DP` in
+`[data-splash-rise]` and `[data-splash-word]` come in and `[data-splash-slide]`
+(the nav and the + button) slides up from below the screen. `SPLASH_CANVAS_DP` in
 `mark.ts` was measured on a Nothing A059; re-measure on another phone before
 trusting the hand-over there. The design and its reasoning are in
 `design/icon-splash.html`.
