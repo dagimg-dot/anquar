@@ -24,7 +24,7 @@ export default function BookCover(rawProps: BookCoverProps) {
 			<div
 				class={[
 					"book-cover",
-					"relative aspect-[3/4] overflow-hidden rounded-xl bg-[oklch(0.22_0.02_163)]",
+					"relative aspect-[2/3] overflow-hidden rounded-xl bg-[oklch(0.22_0.02_163)]",
 					local.class,
 				]
 					.filter(Boolean)
