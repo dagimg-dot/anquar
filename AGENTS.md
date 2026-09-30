@@ -19,6 +19,11 @@ bun install
 bun run dev      # http://localhost:5173
 ```
 
+`bun install` copies anquar-core into `node_modules` rather than linking it,
+and Vite pre-bundles that copy into `node_modules/.vite`. After changing
+anquar-core, run `bun install` and start with `bun run dev --force`, or the app
+keeps running the old core.
+
 No environment variables and no `.env`. The Gemini key is entered in the app
 (Settings tab) and lives in `localStorage` under `anquar_api_key`, alongside
 `anquar_model`.
