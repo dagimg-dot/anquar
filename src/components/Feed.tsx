@@ -44,6 +44,8 @@ import ExplainSheet from "./ExplainSheet.tsx";
 import ReaderRail from "./ReaderRail.tsx";
 import ReaderSettingsPanel from "./ReaderSettingsPanel.tsx";
 
+const COVER_PAGES = 1;
+
 interface BookMeta {
 	author: string;
 	coverUrl?: string;
@@ -132,11 +134,6 @@ function ListCard(props: { block: ListBlock }) {
 	);
 }
 
-/**
- * One card per block, except that a run of headings shares a card — deeply
- * nested editions open a chapter with Part / Book / Section / Title in a row,
- * which is four swipes past no reading at all.
- */
 function toCards(blocks: Block[]): Block[][] {
 	const cards: Block[][] = [];
 	for (const block of blocks) {
@@ -161,8 +158,6 @@ function BlockCard(props: { blocks: Block[]; bookId: string }) {
 
 	const block = () => props.blocks[0];
 
-	// Headings and images are focal cards: they read best centred, whatever
-	// alignment the reader picked for prose.
 	const isFocal = () => block().type === "heading" || block().type === "image";
 
 	return (
@@ -223,10 +218,6 @@ function BlockCard(props: { blocks: Block[]; bookId: string }) {
 	);
 }
 
-/**
- * Offered only while the reader is still in front matter, the way Apple Books
- * surfaces "return to where you began" only after you have jumped.
- */
 function StartReadingPill(props: { onClick: () => void }) {
 	const { themeColors } = useReaderSettings();
 
@@ -260,7 +251,6 @@ function StartReadingPill(props: { onClick: () => void }) {
 
 type SheetName = "contents" | "explain" | "settings";
 
-/** Flattens a card back to plain text for saving, sharing and explaining. */
 function cardText(blocks: Block[]): string {
 	return blocks
 		.map((b) => {
@@ -295,7 +285,6 @@ export default function Feed() {
 	const [container, setContainer] = createSignal<HTMLDivElement>();
 	useTikTokScroll(container);
 
-	// The cover occupies slot 0, so every card sits one slot further down.
 	const bodyStart = createMemo(() => {
 		const frontMatter = new Set(
 			chapters()
@@ -306,7 +295,7 @@ export default function Feed() {
 		const i = cards().findIndex(
 			(card) => !frontMatter.has(card[0].chapterIndex),
 		);
-		return i < 0 ? 0 : i + 1;
+		return i < 0 ? 0 : i + COVER_PAGES;
 	});
 
 	const [position, setPosition] = createSignal(0);
@@ -323,8 +312,7 @@ export default function Feed() {
 
 	const inFrontMatter = () => bodyStart() > 0 && position() < bodyStart();
 
-	/** position() counts snap pages, and the cover holds page 0. */
-	const cardIndex = () => position() - 1;
+	const cardIndex = () => position() - COVER_PAGES;
 	const currentCard = () => cards()[cardIndex()];
 
 	let lastTap = 0;
@@ -335,17 +323,9 @@ export default function Feed() {
 	const reduceMotion = () =>
 		window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-	/**
-	 * A tap toggles the rail and it stays put — so scrolling deliberately does
-	 * not bring it back, or every swipe would undo the tap that dismissed it.
-	 * A selection is the one exception: it is intent, and Explain has to be
-	 * reachable without costing a tap that would clear the selection.
-	 */
 	const railShown = () => shown() || selection().length > 0;
 
-	// Where each chapter starts and how long it runs, so progress costs nothing
-	// to answer on a scroll frame.
-	const spans = createMemo(() => {
+	const chapterSpans = createMemo(() => {
 		const map = new Map<number, { count: number; first: number }>();
 		cards().forEach((card, i) => {
 			const span = map.get(card[0].chapterIndex);
@@ -357,17 +337,12 @@ export default function Feed() {
 
 	const currentChapter = () => currentCard()?.[0].chapterIndex ?? 0;
 
-	/**
-	 * Measured against the whole book rather than the loaded part of it, which
-	 * grows as you read and would make the ring recede while you move forward.
-	 */
 	const progress = createMemo(() => {
 		const total = bookMeta()?.totalChapters ?? 0;
 		if (total === 0) return 0;
-		const span = spans().get(currentChapter());
+		const span = chapterSpans().get(currentChapter());
 		const within =
 			span && span.count > 1 ? (cardIndex() - span.first) / span.count : 0;
-		// cardIndex() is -1 on the cover, which would read as negative progress.
 		return Math.min(1, Math.max(0, (currentChapter() + within) / total));
 	});
 
@@ -398,7 +373,6 @@ export default function Feed() {
 				bookId: meta.id,
 				cardIndex: cardIndex(),
 				chapterIndex,
-				// Saved already groups by book, so the book title would say nothing.
 				label: chapterLabel(
 					chapters().find((c) => c.index === chapterIndex)?.title ?? "",
 					chapterIndex,
@@ -419,7 +393,7 @@ export default function Feed() {
 
 	function scrollToCard(index: number) {
 		const pages = container()?.querySelectorAll<HTMLElement>(".snap-page");
-		pages?.[index + 1]?.scrollIntoView({
+		pages?.[index + COVER_PAGES]?.scrollIntoView({
 			behavior: reduceMotion() ? "auto" : "smooth",
 			block: "start",
 		});
@@ -439,7 +413,6 @@ export default function Feed() {
 
 		const text = `"${picked || cardText(card)}"\n— ${meta.title}, ${meta.author}`;
 		if (navigator.share) {
-			// A dismissed share sheet rejects, and that is not a failure.
 			await navigator.share({ text }).catch(() => {});
 			return;
 		}
@@ -458,7 +431,6 @@ export default function Feed() {
 		setSheet("explain");
 	}
 
-	// clientHeight, not innerHeight: the container is sized in dvh like its cards.
 	function trackPosition(e: Event) {
 		const el = e.currentTarget as HTMLElement;
 		if (el.clientHeight > 0) {
@@ -468,17 +440,14 @@ export default function Feed() {
 
 	function onPointerUp(e: PointerEvent) {
 		if ((e.target as HTMLElement | null)?.closest(".rail")) return;
-		// A swipe also ends in a pointerup; only a stationary one is a tap.
-		if (Math.abs(e.clientX - downX) > 10 || Math.abs(e.clientY - downY) > 10) {
-			return;
-		}
+		const wasSwipe =
+			Math.abs(e.clientX - downX) > 10 || Math.abs(e.clientY - downY) > 10;
+		if (wasSwipe) return;
 		if (readSelection(container())) return;
 
 		const now = Date.now();
 		if (now - lastTap < 320) {
 			lastTap = 0;
-			// The first tap of a double already toggled the rail; put it back,
-			// so saving a card never costs you the visibility you had.
 			setShown((v) => !v);
 			if (!savedHere()) {
 				void toggleSave();
@@ -511,7 +480,6 @@ export default function Feed() {
 	createEffect(async () => {
 		const routeId = params.id;
 		try {
-			// No route id means the tab was opened directly — show the newest book.
 			const record = routeId
 				? await getBookMeta(routeId)
 				: (await listBooks())[0];

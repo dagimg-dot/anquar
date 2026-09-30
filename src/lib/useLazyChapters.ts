@@ -44,14 +44,10 @@ export function useLazyChapters(getBookId: () => string) {
 			nextOrder = batch[batch.length - 1].index + 1;
 			if (batch.length < BATCH_SIZE) setAllLoaded(true);
 
-			// Front matter stays in the feed — it is only ever a guess, and a wrong
-			// one should cost a swipe rather than hide part of the book.
 			const ready = batch.map((ch) => ({
 				index: ch.index,
 				title: ch.title,
 				frontMatter: ch.frontMatter,
-				// chunkBook, rather than chunkBlocks, so the chapter gets its
-				// heading card under the same rule as the CLI.
 				blocks: chunkBook(
 					{ title: "", author: "", chapters: [ch] },
 					DEFAULT_CHUNK_CONFIG,
@@ -64,7 +60,6 @@ export function useLazyChapters(getBookId: () => string) {
 		}
 	}
 
-	/** Contents can jump anywhere; the feed only ever loads forwards. */
 	async function loadUpTo(chapterIndex: number) {
 		while (!allLoaded() && nextOrder <= chapterIndex) {
 			const before = nextOrder;

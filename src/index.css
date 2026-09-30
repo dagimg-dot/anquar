@@ -1,11 +1,8 @@
 @import "tailwindcss";
 
-/* --- Dark mode: data-attribute based --- */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* --- Design tokens: change colors here only --- */
 @theme {
-	/* Semantic tokens */
 	--color-canvas: oklch(0.99 0.002 146);
 	--color-surface: oklch(0.966 0.006 154);
 	--color-ink: oklch(0.192 0.012 167);
@@ -15,7 +12,6 @@
 	--color-border-light: oklch(0.192 0.012 167 / 0.1);
 	--color-surface-elevated: oklch(0.94 0.008 157);
 
-	/* Brand palette — deep enough at 500 to be read as text on canvas (6.1:1) */
 	--color-brand-50: oklch(0.97 0.016 160);
 	--color-brand-100: oklch(0.935 0.032 160);
 	--color-brand-200: oklch(0.88 0.052 160);
@@ -28,19 +24,15 @@
 	--color-brand-900: oklch(0.245 0.04 164);
 	--color-brand-950: oklch(0.195 0.028 166);
 
-	/* Glass tokens */
 	--color-glass-bg: oklch(1 0 0 / 0.12);
 	--color-glass-border: oklch(1 0 0 / 0.25);
 	--color-glass-shadow: oklch(0 0 0 / 0.25);
 
-	/* Typography */
 	--font-sans: "Geist", system-ui, -apple-system, sans-serif;
 
-	/* Motion */
 	--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* --- Dark mode overrides --- */
 [data-theme="dark"] {
 	--color-canvas: oklch(0.174 0.012 176);
 	--color-surface: oklch(0.212 0.015 166);
@@ -68,7 +60,6 @@
 	--color-glass-shadow: oklch(0 0 0 / 0.5);
 }
 
-/* --- Base --- */
 body {
 	margin: 0;
 }
@@ -79,14 +70,12 @@ body {
 	background: var(--color-canvas);
 }
 
-/* --- Smooth theme transitions --- */
 html {
 	transition:
 		background-color 0.3s,
 		color 0.3s;
 }
 
-/* --- Scroll-snap feed (TikTok-style) --- */
 .snap-container {
 	height: 100dvh;
 	overflow-y: auto;
@@ -115,14 +104,11 @@ html {
 	}
 }
 
-/* --- Reader action rail --- */
 .rail {
 	--rail-ease: cubic-bezier(0.23, 1, 0.32, 1);
 	--rail-halo: transparent;
 }
 
-/* The rail floats over live text now, so every mark carries a halo in the page
-   colour — it buys back legibility without putting a visible plate on the page. */
 .rail-glyph svg {
 	filter: drop-shadow(0 0 3px var(--rail-halo))
 		drop-shadow(0 0 7px var(--rail-halo));
@@ -134,7 +120,6 @@ html {
 		0 0 9px var(--rail-halo);
 }
 
-/* Stagger runs bottom-to-top: the glyph nearest the thumb arrives first. */
 .rail-item {
 	opacity: 0.3;
 	transform: translateY(4px);
@@ -149,14 +134,11 @@ html {
 	transform: none;
 }
 
-/* Resting is a retreat, not an entrance — no stagger, and quicker. */
 .rail[data-shown="false"] .rail-item {
 	transition-duration: 170ms;
 	transition-delay: 0ms;
 }
 
-/* The rail floats over live text, so anything short of shown must let taps
-   through — a dimmed button must never eat a tap meant for the page. */
 .rail[data-shown="false"] .rail-item {
 	pointer-events: none;
 }
@@ -249,7 +231,6 @@ html {
 	}
 }
 
-/* --- Reader content --- */
 .reader-content > .block-renderer > p,
 .reader-content > .block-renderer > h1,
 .reader-content > .block-renderer > h2,
@@ -267,7 +248,6 @@ html {
 	height: auto;
 }
 
-/* --- Animated gradient orbs --- */
 @keyframes float-1 {
 	0%,
 	100% {
@@ -336,7 +316,6 @@ html {
 	animation: float-3 10s ease-in-out infinite;
 }
 
-/* --- Glass specular highlights (pseudo-element) --- */
 .glass-specular::after {
 	position: absolute;
 	inset: 0;
@@ -355,7 +334,6 @@ html {
 		inset 0 -1px 1px rgba(255, 255, 255, 0.05);
 }
 
-/* --- Glass mask for thicker feel --- */
 .glass-mask {
 	-webkit-mask-image: linear-gradient(
 		to bottom,
@@ -366,7 +344,6 @@ html {
 	mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
 }
 
-/* --- Scroll-driven adaptive tint --- */
 .glass-nav {
 	transition:
 		background-color 0.2s ease,
@@ -378,14 +355,12 @@ html {
 	backdrop-filter: blur(20px) saturate(180%);
 }
 
-/* --- SVG refraction filter (Chromium progressive enhancement) --- */
 @supports (backdrop-filter: url("#liquid-glass")) {
 	.glass-refract {
 		backdrop-filter: url("#liquid-glass-refraction") blur(12px) saturate(150%);
 	}
 }
 
-/* --- Reusable liquid glass --- */
 .liquid-glass {
 	position: relative;
 	overflow: hidden;
@@ -422,7 +397,6 @@ html {
 		inset 0 -1px 1px rgba(255, 255, 255, 0.05);
 }
 
-/* --- Apple-like Toast --- */
 .apple-toast {
 	display: flex;
 	gap: 8px;

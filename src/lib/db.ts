@@ -33,14 +33,12 @@ interface ProgressRecord {
 
 interface BookmarkRecord {
 	bookId: string;
-	/** Index of the card in the feed — the unit the reader actually saves. */
 	cardIndex?: number;
 	chapterIndex: number;
 	createdAt: string;
 	id?: number;
 	label: string;
 	textSnippet: string;
-	/** Left from the word-based reader; cards superseded it. */
 	wordOffset: number;
 }
 
@@ -174,7 +172,6 @@ class AnquarDB extends Dexie {
 
 const db = new AnquarDB();
 
-/** Image bytes live in their own table; inline they would balloon the JSON. */
 function withoutImageBytes(key: string, value: unknown): unknown {
 	return key === "data" ? undefined : value;
 }
