@@ -232,3 +232,55 @@ export function pulseLine(p: Pulse, goal: number, hour: number): PulseLine {
 		` to close today · ${minutes(goal - p.today)}.`,
 	);
 }
+
+export interface Moment {
+	kind: "goal" | "best" | "streak";
+	text: string;
+	detail: string;
+}
+
+// The reader marks a threshold the moment it's crossed, each kind once a day, the goal first.
+export function momentFor(
+	p: Pulse,
+	goal: number,
+	shown: readonly string[],
+): Moment | undefined {
+	if (p.today >= goal && !shown.includes("goal"))
+		return {
+			kind: "goal",
+			text: "Today's anquar is closed",
+			detail: `${goal}`,
+		};
+	if (
+		p.today > goal &&
+		p.bestDay > 0 &&
+		p.today > p.bestDay &&
+		!shown.includes("best")
+	)
+		return { kind: "best", text: "Best day yet", detail: `${p.today}` };
+	if (p.kept && !shown.includes("streak"))
+		return p.streak === 1
+			? { kind: "streak", text: "Streak started", detail: "1 day" }
+			: { kind: "streak", text: "Streak kept", detail: `${p.streak} days` };
+	return undefined;
+}
+
+const MOMENTS_KEY = "anquar_moments";
+
+export function momentsShown(today: string): string[] {
+	try {
+		const saved = JSON.parse(localStorage.getItem(MOMENTS_KEY) ?? "{}");
+		return saved.date === today ? saved.shown : [];
+	} catch {
+		return [];
+	}
+}
+
+// Closing the goal or beating a best day keeps the streak too, so the streak isn't marked after them.
+export function markMomentShown(today: string, kind: Moment["kind"]) {
+	const shown = new Set([...momentsShown(today), kind, "streak"]);
+	localStorage.setItem(
+		MOMENTS_KEY,
+		JSON.stringify({ date: today, shown: [...shown] }),
+	);
+}

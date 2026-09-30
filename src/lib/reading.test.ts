@@ -1,6 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	dayKey,
+	markMomentShown,
+	momentFor,
+	momentsShown,
 	pulseLine,
 	pulseOf,
 	type ReadingDay,
@@ -203,5 +206,48 @@ describe("what the card says", () => {
 		expect(text(pulseLine(at([3], 2), 30, 10))).toBe(
 			"3 more anquars start a streak, about 1 min.",
 		);
+	});
+});
+
+describe("the moment", () => {
+	const at = (counts: number[], today: number) =>
+		pulseOf(
+			[...history(counts), { date: TODAY, anquars: today, seconds: 0 }],
+			TODAY,
+		);
+
+	it("marks the streak once today's minimum is read", () => {
+		expect(momentFor(at(week(), 4), 30, [])).toBeUndefined();
+		expect(momentFor(at(week(), 5), 30, [])).toMatchObject({
+			text: "Streak kept",
+			detail: "8 days",
+		});
+		expect(momentFor(at([], 5), 30, [])).toMatchObject({
+			text: "Streak started",
+		});
+		expect(momentFor(at(week(), 6), 30, ["streak"])).toBeUndefined();
+	});
+
+	it("puts the goal first, then a best day, each once", () => {
+		expect(momentFor(at(week(), 30), 30, [])).toMatchObject({ kind: "goal" });
+		expect(momentFor(at(week(40), 41), 30, ["goal", "streak"])).toMatchObject({
+			kind: "best",
+			detail: "41",
+		});
+		expect(
+			momentFor(at(week(40), 41), 30, ["goal", "streak", "best"]),
+		).toBeUndefined();
+	});
+
+	it("keeps what it has shown for the day, and the streak with the goal", () => {
+		const store = new Map<string, string>();
+		vi.stubGlobal("localStorage", {
+			getItem: (k: string) => store.get(k) ?? null,
+			setItem: (k: string, v: string) => store.set(k, v),
+		});
+		markMomentShown(TODAY, "goal");
+		expect(momentsShown(TODAY).sort()).toEqual(["goal", "streak"]);
+		expect(momentsShown(shiftDay(TODAY, 1))).toEqual([]);
+		vi.unstubAllGlobals();
 	});
 });

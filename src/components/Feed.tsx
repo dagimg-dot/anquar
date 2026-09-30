@@ -45,6 +45,7 @@ import {
 	imageKey,
 	listBookmarks,
 	listBooks,
+	listReading,
 	removeBookmark,
 	saveProgress,
 } from "../lib/db.ts";
@@ -54,6 +55,15 @@ import {
 	type ReaderSettings,
 	useReaderSettings,
 } from "../lib/reader-settings.tsx";
+import {
+	dayKey,
+	type Moment,
+	markMomentShown,
+	momentFor,
+	momentsShown,
+	pulseOf,
+	readingGoal,
+} from "../lib/reading.ts";
 import { readSelection } from "../lib/selection.ts";
 import { useLazyChapters } from "../lib/useLazyChapters.ts";
 import { useReadingTracker } from "../lib/useReadingTracker.ts";
@@ -63,6 +73,7 @@ import BottomSheet from "./BottomSheet.tsx";
 import ContentsSheet from "./ContentsSheet.tsx";
 import CoverCard from "./CoverCard.tsx";
 import ExplainSheet from "./ExplainSheet.tsx";
+import PulseMoment from "./PulseMoment.tsx";
 import ReaderRail from "./ReaderRail.tsx";
 import ReaderSettingsPanel from "./ReaderSettingsPanel.tsx";
 
@@ -388,7 +399,25 @@ export default function Feed() {
 	const cardIndex = () => position() - COVER_PAGES;
 	const currentCard = () => cards()[cardIndex()];
 
-	useReadingTracker({ bookId: () => bookMeta()?.id, card: currentCard });
+	const [moment, setMoment] = createSignal<Moment>();
+	async function celebrate() {
+		if (moment()) return;
+		const today = dayKey();
+		const next = momentFor(
+			pulseOf(await listReading(), today),
+			readingGoal(),
+			momentsShown(today),
+		);
+		if (!next) return;
+		markMomentShown(today, next.kind);
+		setMoment(next);
+	}
+
+	useReadingTracker({
+		bookId: () => bookMeta()?.id,
+		card: currentCard,
+		onCounted: () => void celebrate(),
+	});
 
 	let lastTap = 0;
 	let downX = 0;
@@ -432,6 +461,7 @@ export default function Feed() {
 	const savedHere = () => savedCardIndexes().includes(cardIndex());
 
 	const chromeOpacity = () => {
+		if (moment()) return 0;
 		if (railShown() || settings().railRest === "always") return 1;
 		return settings().railRest === "hidden" ? 0 : 0.3;
 	};
@@ -769,6 +799,11 @@ export default function Feed() {
 						<Show when={inFrontMatter()}>
 							<StartReadingPill onClick={startReading} />
 						</Show>
+
+						<PulseMoment
+							moment={moment()}
+							onDone={() => setMoment(undefined)}
+						/>
 
 						<BottomSheet
 							onClose={() => setSheet(null)}
