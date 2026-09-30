@@ -4,8 +4,9 @@ import toast from "solid-toast";
 import AppleToaster from "./components/AppleToaster.tsx";
 import BottomNav from "./components/BottomNav.tsx";
 import Feed from "./components/Feed.tsx";
-import { saveBook } from "./lib/db.ts";
-import { useEpubParser } from "./lib/epub.ts";
+import { ImportError } from "./lib/epub.ts";
+import { FAILURE_TEXT } from "./lib/import-check.ts";
+import { type ImportStage, importBook } from "./lib/importer.ts";
 import { ReaderSettingsProvider } from "./lib/reader-settings.tsx";
 import PWABadge from "./PWABadge.tsx";
 import FeedPage from "./pages/Feed.tsx";
@@ -23,16 +24,26 @@ function App() {
 	const bookId = () => params.id || null;
 
 	let fabInputRef: HTMLInputElement | undefined;
-	const { parse } = useEpubParser();
+
+	const STAGE_TEXT: Record<ImportStage, string> = {
+		opening: "Opening",
+		reading: "Reading",
+		saving: "Saving",
+	};
 
 	async function handleFabImport(file: File) {
-		if (!file.name.endsWith(".epub")) return;
+		const name = file.name.replace(/\.epub$/i, "");
+		const toastId = toast.loading(`Opening ${name}…`);
 		try {
-			const result = await parse(file);
-			const bookId = await saveBook(result);
-			toast.success(`${result.title} imported successfully`);
-			navigate(`/book/${bookId}`);
+			const book = await importBook(file, {
+				onStage: (stage) =>
+					toast.loading(`${STAGE_TEXT[stage]} ${name}…`, { id: toastId }),
+			});
+			toast.success(`${book.title} is in your library`, { id: toastId });
+			navigate(`/book/${book.bookId}`);
 		} catch (err) {
+			const reason = err instanceof ImportError ? err.reason : "damaged";
+			toast.error(FAILURE_TEXT[reason], { id: toastId, duration: 6000 });
 			console.error("Import failed:", err);
 		}
 	}
@@ -107,7 +118,7 @@ function App() {
 			<Show when={!isReaderPage() && activeTab() === "feed"}>
 				<input
 					type="file"
-					accept=".epub"
+					accept=".epub,application/epub+zip"
 					class="hidden"
 					ref={(el) => {
 						fabInputRef = el;
