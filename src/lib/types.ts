@@ -5,7 +5,7 @@ export type { ParsedBook };
 export interface DailyRollup {
 	id?: number;
 	bookId: string;
-	buktokCount: number;
+	anquarCount: number;
 	date: string;
 	sessionCount: number;
 }

@@ -32,7 +32,7 @@ export default function ReadingPulse() {
 				</div>
 				<div class="mb-4">
 					<div class="flex items-baseline justify-between mb-1.5">
-						<div class="text-sm text-ink-soft">Today's buktoks</div>
+						<div class="text-sm text-ink-soft">Today's anquars</div>
 						<div class="text-xs font-semibold tabular-nums text-ink-soft">
 							{todayCount()} / {DAILY_GOAL}
 						</div>
@@ -69,7 +69,7 @@ export default function ReadingPulse() {
 				</div>
 			</div>
 			<div class="flex gap-2 px-5 mt-3">
-				<StatCard value={stats()?.total || 0} label="total buktoks" />
+				<StatCard value={stats()?.total || 0} label="total anquars" />
 				<StatCard value={stats()?.avgPerDay || 0} label="avg / day" />
 				<StatCard value={stats()?.sessions || 0} label="sessions" />
 			</div>

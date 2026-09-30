@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "buktok",
+      "name": "anquar",
       "dependencies": {
         "@solidjs/router": "^0.16.1",
         "anquar-core": "file:../anquar-core",

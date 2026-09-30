@@ -19,7 +19,7 @@ export default function AppHeader() {
 					<line x1="26" y1="52" x2="38" y2="52" />
 				</svg>
 				<span class="bg-gradient-to-br from-ink to-ink-soft bg-clip-text text-transparent">
-					buktok
+					anquar
 				</span>
 			</span>
 			<IconButton size="sm" shape="round" ariaLabel="Profile">

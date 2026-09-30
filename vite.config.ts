@@ -42,8 +42,8 @@ export default defineConfig({
 				overrideManifestIcons: true,
 			},
 			manifest: {
-				name: "BukTok",
-				short_name: "BukTok",
+				name: "Anquar",
+				short_name: "Anquar",
 				description: "Guilt-free doomscrolling — books in a TikTok-style feed",
 				theme_color: "#ffffff",
 				background_color: "#ffffff",

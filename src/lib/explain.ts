@@ -24,8 +24,8 @@ export async function explainPassage(
 	book: { author: string; title: string },
 	signal?: AbortSignal,
 ): Promise<string> {
-	const key = localStorage.getItem("buktok_api_key") ?? "";
-	const model = localStorage.getItem("buktok_model") ?? "gemini-2.0-flash";
+	const key = localStorage.getItem("anquar_api_key") ?? "";
+	const model = localStorage.getItem("anquar_model") ?? "gemini-2.0-flash";
 
 	if (!key) throw new ExplainFailure("no-key");
 	if (!model.startsWith("gemini"))

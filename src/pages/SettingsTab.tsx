@@ -32,12 +32,12 @@ const MODELS = [
 export default function SettingsTab() {
 	const { mode, setMode } = useTheme();
 	const [apiKey, setApiKey] = createSignal(
-		localStorage.getItem("buktok_api_key") || "",
+		localStorage.getItem("anquar_api_key") || "",
 	);
 	const [showKey, setShowKey] = createSignal(false);
 	const [saved, setSaved] = createSignal(false);
 	const [model, setModel] = createSignal(
-		localStorage.getItem("buktok_model") || MODELS[0],
+		localStorage.getItem("anquar_model") || MODELS[0],
 	);
 	const [fontSize, setFontSize] = createSignal("M");
 	const [lineSpacing, setLineSpacing] = createSignal(1.7);
@@ -70,14 +70,14 @@ export default function SettingsTab() {
 	};
 
 	const saveApiKey = () => {
-		localStorage.setItem("buktok_api_key", apiKey());
+		localStorage.setItem("anquar_api_key", apiKey());
 		setSaved(true);
 		setTimeout(() => setSaved(false), 2000);
 	};
 
 	const saveModel = (value: string) => {
 		setModel(value);
-		localStorage.setItem("buktok_model", value);
+		localStorage.setItem("anquar_model", value);
 	};
 
 	const clearLibrary = async () => {
@@ -217,7 +217,7 @@ export default function SettingsTab() {
 
 				<SettingsSection title="Reading">
 					<SettingsRowInfo
-						label="Daily buktok goal"
+						label="Daily anquar goal"
 						desc="Sets your target in the Reading Pulse"
 					/>
 					<SettingsOptionGroup>
@@ -320,7 +320,7 @@ export default function SettingsTab() {
 				</SettingsSection>
 
 				<div class="text-center py-8 px-5 text-xs text-ink-muted">
-					buktok · v0.1.0
+					anquar · v0.1.0
 				</div>
 			</div>
 		</>

@@ -63,14 +63,14 @@ interface ImageRecord {
 }
 
 interface DailyRollupRecord {
-	buktokCount: number;
+	anquarCount: number;
 	date: string;
 	id?: number;
 	bookId: string;
 	sessionCount: number;
 }
 
-class BukTokDB extends Dexie {
+class AnquarDB extends Dexie {
 	books!: EntityTable<BookRecord, "id">;
 	chapters!: EntityTable<ChapterRecord, "id">;
 	progress!: EntityTable<ProgressRecord, "bookId">;
@@ -80,46 +80,22 @@ class BukTokDB extends Dexie {
 	images!: EntityTable<ImageRecord, "id">;
 
 	constructor() {
-		super("buktok");
-		this.version(4).stores({
+		super("anquar");
+		this.version(1).stores({
 			books: "id, title, author, addedAt, lastOpenedAt",
-			chapters: "id, bookId, order",
+			chapters: "id, bookId, order, [bookId+order]",
 			progress: "bookId, lastReadAt",
 			bookmarks: "++id, bookId, chapterIndex, createdAt",
 			readerSettings: "bookId",
 			dailyRollups: "++id, bookId, date",
+			images: "id, bookId",
 		});
-
-		// v5 moved chapters to anquar-core's flat block model, which cannot be
-		// read back as the old nested tree. Libraries have to be re-imported;
-		// dailyRollups is spared so the reading streak survives.
-		this.version(5)
-			.stores({
-				books: "id, title, author, addedAt, lastOpenedAt",
-				chapters: "id, bookId, order, [bookId+order]",
-				progress: "bookId, lastReadAt",
-				bookmarks: "++id, bookId, chapterIndex, createdAt",
-				readerSettings: "bookId",
-				dailyRollups: "++id, bookId, date",
-				images: "id, bookId",
-			})
-			.upgrade(async (tx) => {
-				for (const name of [
-					"books",
-					"chapters",
-					"progress",
-					"bookmarks",
-					"readerSettings",
-				]) {
-					await tx.table(name).clear();
-				}
-			});
 	}
 
 	async upsertDailyRollup(
 		bookId: string,
 		date: string,
-		buktokDelta: number,
+		anquarDelta: number,
 		sessionDelta = 0,
 	) {
 		const existing = await this.dailyRollups
@@ -129,14 +105,14 @@ class BukTokDB extends Dexie {
 			.first();
 		if (existing?.id != null) {
 			await this.dailyRollups.update(existing.id, {
-				buktokCount: existing.buktokCount + buktokDelta,
+				anquarCount: existing.anquarCount + anquarDelta,
 				sessionCount: existing.sessionCount + sessionDelta,
 			});
 		} else {
 			await this.dailyRollups.add({
 				bookId,
 				date,
-				buktokCount: buktokDelta,
+				anquarCount: anquarDelta,
 				sessionCount: sessionDelta,
 			});
 		}
@@ -150,7 +126,7 @@ class BukTokDB extends Dexie {
 			.where("date")
 			.aboveOrEqual(cutoffStr)
 			.toArray();
-		const total = rollups.reduce((sum, r) => sum + r.buktokCount, 0);
+		const total = rollups.reduce((sum, r) => sum + r.anquarCount, 0);
 		return {
 			total,
 			avgPerDay: periodDays > 0 ? Math.round(total / periodDays) : 0,
@@ -171,7 +147,7 @@ class BukTokDB extends Dexie {
 				.where("date")
 				.equals(dateStr)
 				.first();
-			if (rollup && rollup.buktokCount > 0) streak++;
+			if (rollup && rollup.anquarCount > 0) streak++;
 			else if (i > 0) break;
 		}
 		return streak;
@@ -189,14 +165,14 @@ class BukTokDB extends Dexie {
 			const dayRollup = rollups.find((r) => r.date === dateStr);
 			weekly.push({
 				day: d.toLocaleDateString("en", { weekday: "short" }),
-				count: dayRollup?.buktokCount ?? 0,
+				count: dayRollup?.anquarCount ?? 0,
 			});
 		}
 		return weekly;
 	}
 }
 
-const db = new BukTokDB();
+const db = new AnquarDB();
 
 /** Image bytes live in their own table; inline they would balloon the JSON. */
 function withoutImageBytes(key: string, value: unknown): unknown {
