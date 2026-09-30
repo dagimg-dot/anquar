@@ -1,12 +1,10 @@
-import { useLocation, useNavigate, useParams } from "@solidjs/router";
+import { useLocation, useParams } from "@solidjs/router";
 import { createSignal, Match, Show, Switch } from "solid-js";
-import toast from "solid-toast";
 import AppleToaster from "./components/AppleToaster.tsx";
 import BottomNav from "./components/BottomNav.tsx";
 import Feed from "./components/Feed.tsx";
-import { ImportError } from "./lib/epub.ts";
-import { FAILURE_TEXT } from "./lib/import-check.ts";
-import { type ImportStage, importBook } from "./lib/importer.ts";
+import ImportSheet from "./components/ImportSheet.tsx";
+import { pickBooks } from "./lib/imports.ts";
 import { ReaderSettingsProvider } from "./lib/reader-settings.tsx";
 import PWABadge from "./PWABadge.tsx";
 import FeedPage from "./pages/Feed.tsx";
@@ -17,50 +15,10 @@ import SettingsTab from "./pages/SettingsTab.tsx";
 function App() {
 	const params = useParams();
 	const location = useLocation();
-	const navigate = useNavigate();
 	const [activeTab, setActiveTab] = createSignal("feed");
 
 	const isReaderPage = () => location.pathname.startsWith("/book/");
 	const bookId = () => params.id || null;
-
-	let fabInputRef: HTMLInputElement | undefined;
-
-	const STAGE_TEXT: Record<ImportStage, string> = {
-		opening: "Opening",
-		reading: "Reading",
-		saving: "Saving",
-	};
-
-	async function handleFabImport(file: File) {
-		const name = file.name.replace(/\.epub$/i, "");
-		const toastId = toast.loading(`Opening ${name}…`);
-		try {
-			const book = await importBook(file, {
-				onStage: (stage) =>
-					toast.loading(`${STAGE_TEXT[stage]} ${name}…`, { id: toastId }),
-			});
-			toast.success(
-				book.alreadyThere
-					? `${book.title} is already in your library`
-					: `${book.title} is in your library`,
-				{ id: toastId },
-			);
-			navigate(`/book/${book.bookId}`);
-		} catch (err) {
-			const reason = err instanceof ImportError ? err.reason : "damaged";
-			toast.error(FAILURE_TEXT[reason], { id: toastId, duration: 6000 });
-			console.error("Import failed:", err);
-		}
-	}
-
-	function onFabFileChange(e: Event) {
-		const input = e.target as HTMLInputElement;
-		const file = input.files?.[0];
-		if (file) {
-			handleFabImport(file);
-			input.value = "";
-		}
-	}
 
 	return (
 		<div class="min-h-screen bg-canvas text-ink">
@@ -121,18 +79,9 @@ function App() {
 				<BottomNav activeTab={activeTab()} setActiveTab={setActiveTab} />
 			</Show>
 			<Show when={!isReaderPage() && activeTab() === "feed"}>
-				<input
-					type="file"
-					accept=".epub,application/epub+zip"
-					class="hidden"
-					ref={(el) => {
-						fabInputRef = el;
-					}}
-					onChange={onFabFileChange}
-				/>
 				<button
 					class="fixed right-4 bottom-22 z-40 flex h-13 w-13 items-center justify-center rounded-2xl bg-brand-500 text-white shadow-lg cursor-pointer border-none transition-all duration-[400ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.92]"
-					onClick={() => fabInputRef?.click()}
+					onClick={pickBooks}
 					type="button"
 					aria-label="Import EPUB"
 					data-splash-slide
@@ -149,6 +98,7 @@ function App() {
 					</svg>
 				</button>
 			</Show>
+			<ImportSheet />
 			<AppleToaster />
 			<PWABadge />
 		</div>

@@ -8,6 +8,13 @@ export const FAILURE_TEXT: Record<ImportFailure, string> = {
 		"Your phone couldn't hand over that file. If it's in the cloud, download it first.",
 };
 
+export const FAILURE_HINT: Record<ImportFailure, string> = {
+	"not-epub": "Anquar reads .epub books.",
+	drm: "Books from Kindle, Kobo or Google Play usually are.",
+	damaged: "Downloading it again often helps.",
+	unreadable: "",
+};
+
 // Every EPUB is a zip, and every zip starts "PK\x03\x04", whatever the file is called.
 export function looksLikeZip(bytes: Uint8Array): boolean {
 	return (

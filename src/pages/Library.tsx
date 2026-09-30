@@ -1,11 +1,19 @@
 import { useNavigate } from "@solidjs/router";
-import { createMemo, createSignal, For, onMount, Show } from "solid-js";
+import {
+	createEffect,
+	createMemo,
+	createSignal,
+	For,
+	on,
+	Show,
+} from "solid-js";
 import AppHeader from "../components/AppHeader";
 import BookCover from "../components/BookCover";
 import CoverGrid from "../components/CoverGrid";
 import FilterChip from "../components/FilterChip";
 import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
+import { libraryVersion } from "../lib/imports";
 
 interface BookWithProgress {
 	addedAt: string;
@@ -26,7 +34,9 @@ export default function Library() {
 	const [filter, setFilter] = createSignal("All");
 	const [loading, setLoading] = createSignal(true);
 
-	onMount(async () => {
+	createEffect(on(libraryVersion, () => void load()));
+
+	async function load() {
 		try {
 			const allBooks = await listBooks();
 			const withProgress = await Promise.all(
@@ -43,7 +53,7 @@ export default function Library() {
 		} finally {
 			setLoading(false);
 		}
-	});
+	}
 
 	const filteredBooks = createMemo(() => {
 		let result = books();

@@ -49,19 +49,18 @@ request that ever leaves the device is an explicit Explain call.
 the tabs (Feed, Library, Saved, Settings, switched by signal rather than URL)
 and `/book/:id` for the reader.
 
-**Import** — `useEpubParser` spawns `src/workers/epub.worker.ts`, which calls
-`parseEpubFromFile` from anquar-core. Parsing stays off the main thread so the
-feed never janks mid-import. Chapters come back as flat `Block[]`, without the
-book's apparatus — cover, title and copyright pages, contents, praise, notes
-and index — and with dedications, epigraphs and prefaces marked `frontMatter`.
+**Import** — the Feed tab's + goes through the queue in `src/lib/imports.ts`
+and the sheet in `ImportSheet`. Books import one at a time, each in its own
+`src/workers/epub.worker.ts`, which `parseEpub` always shuts down afterwards. The
+worker judges the file by its bytes, not its name (`import-check.ts`: not a zip,
+DRM, damaged, unreadable), then calls `parseEpubFromZip` from anquar-core, and
+moves the image bytes to the page rather than copying them. A book whose title
+and author match one in the library is held until you choose Open it or Add a
+copy. Chapters come back as flat `Block[]`, without the book's apparatus —
+cover, title and copyright pages, contents, praise, notes and index — and with
+dedications, epigraphs and prefaces marked `frontMatter`. `libraryVersion`
+ticks when a book lands, and the Feed and Library tabs load again on it.
 
-**Storage** — Dexie over IndexedDB in `src/lib/db.ts`, database `anquar`,
-schema v2. Tables: `books`, `chapters`, `progress`, `bookmarks`,
-`readerSettings`, `reading`, `images`. Image bytes are split into `images`
-so chapter JSON stays small; `saveBook` strips them with a replacer. `progress`
-keeps the id of the card you're on, and the reader loads forward to it on open.
-`reading` has one row per book per reading day; deleting a book keeps its rows,
-because the streak belongs to you, not the book.
 
 **Feed** — `src/components/Feed.tsx`. CSS scroll-snap over cards that
 anquar-core's `paginate` lays out to fill one screen each: whole paragraphs

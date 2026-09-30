@@ -1,5 +1,5 @@
 import { useNavigate } from "@solidjs/router";
-import { createSignal, onMount, Show } from "solid-js";
+import { createEffect, createSignal, on, Show } from "solid-js";
 import AppHeader from "../components/AppHeader";
 import FinishedList from "../components/FinishedList";
 import InProgressRow from "../components/InProgressRow";
@@ -7,6 +7,7 @@ import NowReading from "../components/NowReading";
 import ReadingPulse from "../components/ReadingPulse";
 import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
+import { libraryVersion } from "../lib/imports";
 import { splashReady } from "../splash";
 
 export default function FeedPage() {
@@ -29,7 +30,9 @@ export default function FeedPage() {
 	const [loading, setLoading] = createSignal(true);
 	const [hasBooks, setHasBooks] = createSignal(false);
 
-	onMount(async () => {
+	createEffect(on(libraryVersion, () => void load()));
+
+	async function load() {
 		try {
 			const books = await listBooks();
 			if (books.length === 0) return;
@@ -85,7 +88,7 @@ export default function FeedPage() {
 			setLoading(false);
 			splashReady();
 		}
-	});
+	}
 
 	return (
 		<>
