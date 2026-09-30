@@ -49,8 +49,8 @@ request that ever leaves the device is an explicit Explain call.
 the tabs (Feed, Library, Saved, Settings, switched by signal rather than URL)
 and `/book/:id` for the reader.
 
-**Import** — the Feed tab's + goes through the queue in `src/lib/imports.ts`
-and the sheet in `ImportSheet`. Books import one at a time, each in its own
+**Import** — the Feed and Library tabs' + buttons go through the queue in
+`src/lib/imports.ts` and the sheet in `ImportSheet`. Books import one at a time, each in its own
 `src/workers/epub.worker.ts`, which `parseEpub` always shuts down afterwards. The
 worker judges the file by its bytes, not its name (`import-check.ts`: not a zip,
 DRM, damaged, unreadable), then calls `parseEpubFromZip` from anquar-core, and

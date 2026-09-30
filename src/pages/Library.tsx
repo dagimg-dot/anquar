@@ -13,7 +13,7 @@ import CoverGrid from "../components/CoverGrid";
 import FilterChip from "../components/FilterChip";
 import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
-import { libraryVersion } from "../lib/imports";
+import { libraryVersion, pickBooks } from "../lib/imports";
 
 interface BookWithProgress {
 	addedAt: string;
@@ -81,25 +81,45 @@ export default function Library() {
 		<>
 			<AppHeader />
 			<div class="pb-24">
-				<div class="relative mx-5 mb-4">
-					<svg
-						class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-ink-muted"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-						stroke-width="2"
-						aria-hidden="true"
+				<div class="mx-5 mb-4 flex gap-2.5">
+					<div class="relative flex-1">
+						<svg
+							class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-ink-muted"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+							stroke-width="2"
+							aria-hidden="true"
+						>
+							<circle cx="11" cy="11" r="8" />
+							<path d="m21 21-4.35-4.35" />
+						</svg>
+						<input
+							class="w-full rounded-xl bg-surface-elevated border border-border py-3 pr-4 pl-11 text-sm text-ink outline-none placeholder:text-ink-muted transition-colors duration-200 focus:border-brand-500"
+							type="search"
+							placeholder="Search your library…"
+							value={search()}
+							onInput={(e) => setSearch(e.currentTarget.value)}
+						/>
+					</div>
+					<button
+						aria-label="Add books"
+						class="flex size-[46px] shrink-0 cursor-pointer items-center justify-center rounded-xl bg-brand-500 text-canvas transition-transform active:scale-95"
+						onClick={pickBooks}
+						type="button"
 					>
-						<circle cx="11" cy="11" r="8" />
-						<path d="m21 21-4.35-4.35" />
-					</svg>
-					<input
-						class="w-full rounded-xl bg-surface-elevated border border-border py-3 pr-4 pl-11 text-sm text-ink outline-none placeholder:text-ink-muted transition-colors duration-200 focus:border-brand-500"
-						type="search"
-						placeholder="Search your library…"
-						value={search()}
-						onInput={(e) => setSearch(e.currentTarget.value)}
-					/>
+						<svg
+							aria-hidden="true"
+							class="size-5"
+							fill="none"
+							stroke="currentColor"
+							stroke-linecap="round"
+							stroke-width="2.6"
+							viewBox="0 0 24 24"
+						>
+							<path d="M12 5v14M5 12h14" />
+						</svg>
+					</button>
 				</div>
 				<div class="flex gap-2 pb-4 px-5 overflow-x-auto [&::-webkit-scrollbar]:hidden">
 					<For each={FILTERS}>
@@ -136,7 +156,29 @@ export default function Library() {
 						</For>
 					</CoverGrid>
 				</Show>
-				<Show when={!loading() && filteredBooks().length === 0}>
+				<Show when={!loading() && books().length === 0}>
+					<div class="flex flex-col items-center px-10 py-16 text-center">
+						<div class="font-semibold text-ink text-lg">
+							Your library is empty
+						</div>
+						<p class="mt-1 mb-6 text-ink-soft text-sm leading-relaxed">
+							Add an EPUB from your phone, or share one to Anquar from Telegram
+							or Files.
+						</p>
+						<button
+							class="h-12 cursor-pointer rounded-2xl bg-brand-500 px-7 font-semibold text-[15px] text-canvas transition-transform active:scale-[0.98]"
+							onClick={pickBooks}
+							type="button"
+						>
+							Add your first book
+						</button>
+					</div>
+				</Show>
+				<Show
+					when={
+						!loading() && books().length > 0 && filteredBooks().length === 0
+					}
+				>
 					<div class="text-center py-12 px-5 text-ink-soft text-sm">
 						No books found
 					</div>
