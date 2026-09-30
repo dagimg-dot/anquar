@@ -11,8 +11,12 @@ export default function CoverGrid(rawProps: CoverGridProps) {
 
 	return (
 		<div
-			class={["grid gap-4 px-5", props.class].filter(Boolean).join(" ")}
-			style={{ "grid-template-columns": `repeat(${props.columns}, 1fr)` }}
+			class={["grid items-start gap-4 px-5", props.class]
+				.filter(Boolean)
+				.join(" ")}
+			style={{
+				"grid-template-columns": `repeat(${props.columns}, 1fr)`,
+			}}
 		>
 			{props.children}
 		</div>

@@ -12,7 +12,7 @@ export default function CarouselRow(props: CarouselRowProps) {
 		<div
 			class={[
 				"carousel-row",
-				"flex gap-3 overflow-x-auto pb-2 px-5",
+				"flex items-start gap-3 overflow-x-auto pb-2 px-5",
 				props.class,
 			]
 				.filter(Boolean)
