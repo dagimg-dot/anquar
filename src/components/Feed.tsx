@@ -56,6 +56,7 @@ import {
 } from "../lib/reader-settings.tsx";
 import { readSelection } from "../lib/selection.ts";
 import { useLazyChapters } from "../lib/useLazyChapters.ts";
+import { useReadingTracker } from "../lib/useReadingTracker.ts";
 import { useTikTokScroll } from "../lib/useTikTokScroll.ts";
 import { splashReady } from "../splash.ts";
 import BottomSheet from "./BottomSheet.tsx";
@@ -386,6 +387,8 @@ export default function Feed() {
 
 	const cardIndex = () => position() - COVER_PAGES;
 	const currentCard = () => cards()[cardIndex()];
+
+	useReadingTracker({ bookId: () => bookMeta()?.id, card: currentCard });
 
 	let lastTap = 0;
 	let downX = 0;

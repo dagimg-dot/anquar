@@ -92,7 +92,6 @@ export default function SettingsTab() {
 			await db.bookmarks.clear();
 			await db.readerSettings.clear();
 			await db.images.clear();
-			await db.dailyRollups.clear();
 			window.location.reload();
 		}
 	};

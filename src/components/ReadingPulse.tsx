@@ -1,24 +1,43 @@
-import { createMemo, createSignal, For, onMount } from "solid-js";
-import { db } from "../lib/db";
-import type { ReadingStats } from "../lib/types";
+import { createSignal, For, onMount } from "solid-js";
+import { listReading } from "../lib/db";
+import { dayKey, pulseOf, shiftDay } from "../lib/reading";
 import SectionHeader from "./SectionHeader";
 import StatCard from "./StatCard";
 
 const DAILY_GOAL = 30;
 
+interface ReadingStats {
+	avgPerDay: number;
+	sessions: number;
+	streak: number;
+	total: number;
+	weekly: { count: number; day: string }[];
+}
+
 export default function ReadingPulse() {
 	const [stats, setStats] = createSignal<ReadingStats | null>(null);
 
 	onMount(async () => {
-		const readingStats = await db.getReadingStats(30);
-		setStats(readingStats);
+		const today = dayKey();
+		const since = shiftDay(today, -29);
+		const rows = (await listReading()).filter((r) => r.date >= since);
+		const pulse = pulseOf(rows, today);
+		const total = rows.reduce((sum, r) => sum + r.anquars, 0);
+		setStats({
+			avgPerDay: Math.round(total / 30),
+			sessions: rows.reduce((sum, r) => sum + r.sessions, 0),
+			streak: pulse.streak,
+			total,
+			weekly: pulse.week.map((d) => ({
+				count: d.anquars,
+				day: new Date(`${d.date}T12:00`).toLocaleDateString("en", {
+					weekday: "short",
+				}),
+			})),
+		});
 	});
 
-	const todayCount = createMemo(() => {
-		const weekly = stats()?.weekly;
-		if (!weekly?.length) return 0;
-		return weekly[weekly.length - 1]?.count ?? 0;
-	});
+	const todayCount = () => stats()?.weekly.at(-1)?.count ?? 0;
 
 	return (
 		<div class="mb-2">

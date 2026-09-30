@@ -1,8 +1,7 @@
 import type { Block, ParsedBook } from "anquar-core";
-import Dexie, { type EntityTable } from "dexie";
+import Dexie, { type EntityTable, type Table } from "dexie";
 import { releaseCoverUrl } from "./covers.ts";
 import type { ReaderSettings } from "./reader-settings.tsx";
-import type { ReadingStats, WeeklyHeatmapEntry } from "./types.ts";
 
 interface BookRecord {
 	addedAt: string;
@@ -61,12 +60,13 @@ interface ImageRecord {
 	id: string;
 }
 
-interface DailyRollupRecord {
-	anquarCount: number;
-	date: string;
-	id?: number;
+interface ReadingRecord {
+	anquars: number;
 	bookId: string;
-	sessionCount: number;
+	cards: string[];
+	date: string;
+	seconds: number;
+	sessions: number;
 }
 
 class AnquarDB extends Dexie {
@@ -75,7 +75,7 @@ class AnquarDB extends Dexie {
 	progress!: EntityTable<ProgressRecord, "bookId">;
 	bookmarks!: EntityTable<BookmarkRecord, "id">;
 	readerSettings!: EntityTable<ReaderSettingsRecord, "bookId">;
-	dailyRollups!: EntityTable<DailyRollupRecord, "id">;
+	reading!: Table<ReadingRecord, [string, string]>;
 	images!: EntityTable<ImageRecord, "id">;
 
 	constructor() {
@@ -89,85 +89,11 @@ class AnquarDB extends Dexie {
 			dailyRollups: "++id, bookId, date",
 			images: "id, bookId",
 		});
-	}
-
-	async upsertDailyRollup(
-		bookId: string,
-		date: string,
-		anquarDelta: number,
-		sessionDelta = 0,
-	) {
-		const existing = await this.dailyRollups
-			.where("bookId")
-			.equals(bookId)
-			.and((r) => r.date === date)
-			.first();
-		if (existing?.id != null) {
-			await this.dailyRollups.update(existing.id, {
-				anquarCount: existing.anquarCount + anquarDelta,
-				sessionCount: existing.sessionCount + sessionDelta,
-			});
-		} else {
-			await this.dailyRollups.add({
-				bookId,
-				date,
-				anquarCount: anquarDelta,
-				sessionCount: sessionDelta,
-			});
-		}
-	}
-
-	async getReadingStats(periodDays = 30): Promise<ReadingStats> {
-		const cutoff = new Date();
-		cutoff.setDate(cutoff.getDate() - periodDays);
-		const cutoffStr = cutoff.toISOString().split("T")[0];
-		const rollups = await this.dailyRollups
-			.where("date")
-			.aboveOrEqual(cutoffStr)
-			.toArray();
-		const total = rollups.reduce((sum, r) => sum + r.anquarCount, 0);
-		return {
-			total,
-			avgPerDay: periodDays > 0 ? Math.round(total / periodDays) : 0,
-			sessions: rollups.reduce((sum, r) => sum + r.sessionCount, 0),
-			streak: await this.getStreak(),
-			weekly: await this.getWeeklyHeatmap(rollups),
-		};
-	}
-
-	private async getStreak(): Promise<number> {
-		let streak = 0;
-		const today = new Date();
-		for (let i = 0; i < 365; i++) {
-			const d = new Date(today);
-			d.setDate(d.getDate() - i);
-			const dateStr = d.toISOString().split("T")[0];
-			const rollup = await this.dailyRollups
-				.where("date")
-				.equals(dateStr)
-				.first();
-			if (rollup && rollup.anquarCount > 0) streak++;
-			else if (i > 0) break;
-		}
-		return streak;
-	}
-
-	private async getWeeklyHeatmap(
-		rollups: DailyRollupRecord[],
-	): Promise<WeeklyHeatmapEntry[]> {
-		const weekly: WeeklyHeatmapEntry[] = [];
-		const today = new Date();
-		for (let i = 6; i >= 0; i--) {
-			const d = new Date(today);
-			d.setDate(d.getDate() - i);
-			const dateStr = d.toISOString().split("T")[0];
-			const dayRollup = rollups.find((r) => r.date === dateStr);
-			weekly.push({
-				day: d.toLocaleDateString("en", { weekday: "short" }),
-				count: dayRollup?.anquarCount ?? 0,
-			});
-		}
-		return weekly;
+		// Nothing ever wrote a daily rollup, so the table goes without a migration.
+		this.version(2).stores({
+			dailyRollups: null,
+			reading: "[date+bookId], date, bookId",
+		});
 	}
 }
 
@@ -285,6 +211,38 @@ export function getProgress(bookId: string) {
 	return db.progress.get(bookId);
 }
 
+// One row per book per reading day. A card counts once a day however often it's read, which is why the
+// row keeps the ids it has counted. Deleting a book keeps its rows: the streak is yours, not the book's.
+export function recordReading(
+	bookId: string,
+	date: string,
+	add: { cardId?: string; seconds?: number; session?: boolean },
+): Promise<boolean> {
+	return db.transaction("rw", db.reading, async () => {
+		const row = (await db.reading.get([date, bookId])) ?? {
+			anquars: 0,
+			bookId,
+			cards: [],
+			date,
+			seconds: 0,
+			sessions: 0,
+		};
+		const counted = add.cardId !== undefined && !row.cards.includes(add.cardId);
+		if (counted && add.cardId) {
+			row.cards.push(add.cardId);
+			row.anquars += 1;
+		}
+		row.seconds += add.seconds ?? 0;
+		if (add.session) row.sessions += 1;
+		await db.reading.put(row);
+		return counted;
+	});
+}
+
+export function listReading() {
+	return db.reading.toArray();
+}
+
 export async function deleteBook(bookId: string) {
 	releaseCoverUrl(bookId);
 	const tables = [
@@ -293,7 +251,6 @@ export async function deleteBook(bookId: string) {
 		db.progress,
 		db.bookmarks,
 		db.readerSettings,
-		db.dailyRollups,
 		db.images,
 	] as const;
 	await db.transaction("rw", tables, async () => {
@@ -302,7 +259,6 @@ export async function deleteBook(bookId: string) {
 		await db.progress.delete(bookId);
 		await db.bookmarks.where("bookId").equals(bookId).delete();
 		await db.readerSettings.where("bookId").equals(bookId).delete();
-		await db.dailyRollups.where("bookId").equals(bookId).delete();
 		await db.images.where("bookId").equals(bookId).delete();
 	});
 }
