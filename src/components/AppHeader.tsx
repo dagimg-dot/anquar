@@ -1,3 +1,4 @@
+import { MARK, markLines } from "../brand/mark";
 import IconButton from "./IconButton";
 
 export default function AppHeader() {
@@ -9,14 +10,13 @@ export default function AppHeader() {
 					viewBox="0 0 64 64"
 					fill="none"
 					stroke="currentColor"
-					stroke-width="4"
+					stroke-width={MARK.stroke}
 					stroke-linecap="round"
 					aria-hidden="true"
 				>
-					<line x1="8" y1="16" x2="56" y2="16" />
-					<line x1="14" y1="28" x2="50" y2="28" />
-					<line x1="20" y1="40" x2="44" y2="40" />
-					<line x1="26" y1="52" x2="38" y2="52" />
+					{markLines().map((l) => (
+						<line x1={l.x1} y1={l.y} x2={l.x2} y2={l.y} />
+					))}
 				</svg>
 				<span class="bg-gradient-to-br from-ink to-ink-soft bg-clip-text text-transparent">
 					anquar

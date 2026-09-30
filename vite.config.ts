@@ -2,6 +2,12 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, type Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import solid from "vite-plugin-solid";
+import { GROUND } from "./src/brand/mark.ts";
+import {
+	IOS_SCREENS,
+	startupImage,
+	startupMedia,
+} from "./src/brand/startup.ts";
 
 function manifestContentType(): Plugin {
 	return {
@@ -13,6 +19,22 @@ function manifestContentType(): Plugin {
 				}
 				next();
 			});
+		},
+	};
+}
+
+// index.html takes its colours and the iOS startup images from src/brand.
+function brandHtml(): Plugin {
+	return {
+		name: "brand-html",
+		transformIndexHtml(html) {
+			const startup = IOS_SCREENS.map(
+				(s) =>
+					`<link rel="apple-touch-startup-image" media="${startupMedia(s)}" href="/${startupImage(s)}">`,
+			).join("\n    ");
+			return html
+				.replace("<!--apple-startup-->", startup)
+				.replaceAll("__GROUND__", GROUND);
 		},
 	};
 }
@@ -32,30 +54,44 @@ export default defineConfig({
 		tailwindcss(),
 		solid(),
 		manifestContentType(),
+		brandHtml(),
 		VitePWA({
 			registerType: "prompt",
 			injectRegister: false,
-			pwaAssets: {
-				disabled: false,
-				config: true,
-				htmlPreset: "2023",
-				overrideManifestIcons: true,
-			},
+			// Android draws its splash from background_color and the maskable icon, whose ground is the same
+			// colour, and keeps theme_color in the status bar: both are the dark canvas, so the launch, the
+			// splash and the Feed tab are one surface.
 			manifest: {
+				id: "/",
 				name: "Anquar",
 				short_name: "Anquar",
 				description: "Guilt-free doomscrolling — books in a TikTok-style feed",
-				theme_color: "#ffffff",
-				background_color: "#ffffff",
+				theme_color: GROUND,
+				background_color: GROUND,
 				display: "standalone",
 				scope: "/",
 				start_url: "/",
 				icons: [
-					{ src: "pwa-64x64.png", sizes: "64x64", type: "image/png" },
-					{ src: "pwa-192x192.png", sizes: "192x192", type: "image/png" },
-					{ src: "pwa-512x512.png", sizes: "512x512", type: "image/png" },
 					{
-						src: "maskable-icon-512x512.png",
+						src: "icons/pwa-192x192.png",
+						sizes: "192x192",
+						type: "image/png",
+						purpose: "any",
+					},
+					{
+						src: "icons/pwa-512x512.png",
+						sizes: "512x512",
+						type: "image/png",
+						purpose: "any",
+					},
+					{
+						src: "icons/maskable-192x192.png",
+						sizes: "192x192",
+						type: "image/png",
+						purpose: "maskable",
+					},
+					{
+						src: "icons/maskable-512x512.png",
 						sizes: "512x512",
 						type: "image/png",
 						purpose: "maskable",

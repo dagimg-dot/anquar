@@ -84,6 +84,16 @@ minting a fresh one each render reloads the image and flickers. Only covers are
 revoked (`releaseCoverUrl`, called by `deleteBook`); image URLs are held for the
 life of the page.
 
+**Mark and icons** — `src/brand/mark.ts` is the one drawing of the mark: four
+lines whose ends run to a point, the core. The header, the icons and the
+splash all read it. `bun run icons` (`scripts/icons.ts`, needs rsvg-convert and
+ImageMagick) writes every icon, the favicon and the plain iOS startup images
+into `public/`; never edit those by hand. The icon's ground is the dark canvas
+`#0B1210`, and so are the manifest's `background_color` and `theme_color`:
+Android draws its launch splash from them, so launch, splash and app are one
+surface.
+
+
 ## Testing
 
 <!-- TODO -->
