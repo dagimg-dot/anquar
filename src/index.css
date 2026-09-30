@@ -79,6 +79,8 @@ html {
 .snap-container {
 	height: 100dvh;
 	overflow-y: auto;
+	/* Feed.tsx restores the reading position after a relayout; browser scroll anchoring would fight it. */
+	overflow-anchor: none;
 	overscroll-behavior: contain;
 	scroll-snap-type: y mandatory;
 	scrollbar-width: none;

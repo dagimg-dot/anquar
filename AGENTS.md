@@ -59,9 +59,11 @@ where they fit, a paragraph split at a sentence where a card would otherwise
 be mostly empty, headings kept with what they open. A card is an *anquar*, the
 unit behind the daily goal and reading stats. `LayoutProbe`, a hidden card in
 the reader's type, measures how much a card holds (`src/lib/card-layout.ts`)
-and re-measures whenever the screen, type size, line height or margins change,
-and the book is then paginated again. `useLazyChapters` loads three chapters at
-a time behind an IntersectionObserver sentinel, and `loadUpTo` pulls forward
+and re-measures whenever the screen, type size, line height or margins change;
+the book is then paginated again and the reader returned to the card holding
+the words they were on. Card ids name a place in the book (`c3-12@480`), which
+is how that return survives a relayout. `useLazyChapters` loads three chapters
+at a time behind an IntersectionObserver sentinel, and `loadUpTo` pulls forward
 far enough for a contents jump to land.
 
 **Reader chrome** — `ReaderRail` carries contents, explain, save, share and

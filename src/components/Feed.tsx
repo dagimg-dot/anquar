@@ -22,6 +22,7 @@ import {
 	createSignal,
 	For,
 	Match,
+	on,
 	onCleanup,
 	onMount,
 	Show,
@@ -29,7 +30,12 @@ import {
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import toast from "solid-toast";
-import { LAYOUT_SAMPLE, readLayout, reuseCards } from "../lib/card-layout.ts";
+import {
+	findCardHolding,
+	LAYOUT_SAMPLE,
+	readLayout,
+	reuseCards,
+} from "../lib/card-layout.ts";
 import { chapterLabel } from "../lib/chapters.ts";
 import { coverUrl } from "../lib/covers.ts";
 import {
@@ -453,13 +459,47 @@ export default function Feed() {
 		bloomEl.classList.add("save-bloom");
 	}
 
-	function scrollToCard(index: number) {
+	function scrollToCard(index: number, instant = false) {
 		const pages = container()?.querySelectorAll<HTMLElement>(".snap-page");
 		pages?.[index + COVER_PAGES]?.scrollIntoView({
-			behavior: reduceMotion() ? "auto" : "smooth",
+			behavior: instant || reduceMotion() ? "auto" : "smooth",
 			block: "start",
 		});
 	}
+
+	let anchor: string | undefined;
+	let returningTo: number | undefined;
+	let returnDeadline: ReturnType<typeof setTimeout> | undefined;
+	createEffect(
+		on(position, () => {
+			const card = currentCard();
+			if (!card) return;
+			if (returningTo !== undefined) {
+				if (cardIndex() !== returningTo) return;
+				returningTo = undefined;
+			}
+			if (!anchor || findCardHolding(cards(), anchor) !== cardIndex())
+				anchor = card.id;
+		}),
+	);
+	createEffect(
+		on(
+			layout,
+			() => {
+				if (!anchor) return;
+				const index = findCardHolding(cards(), anchor);
+				if (index < 0) return;
+				returningTo = index;
+				clearTimeout(returnDeadline);
+				returnDeadline = setTimeout(() => {
+					returningTo = undefined;
+				}, 1000);
+				requestAnimationFrame(() => scrollToCard(index, true));
+			},
+			{ defer: true },
+		),
+	);
+	onCleanup(() => clearTimeout(returnDeadline));
 
 	async function jumpToChapter(chapterIndex: number) {
 		setSheet(null);
