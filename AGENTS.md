@@ -62,9 +62,9 @@ the reader's type, measures how much a card holds (`src/lib/card-layout.ts`)
 and re-measures whenever the screen, type size, line height or margins change;
 the book is then paginated again and the reader returned to the card holding
 the words they were on. Card ids name a place in the book (`c3-12@480`), which
-is how that return survives a relayout. `useLazyChapters` loads three chapters
-at a time behind an IntersectionObserver sentinel, and `loadUpTo` pulls forward
-far enough for a contents jump to land.
+is how that return, and bookmarks, survive a relayout. `useLazyChapters` loads
+three chapters at a time behind an IntersectionObserver sentinel, and `loadUpTo`
+pulls forward far enough for a contents jump to land.
 
 **Reader chrome** — `ReaderRail` carries contents, explain, save, share and
 settings; each opens a `BottomSheet`. The rail overlays the page rather than

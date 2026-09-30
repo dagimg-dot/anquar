@@ -415,7 +415,14 @@ export default function Feed() {
 		return Math.min(1, Math.max(0, (currentChapter() + within) / total));
 	});
 
-	const savedHere = () => bookmarks().some((b) => b.cardIndex === cardIndex());
+	const savedCardIndexes = createMemo(() => {
+		const list = cards();
+		return bookmarks().map((b) =>
+			b.cardId ? findCardHolding(list, b.cardId) : (b.cardIndex ?? -1),
+		);
+	});
+
+	const savedHere = () => savedCardIndexes().includes(cardIndex());
 
 	const chromeOpacity = () => {
 		if (railShown() || settings().railRest === "always") return 1;
@@ -432,13 +439,16 @@ export default function Feed() {
 		const card = currentCard();
 		if (!meta || !card) return;
 
-		const existing = bookmarks().find((b) => b.cardIndex === cardIndex());
+		const existing = bookmarks().find(
+			(_, i) => savedCardIndexes()[i] === cardIndex(),
+		);
 		if (existing?.id !== undefined) {
 			await removeBookmark(existing.id);
 			toast.success("Removed from shelf");
 		} else {
 			await addBookmark({
 				bookId: meta.id,
+				cardId: card.id,
 				cardIndex: cardIndex(),
 				chapterIndex: card.chapterIndex,
 				label: chapterLabel(

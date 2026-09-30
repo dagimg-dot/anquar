@@ -33,6 +33,7 @@ interface ProgressRecord {
 
 interface BookmarkRecord {
 	bookId: string;
+	cardId?: string;
 	cardIndex?: number;
 	chapterIndex: number;
 	createdAt: string;
@@ -314,6 +315,7 @@ export function listBookmarks(bookId: string) {
 
 export function addBookmark(entry: {
 	bookId: string;
+	cardId: string;
 	cardIndex: number;
 	chapterIndex: number;
 	label: string;
