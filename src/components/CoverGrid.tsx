@@ -15,7 +15,7 @@ export default function CoverGrid(rawProps: CoverGridProps) {
 				.filter(Boolean)
 				.join(" ")}
 			style={{
-				"grid-template-columns": `repeat(${props.columns}, 1fr)`,
+				"grid-template-columns": `repeat(${props.columns}, minmax(0, 1fr))`,
 			}}
 		>
 			{props.children}

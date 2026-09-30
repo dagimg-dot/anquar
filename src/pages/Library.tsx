@@ -118,7 +118,9 @@ export default function Library() {
 									<div class="text-sm font-medium text-ink mt-2 overflow-hidden text-ellipsis whitespace-nowrap">
 										{book.title}
 									</div>
-									<div class="text-xs text-ink-soft mt-0.5">{book.author}</div>
+									<div class="text-xs text-ink-soft mt-0.5 truncate">
+										{book.author}
+									</div>
 								</button>
 							)}
 						</For>
