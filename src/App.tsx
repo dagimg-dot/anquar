@@ -39,7 +39,12 @@ function App() {
 				onStage: (stage) =>
 					toast.loading(`${STAGE_TEXT[stage]} ${name}…`, { id: toastId }),
 			});
-			toast.success(`${book.title} is in your library`, { id: toastId });
+			toast.success(
+				book.alreadyThere
+					? `${book.title} is already in your library`
+					: `${book.title} is in your library`,
+				{ id: toastId },
+			);
 			navigate(`/book/${book.bookId}`);
 		} catch (err) {
 			const reason = err instanceof ImportError ? err.reason : "damaged";

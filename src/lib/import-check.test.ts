@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lockedByDrm, looksLikeZip } from "./import-check.ts";
+import { lockedByDrm, looksLikeZip, sameBook } from "./import-check.ts";
 
 describe("looksLikeZip", () => {
 	it("knows a zip by its first four bytes, not its name", () => {
@@ -30,5 +30,22 @@ describe("lockedByDrm", () => {
 			lockedByDrm(method("http://www.w3.org/2001/04/xmlenc#aes128-cbc"), false),
 		).toBe(true);
 		expect(lockedByDrm("", true)).toBe(true);
+	});
+});
+
+describe("sameBook", () => {
+	it("matches title and author ignoring case and spacing", () => {
+		expect(
+			sameBook(
+				{ title: "Animal  Farm", author: "George Orwell" },
+				{ title: "animal farm", author: "george orwell " },
+			),
+		).toBe(true);
+		expect(
+			sameBook(
+				{ title: "Animal Farm", author: "George Orwell" },
+				{ title: "Animal Farm", author: "Someone Else" },
+			),
+		).toBe(false);
 	});
 });

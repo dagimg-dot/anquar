@@ -1,6 +1,7 @@
 import type { Block, ParsedBook } from "anquar-core";
 import Dexie, { type EntityTable, type Table } from "dexie";
 import { releaseCoverUrl } from "./covers.ts";
+import { sameBook } from "./import-check.ts";
 import type { ReaderSettings } from "./reader-settings.tsx";
 
 interface BookRecord {
@@ -205,6 +206,10 @@ export async function saveProgress(
 		lastReadAt: new Date().toISOString(),
 	});
 	await db.books.update(bookId, { lastOpenedAt: new Date().toISOString() });
+}
+
+export async function findBook(match: { title: string; author: string }) {
+	return (await db.books.toArray()).find((book) => sameBook(book, match));
 }
 
 export function getProgress(bookId: string) {

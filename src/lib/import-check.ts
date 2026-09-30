@@ -36,3 +36,14 @@ export function lockedByDrm(
 	].map((m) => m[1]);
 	return algorithms.some((a) => !FONT_OBFUSCATION.includes(a));
 }
+
+const normal = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+
+export function sameBook(
+	a: { title: string; author: string },
+	b: { title: string; author: string },
+): boolean {
+	return (
+		normal(a.title) === normal(b.title) && normal(a.author) === normal(b.author)
+	);
+}
