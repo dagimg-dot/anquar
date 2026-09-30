@@ -49,8 +49,9 @@ request that ever leaves the device is an explicit Explain call.
 the tabs (Feed, Library, Saved, Settings, switched by signal rather than URL)
 and `/book/:id` for the reader.
 
-**Import** — the Feed and Library tabs' + buttons go through the queue in
-`src/lib/imports.ts` and the sheet in `ImportSheet`. Books import one at a time, each in its own
+**Import** — every way in (the Feed tab's +, the Library tab's +, and books
+shared to Anquar from other apps) goes through the queue in `src/lib/imports.ts`
+and the sheet in `ImportSheet`. Books import one at a time, each in its own
 `src/workers/epub.worker.ts`, which `parseEpub` always shuts down afterwards. The
 worker judges the file by its bytes, not its name (`import-check.ts`: not a zip,
 DRM, damaged, unreadable), then calls `parseEpubFromZip` from anquar-core, and
@@ -61,6 +62,20 @@ cover, title and copyright pages, contents, praise, notes and index — and with
 dedications, epigraphs and prefaces marked `frontMatter`. `libraryVersion`
 ticks when a book lands, and the Feed and Library tabs load again on it.
 
+**Share target** — the manifest's `share_target` makes Anquar a target for
+EPUBs in Android's share sheet. `public/share-target.js`, imported into the
+generated service worker, takes the post, leaves the files in the
+`anquar-shared` cache and redirects to `/?shared`, where `importShared` hands
+them to the queue. An installed app only picks up a change to the share target
+when Chrome rebuilds it, which can take a day; reinstalling is immediate.
+
+**Storage** — Dexie over IndexedDB in `src/lib/db.ts`, database `anquar`,
+schema v2. Tables: `books`, `chapters`, `progress`, `bookmarks`,
+`readerSettings`, `reading`, `images`. Image bytes are split into `images`
+so chapter JSON stays small; `saveBook` strips them with a replacer. `progress`
+keeps the id of the card you're on, and the reader loads forward to it on open.
+`reading` has one row per book per reading day; deleting a book keeps its rows,
+because the streak belongs to you, not the book.
 
 **Feed** — `src/components/Feed.tsx`. CSS scroll-snap over cards that
 anquar-core's `paginate` lays out to fill one screen each: whole paragraphs

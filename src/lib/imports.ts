@@ -178,3 +178,25 @@ function reset() {
 	held.clear();
 	setJobs(reconcile([]));
 }
+
+// Where the service worker leaves books shared to Anquar (public/share-target.js).
+const SHARED_CACHE = "anquar-shared";
+
+export async function importShared() {
+	const cache = await caches.open(SHARED_CACHE);
+	const shared: File[] = [];
+	for (const request of await cache.keys()) {
+		const response = await cache.match(request);
+		await cache.delete(request);
+		if (!response) continue;
+		const name = decodeURIComponent(
+			response.headers.get("x-file-name") ?? "book.epub",
+		);
+		shared.push(
+			new File([await response.blob()], name, {
+				type: response.headers.get("content-type") ?? "",
+			}),
+		);
+	}
+	importFiles(shared);
+}

@@ -1,10 +1,10 @@
-import { useLocation, useParams } from "@solidjs/router";
-import { createSignal, Match, Show, Switch } from "solid-js";
+import { useLocation, useNavigate, useParams } from "@solidjs/router";
+import { createSignal, Match, onMount, Show, Switch } from "solid-js";
 import AppleToaster from "./components/AppleToaster.tsx";
 import BottomNav from "./components/BottomNav.tsx";
 import Feed from "./components/Feed.tsx";
 import ImportSheet from "./components/ImportSheet.tsx";
-import { pickBooks } from "./lib/imports.ts";
+import { importShared, pickBooks } from "./lib/imports.ts";
 import { ReaderSettingsProvider } from "./lib/reader-settings.tsx";
 import PWABadge from "./PWABadge.tsx";
 import FeedPage from "./pages/Feed.tsx";
@@ -15,10 +15,19 @@ import SettingsTab from "./pages/SettingsTab.tsx";
 function App() {
 	const params = useParams();
 	const location = useLocation();
+	const navigate = useNavigate();
 	const [activeTab, setActiveTab] = createSignal("feed");
 
 	const isReaderPage = () => location.pathname.startsWith("/book/");
 	const bookId = () => params.id || null;
+
+	// A book shared to Anquar from another app arrives as a redirect to "/?shared", with the files left in
+	// the service worker's cache.
+	onMount(() => {
+		if (!new URLSearchParams(location.search).has("shared")) return;
+		navigate("/", { replace: true });
+		void importShared();
+	});
 
 	return (
 		<div class="min-h-screen bg-canvas text-ink">

@@ -75,6 +75,17 @@ export default defineConfig({
 				display: "standalone",
 				scope: "/",
 				start_url: "/",
+				// Share → Anquar from other apps; public/share-target.js takes the post.
+				share_target: {
+					action: "/share-target",
+					method: "POST",
+					enctype: "multipart/form-data",
+					params: {
+						files: [
+							{ name: "books", accept: ["application/epub+zip", ".epub"] },
+						],
+					},
+				},
 				icons: [
 					{
 						src: "icons/pwa-192x192.png",
@@ -104,6 +115,8 @@ export default defineConfig({
 			},
 			workbox: {
 				globPatterns: ["**/*.{js,css,html,svg,png,ico}"],
+				globIgnores: ["share-target.js"],
+				importScripts: ["share-target.js"],
 				cleanupOutdatedCaches: true,
 				clientsClaim: true,
 			},
