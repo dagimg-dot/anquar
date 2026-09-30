@@ -119,6 +119,7 @@ function App() {
 					onClick={() => fabInputRef?.click()}
 					type="button"
 					aria-label="Import EPUB"
+					data-splash-rise
 				>
 					<svg
 						fill="none"

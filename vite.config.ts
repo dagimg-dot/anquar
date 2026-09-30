@@ -2,7 +2,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, type Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import solid from "vite-plugin-solid";
-import { GROUND } from "./src/brand/mark.ts";
+import { GROUND, INK, markSvgLines, SPLASH_BOX } from "./src/brand/mark.ts";
 import {
 	IOS_SCREENS,
 	startupImage,
@@ -23,7 +23,8 @@ function manifestContentType(): Plugin {
 	};
 }
 
-// index.html takes its colours and the iOS startup images from src/brand.
+// The splash's first frame has to be in index.html, painted before the bundle loads, so the mark, its
+// colours and size, and the iOS startup images are written into it from src/brand.
 function brandHtml(): Plugin {
 	return {
 		name: "brand-html",
@@ -33,8 +34,11 @@ function brandHtml(): Plugin {
 					`<link rel="apple-touch-startup-image" media="${startupMedia(s)}" href="/${startupImage(s)}">`,
 			).join("\n    ");
 			return html
+				.replace("<!--mark-->", markSvgLines())
 				.replace("<!--apple-startup-->", startup)
-				.replaceAll("__GROUND__", GROUND);
+				.replaceAll("__GROUND__", GROUND)
+				.replaceAll("__INK__", INK)
+				.replace("__SPLASH_BOX__", SPLASH_BOX.toFixed(2));
 		},
 	};
 }

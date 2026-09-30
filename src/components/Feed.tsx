@@ -55,6 +55,7 @@ import {
 import { readSelection } from "../lib/selection.ts";
 import { useLazyChapters } from "../lib/useLazyChapters.ts";
 import { useTikTokScroll } from "../lib/useTikTokScroll.ts";
+import { splashReady } from "../splash.ts";
 import BottomSheet from "./BottomSheet.tsx";
 import ContentsSheet from "./ContentsSheet.tsx";
 import CoverCard from "./CoverCard.tsx";
@@ -616,6 +617,7 @@ export default function Feed() {
 			console.error("Failed to load book:", err);
 		} finally {
 			setMetaLoaded(true);
+			splashReady();
 		}
 	});
 

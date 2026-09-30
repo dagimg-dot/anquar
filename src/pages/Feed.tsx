@@ -7,6 +7,7 @@ import NowReading from "../components/NowReading";
 import ReadingPulse from "../components/ReadingPulse";
 import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
+import { splashReady } from "../splash";
 
 export default function FeedPage() {
 	const navigate = useNavigate();
@@ -82,13 +83,14 @@ export default function FeedPage() {
 			console.error("Failed to load feed:", err);
 		} finally {
 			setLoading(false);
+			splashReady();
 		}
 	});
 
 	return (
 		<>
 			<AppHeader />
-			<div class="pb-24">
+			<div class="pb-24" data-splash-rise="children">
 				<Show
 					when={!loading()}
 					fallback={

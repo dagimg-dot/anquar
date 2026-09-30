@@ -93,6 +93,18 @@ into `public/`; never edit those by hand. The icon's ground is the dark canvas
 Android draws its launch splash from them, so launch, splash and app are one
 surface.
 
+**Splash** — only in the installed app. Android shows its own splash first
+(the maskable icon's mark, centred on the whole screen), so `index.html` paints
+the same mark in the same place before the bundle loads; `vite.config.ts`
+writes the mark and sizes into it from `src/brand`. `src/splash.ts` takes that
+frame over: it holds 0.3 s while Android's splash fades (elsewhere the mark
+builds), steps the lines while the app loads, and once `splashReady()` is
+called (the Feed tab after `listBooks`, the reader once its book is loaded)
+lands the mark on the header's `[data-splash-land]` while
+`[data-splash-rise]` and `[data-splash-word]` come in. `SPLASH_CANVAS_DP` in
+`mark.ts` was measured on a Nothing A059; re-measure on another phone before
+trusting the hand-over there. The design and its reasoning are in
+`design/icon-splash.html`.
 
 ## Testing
 

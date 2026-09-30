@@ -28,9 +28,47 @@
       );
     })();
     </script>
+    <style>
+      #splash { position: fixed; inset: 0; z-index: 2147483647; }
+      #splash > div { position: absolute; inset: 0; background: __GROUND__; }
+      #splash > svg { position: absolute; left: 0; top: 0; overflow: visible; color: __INK__; }
+      #splash[data-entry="build"] > svg { visibility: hidden; }
+    </style>
     <title>anquar</title>
   </head>
   <body>
+    <div id="splash"><div></div><svg viewBox="0 0 64 64" aria-hidden="true"><!--mark--></svg></div>
+    <script>
+    "use strict";
+    // The splash's first frame, placed before the bundle loads; src/splash.ts takes it from here. Only an
+    // installed app has one. On Android the phone has just shown its own splash, the icon's mark centred on
+    // the whole screen, and our page starts below the status bar, so the mark goes exactly where that one is.
+    (() => {
+      const el = document.getElementById("splash");
+      const standalone =
+        matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+      if (!standalone) return el.remove();
+      const android = /Android/.test(navigator.userAgent);
+      const svg = el.lastElementChild;
+      const place = () => {
+        const vv = window.visualViewport;
+        const W = vv ? vv.width : innerWidth;
+        const H = vv && Math.abs(vv.height - innerHeight) < 1 ? vv.height : innerHeight;
+        const top = screen.availTop || 0;
+        const sh = Math.abs(screen.height - (top + H)) < 1 ? top + H : screen.height;
+        const cy = android && top > 0 ? sh / 2 - top : H / 2;
+        const s = __SPLASH_BOX__;
+        const box = { x: W / 2 - s / 2, y: cy - s / 2, s };
+        svg.style.width = svg.style.height = `${s}px`;
+        svg.style.transform = `translate(${box.x}px, ${box.y}px)`;
+        return box;
+      };
+      place();
+      addEventListener("resize", place);
+      el.dataset.entry = android ? "hold" : "build";
+      window.__anquarSplash = { t0: performance.now(), entry: el.dataset.entry, place };
+    })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/index.tsx"></script>
   </body>
