@@ -13,7 +13,6 @@ interface BookmarkItem {
 	id?: number;
 	label: string;
 	textSnippet: string;
-	wordOffset: number;
 }
 
 interface BookGroup {
@@ -89,7 +88,7 @@ export default function Saved() {
 										{(bm) => (
 											<HighlightCard
 												text={bm.textSnippet}
-												meta={`${bm.wordOffset} buktoks · ${new Date(bm.createdAt).toLocaleDateString()}`}
+												meta={new Date(bm.createdAt).toLocaleDateString()}
 											/>
 										)}
 									</For>
