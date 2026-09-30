@@ -1,10 +1,8 @@
 import { createSignal, For, onMount } from "solid-js";
 import { listReading } from "../lib/db";
-import { dayKey, pulseOf, shiftDay } from "../lib/reading";
+import { dayKey, pulseOf, readingGoal, shiftDay } from "../lib/reading";
 import SectionHeader from "./SectionHeader";
 import StatCard from "./StatCard";
-
-const DAILY_GOAL = 30;
 
 interface ReadingStats {
 	avgPerDay: number;
@@ -16,6 +14,7 @@ interface ReadingStats {
 
 export default function ReadingPulse() {
 	const [stats, setStats] = createSignal<ReadingStats | null>(null);
+	const goal = readingGoal();
 
 	onMount(async () => {
 		const today = dayKey();
@@ -53,14 +52,14 @@ export default function ReadingPulse() {
 					<div class="flex items-baseline justify-between mb-1.5">
 						<div class="text-sm text-ink-soft">Today's anquars</div>
 						<div class="text-xs font-semibold tabular-nums text-ink-soft">
-							{todayCount()} / {DAILY_GOAL}
+							{todayCount()} / {goal}
 						</div>
 					</div>
 					<div class="h-1.5 rounded-[3px] bg-border overflow-hidden">
 						<div
 							class="h-full rounded-[3px] bg-brand-500 transition-[width] duration-300 ease-in-out"
 							style={{
-								width: `${Math.min(100, (todayCount() / DAILY_GOAL) * 100)}%`,
+								width: `${Math.min(100, (todayCount() / goal) * 100)}%`,
 							}}
 						/>
 					</div>

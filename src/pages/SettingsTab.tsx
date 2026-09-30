@@ -8,6 +8,7 @@ import SettingsSection, {
 	SettingsThemeOption,
 } from "../components/SettingsSection";
 import { db } from "../lib/db";
+import { readingGoal, setReadingGoal } from "../lib/reading";
 import { useTheme } from "../theme/ThemeContext";
 
 const FONT_SIZES = ["XS", "S", "M", "L", "XL"] as const;
@@ -42,7 +43,7 @@ export default function SettingsTab() {
 	const [fontSize, setFontSize] = createSignal("M");
 	const [lineSpacing, setLineSpacing] = createSignal(1.7);
 	const [alignment, setAlignment] = createSignal("top");
-	const [goal, setGoal] = createSignal(30);
+	const [goal, setGoal] = createSignal(readingGoal());
 
 	db.readerSettings.get("global").then((record) => {
 		if (record) {
@@ -225,7 +226,10 @@ export default function SettingsTab() {
 								<SettingsOption
 									label={String(g)}
 									active={goal() === g}
-									onClick={() => setGoal(g)}
+									onClick={() => {
+										setGoal(g);
+										setReadingGoal(g);
+									}}
 								/>
 							)}
 						</For>
