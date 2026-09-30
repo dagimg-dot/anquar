@@ -1,6 +1,12 @@
 import type { Block } from "anquar-core";
 import { chunkBook, DEFAULT_CHUNK_CONFIG } from "anquar-core";
-import { createEffect, createSignal, onCleanup } from "solid-js";
+import {
+	createEffect,
+	createMemo,
+	createSignal,
+	on,
+	onCleanup,
+} from "solid-js";
 import { getChaptersRange } from "./db.ts";
 
 const BATCH_SIZE = 3;
@@ -13,6 +19,7 @@ export interface FeedChapter {
 }
 
 export function useLazyChapters(getBookId: () => string) {
+	const bookId = createMemo(getBookId);
 	const [chapters, setChapters] = createSignal<FeedChapter[]>([]);
 	const [loading, setLoading] = createSignal(false);
 	const [allLoaded, setAllLoaded] = createSignal(false);
@@ -30,12 +37,14 @@ export function useLazyChapters(getBookId: () => string) {
 	}
 
 	async function runBatch() {
-		const bookId = getBookId();
-		if (!bookId || allLoaded()) return;
+		const id = bookId();
+		if (!id || allLoaded()) return;
 
 		setLoading(true);
 		try {
-			const batch = await getChaptersRange(bookId, nextOrder, BATCH_SIZE);
+			const batch = await getChaptersRange(id, nextOrder, BATCH_SIZE);
+			const bookChanged = id !== bookId();
+			if (bookChanged) return;
 			if (batch.length === 0) {
 				setAllLoaded(true);
 				return;
@@ -80,13 +89,15 @@ export function useLazyChapters(getBookId: () => string) {
 		observer.observe(el);
 	}
 
-	createEffect(() => {
-		const bookId = getBookId();
-		setChapters([]);
-		setAllLoaded(false);
-		nextOrder = 0;
-		if (bookId) void loadNextBatch();
-	});
+	createEffect(
+		on(bookId, (id) => {
+			setChapters([]);
+			setAllLoaded(false);
+			nextOrder = 0;
+			const previousBatch = pending ?? Promise.resolve();
+			if (id) void previousBatch.then(loadNextBatch);
+		}),
+	);
 
 	onCleanup(() => observer?.disconnect());
 
