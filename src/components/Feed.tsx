@@ -595,8 +595,14 @@ export default function Feed() {
 				await loadUpTo(saved.chapterIndex);
 				const index = findCardHolding(cards(), saved.cardId);
 				if (index < 0) return;
-				anchor = saved.cardId;
-				requestAnimationFrame(() => scrollToCard(index, true));
+				requestAnimationFrame(() => {
+					// A deep place takes a moment to load; anyone who has scrolled off the cover by then has
+					// chosen where to start.
+					const el = container();
+					if (el && Math.round(el.scrollTop / el.clientHeight) !== 0) return;
+					anchor = saved.cardId;
+					scrollToCard(index, true);
+				});
 			},
 		),
 	);
