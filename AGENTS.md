@@ -26,7 +26,9 @@ keeps running the old core.
 
 No environment variables and no `.env`. The Gemini key is entered in the app
 (Settings tab) and lives in `localStorage` under `anquar_api_key`, alongside
-`anquar_model`.
+`anquar_model` and the daily goal, `anquar_goal`. The Reading Pulse keeps its
+small bookkeeping there too: `anquar_last_read_at` (for sessions),
+`anquar_moments` and `anquar_pulse_stepped` (what has been celebrated today).
 
 ## Commands
 
@@ -54,9 +56,12 @@ book's apparatus — cover, title and copyright pages, contents, praise, notes
 and index — and with dedications, epigraphs and prefaces marked `frontMatter`.
 
 **Storage** — Dexie over IndexedDB in `src/lib/db.ts`, database `anquar`,
-schema v1. Tables: `books`, `chapters`, `progress`, `bookmarks`,
-`readerSettings`, `dailyRollups`, `images`. Image bytes are split into `images`
-so chapter JSON stays small; `saveBook` strips them with a replacer.
+schema v2. Tables: `books`, `chapters`, `progress`, `bookmarks`,
+`readerSettings`, `reading`, `images`. Image bytes are split into `images`
+so chapter JSON stays small; `saveBook` strips them with a replacer. `progress`
+keeps the id of the card you're on, and the reader loads forward to it on open.
+`reading` has one row per book per reading day; deleting a book keeps its rows,
+because the streak belongs to you, not the book.
 
 **Feed** — `src/components/Feed.tsx`. CSS scroll-snap over cards that
 anquar-core's `paginate` lays out to fill one screen each: whole paragraphs
@@ -106,9 +111,23 @@ lands the mark on the header's `[data-splash-land]` while
 trusting the hand-over there. The design and its reasoning are in
 `design/icon-splash.html`.
 
+**Reading Pulse** — `useReadingTracker` times the card on screen while the app
+is visible. A card counts once it has been there for its words at 600 wpm,
+once per card per day, and its time counts up to its words at 150 wpm. Days end
+at 4 a.m. (`dayKey`). `pulseOf` turns the `reading` rows into the card: 5
+anquars keep the streak, seven reading days bank a rest day (two at most) that
+a missed day spends, and a rest day holds the streak without adding to it.
+`ReadingPulse` draws today as `MarkMeter`, the mark filled a quarter of the
+goal per line, and tapping it continues your book. `PulseMoment` is the pill
+the reader drops when the goal closes, a best day is beaten or the streak is
+kept, each once a day.
+
 ## Testing
 
-<!-- TODO -->
+`bun run test` runs Vitest (happy-dom). The reading rules are pure functions in
+`src/lib/reading.ts` with their tests beside them, in `reading.test.ts`: the
+4 a.m. day, what counts as an anquar, the streak and rest days, the card's
+line and which moment to show. Change a rule there, test first.
 
 ## PR / Commit
 
