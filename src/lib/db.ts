@@ -25,10 +25,10 @@ interface ChapterRecord {
 
 interface ProgressRecord {
 	bookId: string;
+	cardId: string;
 	chapterIndex: number;
 	lastReadAt: string;
 	progressPercent: number;
-	wordOffset: number;
 }
 
 interface BookmarkRecord {
@@ -269,15 +269,13 @@ export async function listChapterTitles(bookId: string) {
 
 export async function saveProgress(
 	bookId: string,
-	chapterIndex: number,
-	wordOffset: number,
-	progressPercent: number,
+	place: { cardId: string; chapterIndex: number; percent: number },
 ) {
 	await db.progress.put({
 		bookId,
-		chapterIndex,
-		wordOffset,
-		progressPercent,
+		cardId: place.cardId,
+		chapterIndex: place.chapterIndex,
+		progressPercent: place.percent,
 		lastReadAt: new Date().toISOString(),
 	});
 	await db.books.update(bookId, { lastOpenedAt: new Date().toISOString() });

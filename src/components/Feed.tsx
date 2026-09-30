@@ -41,10 +41,12 @@ import { coverUrl } from "../lib/covers.ts";
 import {
 	addBookmark,
 	getBookMeta,
+	getProgress,
 	imageKey,
 	listBookmarks,
 	listBooks,
 	removeBookmark,
+	saveProgress,
 } from "../lib/db.ts";
 import { imageUrl } from "../lib/images.ts";
 import {
@@ -410,6 +412,7 @@ export default function Feed() {
 	const progress = createMemo(() => {
 		const total = bookMeta()?.totalChapters ?? 0;
 		if (total === 0) return 0;
+		if (allLoaded() && cardIndex() === cards().length - 1) return 1;
 		const span = chapterSpans().get(currentChapter());
 		const within =
 			span && span.count > 1 ? (cardIndex() - span.first) / span.count : 0;
@@ -511,6 +514,59 @@ export default function Feed() {
 		),
 	);
 	onCleanup(() => clearTimeout(returnDeadline));
+
+	// The place is the card's id, a place in the book, so a relayout can't move it. The cover isn't a place:
+	// scrolling back to it keeps the card you were on.
+	let saveTimer: ReturnType<typeof setTimeout> | undefined;
+	let unsaved: (() => void) | undefined;
+	const flushPlace = () => {
+		clearTimeout(saveTimer);
+		unsaved?.();
+		unsaved = undefined;
+	};
+	createEffect(
+		on(
+			position,
+			() => {
+				const meta = bookMeta();
+				const card = currentCard();
+				if (!meta || !card) return;
+				const place = {
+					cardId: card.id,
+					chapterIndex: card.chapterIndex,
+					percent: progress() * 100,
+				};
+				clearTimeout(saveTimer);
+				unsaved = () => void saveProgress(meta.id, place);
+				saveTimer = setTimeout(flushPlace, 600);
+			},
+			{ defer: true },
+		),
+	);
+	onMount(() => {
+		const onHide = () => document.hidden && flushPlace();
+		document.addEventListener("visibilitychange", onHide);
+		onCleanup(() => {
+			document.removeEventListener("visibilitychange", onHide);
+			flushPlace();
+		});
+	});
+
+	createEffect(
+		on(
+			() => bookMeta()?.id,
+			async (id) => {
+				if (!id) return;
+				const saved = await getProgress(id);
+				if (!saved?.cardId || id !== bookMeta()?.id) return;
+				await loadUpTo(saved.chapterIndex);
+				const index = findCardHolding(cards(), saved.cardId);
+				if (index < 0) return;
+				anchor = saved.cardId;
+				requestAnimationFrame(() => scrollToCard(index, true));
+			},
+		),
+	);
 
 	async function jumpToChapter(chapterIndex: number) {
 		setSheet(null);
