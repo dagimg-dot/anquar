@@ -27,21 +27,21 @@ export function useLazyChapters(getBookId: () => string) {
 	let nextOrder = 0;
 	let pending: Promise<void> | null = null;
 
-	function loadNextBatch(): Promise<void> {
+	function loadNextBatch(size = BATCH_SIZE): Promise<void> {
 		if (pending) return pending;
-		pending = runBatch().finally(() => {
+		pending = runBatch(size).finally(() => {
 			pending = null;
 		});
 		return pending;
 	}
 
-	async function runBatch() {
+	async function runBatch(size: number) {
 		const id = bookId();
 		if (!id || allLoaded()) return;
 
 		setLoading(true);
 		try {
-			const batch = await getChaptersRange(id, nextOrder, BATCH_SIZE);
+			const batch = await getChaptersRange(id, nextOrder, size);
 			const bookChanged = id !== bookId();
 			if (bookChanged) return;
 			if (batch.length === 0) {
@@ -50,7 +50,7 @@ export function useLazyChapters(getBookId: () => string) {
 			}
 
 			nextOrder = batch[batch.length - 1].index + 1;
-			if (batch.length < BATCH_SIZE) setAllLoaded(true);
+			if (batch.length < size) setAllLoaded(true);
 
 			setChapters((prev) => [...prev, ...batch]);
 		} finally {
@@ -58,10 +58,12 @@ export function useLazyChapters(getBookId: () => string) {
 		}
 	}
 
+	// Everything up to the chapter comes in one batch, so the book is paged once rather than once per three
+	// chapters on the way.
 	async function loadUpTo(chapterIndex: number) {
 		while (!allLoaded() && nextOrder <= chapterIndex) {
 			const before = nextOrder;
-			await loadNextBatch();
+			await loadNextBatch(Math.max(BATCH_SIZE, chapterIndex - nextOrder + 1));
 			if (nextOrder === before) return;
 		}
 	}
@@ -84,7 +86,7 @@ export function useLazyChapters(getBookId: () => string) {
 			setAllLoaded(false);
 			nextOrder = 0;
 			const previousBatch = pending ?? Promise.resolve();
-			if (id) void previousBatch.then(loadNextBatch);
+			if (id) void previousBatch.then(() => loadNextBatch());
 		}),
 	);
 
