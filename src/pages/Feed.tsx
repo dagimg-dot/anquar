@@ -137,7 +137,12 @@ export default function FeedPage() {
 						<Show when={inProgressBooks().length > 0}>
 							<InProgressRow books={inProgressBooks()} />
 						</Show>
-						<ReadingPulse />
+						<ReadingPulse
+							onOpen={() => {
+								const book = lastBook();
+								if (book) navigate(`/book/${book.id}`);
+							}}
+						/>
 						<FinishedList />
 					</Show>
 				</Show>

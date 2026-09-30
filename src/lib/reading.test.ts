@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	dayKey,
+	pulseLine,
 	pulseOf,
 	type ReadingDay,
 	readTimes,
@@ -133,5 +134,74 @@ describe("the week and pace", () => {
 		}));
 		expect(pulseOf(rows, TODAY).pace).toBe(20);
 		expect(pulseOf([], TODAY).pace).toBe(25);
+	});
+});
+
+describe("what the card says", () => {
+	const text = (l: ReturnType<typeof pulseLine>) =>
+		l.parts.map((p) => p.text).join("");
+	const at = (counts: number[], today: number) =>
+		pulseOf(
+			[
+				...history(counts),
+				{ date: TODAY, anquars: today, seconds: today * 30 },
+			],
+			TODAY,
+		);
+
+	it("asks a new reader for the first five", () => {
+		expect(text(pulseLine(pulseOf([], TODAY), 30, 9))).toBe(
+			"Read 5 anquars to start a streak, about 2 min.",
+		);
+	});
+
+	it("counts down to the goal in minutes once the streak is kept", () => {
+		expect(text(pulseLine(at(week(10), 16), 30, 14))).toBe(
+			"14 more to close today · about 5 min.",
+		);
+	});
+
+	it("warns only in the evening, and says when the streak ends", () => {
+		const p = at(week(10), 2);
+		expect(pulseLine(p, 30, 14)).toMatchObject({ risk: false });
+		const evening = pulseLine(p, 30, 21);
+		expect(evening.risk).toBe(true);
+		expect(text(evening)).toBe(
+			"3 anquars keep your 7-day streak. It ends at 4 a.m.",
+		);
+		expect(pulseLine(p, 30, 1).risk).toBe(true);
+	});
+
+	it("says a rest day was used", () => {
+		expect(text(pulseLine(at([...week(), 0], 1), 30, 10))).toBe(
+			"Yesterday was a rest day. 4 anquars keep the streak going.",
+		);
+	});
+
+	it("points to the best streak after one ends, never the loss", () => {
+		expect(text(pulseLine(at([...week(9), 0, 0], 0), 30, 10))).toBe(
+			"A new streak starts today. Your best is 7 days.",
+		);
+	});
+
+	it("closes the goal, then marks a best day", () => {
+		expect(text(pulseLine(at(week(40), 30), 30, 22))).toBe(
+			"Today's anquar is closed. Anything more is a bonus.",
+		);
+		expect(text(pulseLine(at(week(40), 35), 30, 22))).toBe(
+			"Closed, and 5 over. Anything more is a bonus.",
+		);
+		expect(text(pulseLine(at(week(40), 41), 30, 22))).toBe(
+			"Best day yet · 41 anquars.",
+		);
+	});
+
+	it("says one anquar, not one anquars", () => {
+		expect(text(pulseLine(at(week(), 4), 30, 10))).toBe(
+			"1 anquar keeps your 7-day streak, about 1 min.",
+		);
+		expect(text(pulseLine(at([3], 2), 30, 10))).toBe(
+			"3 more anquars start a streak, about 1 min.",
+		);
 	});
 });

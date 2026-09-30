@@ -1,96 +1,187 @@
-import { createSignal, For, onMount } from "solid-js";
-import { listReading } from "../lib/db";
-import { dayKey, pulseOf, readingGoal, shiftDay } from "../lib/reading";
+import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { db, listReading } from "../lib/db";
+import {
+	dayKey,
+	type Pulse,
+	pulseLine,
+	pulseOf,
+	readingGoal,
+} from "../lib/reading";
+import MarkMeter from "./MarkMeter";
 import SectionHeader from "./SectionHeader";
 import StatCard from "./StatCard";
 
-interface ReadingStats {
-	avgPerDay: number;
-	sessions: number;
-	streak: number;
-	total: number;
-	weekly: { count: number; day: string }[];
+// The day the card last took its step for a closed goal, so it takes it once, the first time you see it.
+const STEPPED_KEY = "anquar_pulse_stepped";
+
+const weekday = (date: string) =>
+	new Date(`${date}T12:00`).toLocaleDateString("en", { weekday: "narrow" });
+
+function StreakChip(props: { pulse: Pulse }) {
+	return (
+		<span
+			class="inline-flex h-[26px] items-center gap-1.5 rounded-full bg-surface-elevated px-2.5 font-semibold text-[12.5px]"
+			classList={{
+				"text-ink": props.pulse.kept,
+				"text-ink-soft": !props.pulse.kept,
+			}}
+		>
+			<Show fallback="No streak yet" when={props.pulse.streak > 0}>
+				<span aria-hidden="true">🔥</span>
+				{props.pulse.streak}
+				<Show when={props.pulse.rests > 0}>
+					<span class="font-medium text-ice">· {props.pulse.rests} rest</span>
+				</Show>
+			</Show>
+		</span>
+	);
 }
 
-export default function ReadingPulse() {
-	const [stats, setStats] = createSignal<ReadingStats | null>(null);
+export default function ReadingPulse(props: { onOpen?: () => void }) {
 	const goal = readingGoal();
+	const [pulse, setPulse] = createSignal<Pulse>();
+	const [hour, setHour] = createSignal(new Date().getHours());
+	const [finished, setFinished] = createSignal(0);
+	let meter: HTMLDivElement | undefined;
 
-	onMount(async () => {
+	const closed = () => (pulse()?.today ?? 0) >= goal;
+	const line = () => {
+		const p = pulse();
+		return p ? pulseLine(p, goal, hour()) : undefined;
+	};
+
+	function step() {
+		if (!meter || matchMedia("(prefers-reduced-motion: reduce)").matches)
+			return;
+		meter.animate(
+			[
+				{ transform: "none" },
+				{ transform: "translateY(-7px)", offset: 0.38 },
+				{ transform: "none" },
+			],
+			{ duration: 560, easing: "cubic-bezier(0.23, 1, 0.32, 1)" },
+		);
+	}
+
+	async function load() {
 		const today = dayKey();
-		const since = shiftDay(today, -29);
-		const rows = (await listReading()).filter((r) => r.date >= since);
-		const pulse = pulseOf(rows, today);
-		const total = rows.reduce((sum, r) => sum + r.anquars, 0);
-		setStats({
-			avgPerDay: Math.round(total / 30),
-			sessions: rows.reduce((sum, r) => sum + r.sessions, 0),
-			streak: pulse.streak,
-			total,
-			weekly: pulse.week.map((d) => ({
-				count: d.anquars,
-				day: new Date(`${d.date}T12:00`).toLocaleDateString("en", {
-					weekday: "short",
-				}),
-			})),
-		});
-	});
+		const p = pulseOf(await listReading(), today);
+		const progress = await db.progress.toArray();
+		setHour(new Date().getHours());
+		setPulse(p);
+		setFinished(progress.filter((r) => r.progressPercent >= 100).length);
+		if (p.today >= goal && localStorage.getItem(STEPPED_KEY) !== today) {
+			localStorage.setItem(STEPPED_KEY, today);
+			requestAnimationFrame(step);
+		}
+	}
 
-	const todayCount = () => stats()?.weekly.at(-1)?.count ?? 0;
+	onMount(() => {
+		void load();
+		const onVisible = () => !document.hidden && void load();
+		document.addEventListener("visibilitychange", onVisible);
+		onCleanup(() =>
+			document.removeEventListener("visibilitychange", onVisible),
+		);
+	});
 
 	return (
 		<div class="mb-2">
 			<SectionHeader title="Your Reading Pulse" />
-			<div class="bg-surface border border-border rounded-2xl py-4 px-5 mx-5">
-				<div class="flex items-center gap-2 mb-4">
-					<span class="text-xl">🔥</span>
-					<span class="text-lg font-semibold text-ink">
-						{stats()?.streak || 0} day streak
-					</span>
-				</div>
-				<div class="mb-4">
-					<div class="flex items-baseline justify-between mb-1.5">
-						<div class="text-sm text-ink-soft">Today's anquars</div>
-						<div class="text-xs font-semibold tabular-nums text-ink-soft">
-							{todayCount()} / {goal}
-						</div>
-					</div>
-					<div class="h-1.5 rounded-[3px] bg-border overflow-hidden">
-						<div
-							class="h-full rounded-[3px] bg-brand-500 transition-[width] duration-300 ease-in-out"
-							style={{
-								width: `${Math.min(100, (todayCount() / goal) * 100)}%`,
-							}}
-						/>
-					</div>
-				</div>
-				{/* Weekly heatmap — single loop so dots and labels stay aligned */}
-				<div class="flex items-end justify-between mb-4">
-					<For each={stats()?.weekly || []}>
-						{(day) => (
-							<div class="flex flex-col items-center gap-1">
+			<Show when={pulse()}>
+				{(p) => (
+					<>
+						<button
+							aria-label={`Continue reading. ${p().today} of ${goal} anquars today, ${p().streak}-day streak.`}
+							class="mx-5 block w-[calc(100%-2.5rem)] cursor-pointer rounded-2xl border border-border bg-surface px-4 pt-4 pb-3.5 text-left transition-transform duration-200 active:scale-[0.985]"
+							onClick={() => props.onOpen?.()}
+							type="button"
+						>
+							<div class="flex items-center gap-4">
 								<div
-									class="w-7 h-7 rounded-full bg-brand-500"
-									style={{
-										opacity:
-											day.count > 0
-												? String(Math.min(1, day.count / 10))
-												: "0.15",
+									class="grid size-[84px] shrink-0 place-items-center rounded-[20px] transition-colors duration-500"
+									classList={{
+										"bg-canvas": !closed(),
+										"bg-brand-500/15": closed(),
 									}}
-								/>
-								<span class="text-[10px] text-ink-soft text-center">
-									{day.day}
-								</span>
+									ref={meter}
+								>
+									<MarkMeter
+										class="size-16"
+										fill={Math.min(1, p().today / goal)}
+									/>
+								</div>
+								<div class="min-w-0">
+									<div class="font-extrabold text-[30px] text-ink tabular-nums leading-none tracking-[-0.03em]">
+										{p().today}
+										<span class="ml-1 font-semibold text-[15px] text-ink-soft tracking-normal">
+											/ {goal}
+										</span>
+									</div>
+									<div class="mt-1 mb-2 text-ink-soft text-xs">
+										anquars today
+									</div>
+									<StreakChip pulse={p()} />
+								</div>
 							</div>
-						)}
-					</For>
-				</div>
-			</div>
-			<div class="flex gap-2 px-5 mt-3">
-				<StatCard value={stats()?.total || 0} label="total anquars" />
-				<StatCard value={stats()?.avgPerDay || 0} label="avg / day" />
-				<StatCard value={stats()?.sessions || 0} label="sessions" />
-			</div>
+
+							<p class="mt-3 text-[13px] text-ink-soft leading-snug">
+								<For each={line()?.parts}>
+									{(part) =>
+										part.strong ? (
+											<strong
+												class="font-semibold"
+												classList={{
+													"text-flame": line()?.risk,
+													"text-ink": !line()?.risk,
+												}}
+											>
+												{part.text}
+											</strong>
+										) : (
+											part.text
+										)
+									}
+								</For>
+							</p>
+
+							<div
+								aria-hidden="true"
+								class="mt-3.5 flex justify-between border-border border-t pt-3"
+							>
+								<For each={p().week}>
+									{(d) => (
+										<div
+											class="flex w-[34px] flex-col items-center gap-1.5 text-[10px]"
+											classList={{
+												"text-ink": d.today,
+												"text-ink-muted": !d.today,
+											}}
+										>
+											<MarkMeter
+												class="size-[26px]"
+												fill={d.rest ? 1 : Math.min(1, d.anquars / goal)}
+												rest={d.rest}
+												stroke={6}
+											/>
+											{weekday(d.date)}
+											<Show when={d.today}>
+												<span class="-mt-1 size-1 rounded-full bg-brand-500" />
+											</Show>
+										</div>
+									)}
+								</For>
+							</div>
+						</button>
+
+						<div class="mt-3 flex gap-2 px-5">
+							<StatCard label="min this week" value={p().minutesThisWeek} />
+							<StatCard label="best streak" value={p().best} />
+							<StatCard label="books finished" value={finished()} />
+						</div>
+					</>
+				)}
+			</Show>
 		</div>
 	);
 }

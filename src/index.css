@@ -24,6 +24,9 @@
 	--color-brand-900: oklch(0.245 0.04 164);
 	--color-brand-950: oklch(0.195 0.028 166);
 
+	--color-ice: oklch(0.52 0.1 235);
+	--color-flame: oklch(0.55 0.16 48);
+
 	--color-glass-bg: oklch(1 0 0 / 0.12);
 	--color-glass-border: oklch(1 0 0 / 0.25);
 	--color-glass-shadow: oklch(0 0 0 / 0.25);
@@ -54,6 +57,9 @@
 	--color-brand-800: oklch(0.5 0.12 154);
 	--color-brand-900: oklch(0.4 0.095 156);
 	--color-brand-950: oklch(0.3 0.07 158);
+
+	--color-ice: oklch(0.8 0.075 230);
+	--color-flame: oklch(0.78 0.15 58);
 
 	--color-glass-bg: oklch(0 0 0 / 0.25);
 	--color-glass-border: oklch(1 0 0 / 0.15);

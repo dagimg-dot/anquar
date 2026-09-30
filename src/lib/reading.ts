@@ -152,3 +152,83 @@ export function pulseOf(rows: readonly ReadingDay[], today: string): Pulse {
 		pace: paces.length ? paces[Math.floor(paces.length / 2)] : DEFAULT_PACE,
 	};
 }
+
+export interface LinePart {
+	text: string;
+	strong?: boolean;
+}
+
+export interface PulseLine {
+	parts: LinePart[];
+	risk: boolean;
+}
+
+const anquars = (n: number) => `${n} ${n === 1 ? "anquar" : "anquars"}`;
+const verb = (n: number, v: string) => (n === 1 ? `${v}s` : v);
+
+// What the card says next: one line, picked by where today stands, in minutes at your own pace.
+export function pulseLine(p: Pulse, goal: number, hour: number): PulseLine {
+	const minutes = (n: number) =>
+		`about ${Math.max(1, Math.round((n * p.pace) / 60))} min`;
+	const toKeep = STREAK_MIN - p.today;
+	const line = (...parts: (string | LinePart)[]): PulseLine => ({
+		parts: parts.map((part) =>
+			typeof part === "string" ? { text: part } : part,
+		),
+		risk: false,
+	});
+	const strong = (text: string): LinePart => ({ text, strong: true });
+
+	if (!p.started)
+		return line(
+			strong(`Read ${anquars(STREAK_MIN)}`),
+			` to start a streak, ${minutes(STREAK_MIN)}.`,
+		);
+	if (p.today >= goal) {
+		if (p.bestDay > 0 && p.today > p.bestDay && p.today > goal)
+			return line(strong("Best day yet"), ` · ${anquars(p.today)}.`);
+		if (p.today > goal)
+			return line(
+				strong("Closed"),
+				`, and ${p.today - goal} over. Anything more is a bonus.`,
+			);
+		return line(
+			strong("Today's anquar is closed."),
+			" Anything more is a bonus.",
+		);
+	}
+	if (!p.kept && p.streak > 0 && (hour >= 20 || hour < 4))
+		return {
+			...line(
+				strong(anquars(toKeep)),
+				` ${verb(toKeep, "keep")} your ${p.streak}-day streak. It ends at 4 a.m.`,
+			),
+			risk: true,
+		};
+	if (!p.kept && p.restYesterday)
+		return line(
+			"Yesterday was a ",
+			strong("rest day"),
+			`. ${anquars(toKeep)} ${verb(toKeep, "keep")} the streak going.`,
+		);
+	if (p.streak === 0 && p.best > 0 && p.today === 0)
+		return line(
+			"A new streak starts today. Your best is ",
+			strong(`${p.best} days`),
+			".",
+		);
+	if (!p.kept && p.streak === 0)
+		return line(
+			strong(`${toKeep} more ${toKeep === 1 ? "anquar" : "anquars"}`),
+			` ${verb(toKeep, "start")} a streak, ${minutes(toKeep)}.`,
+		);
+	if (!p.kept)
+		return line(
+			strong(anquars(toKeep)),
+			` ${verb(toKeep, "keep")} your ${p.streak}-day streak, ${minutes(toKeep)}.`,
+		);
+	return line(
+		strong(`${goal - p.today} more`),
+		` to close today · ${minutes(goal - p.today)}.`,
+	);
+}
