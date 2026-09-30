@@ -4,9 +4,9 @@ Guilt-free doomscrolling — a Solid.js PWA that turns books into a TikTok-style
 
 ## Setup
 
-Anquar depends on **`anquar-core`**, the book chunker, as a local path dependency
-(`file:../anquar-core`). It is not published, so it must be cloned as a sibling
-directory or `bun install` fails:
+Anquar depends on **`anquar-core`**, the book parser and paginator, as a local
+path dependency (`file:../anquar-core`). It is not published, so it must be
+cloned as a sibling directory or `bun install` fails:
 
 ```
 TYPESCRIPT/
@@ -44,18 +44,25 @@ and `/book/:id` for the reader.
 
 **Import** — `useEpubParser` spawns `src/workers/epub.worker.ts`, which calls
 `parseEpubFromFile` from anquar-core. Parsing stays off the main thread so the
-feed never janks mid-import. Chapters come back as flat `Block[]`.
+feed never janks mid-import. Chapters come back as flat `Block[]`, without the
+book's apparatus — cover, title and copyright pages, contents, praise, notes
+and index — and with dedications, epigraphs and prefaces marked `frontMatter`.
 
 **Storage** — Dexie over IndexedDB in `src/lib/db.ts`, database `anquar`,
 schema v1. Tables: `books`, `chapters`, `progress`, `bookmarks`,
 `readerSettings`, `dailyRollups`, `images`. Image bytes are split into `images`
 so chapter JSON stays small; `saveBook` strips them with a replacer.
 
-**Feed** — `src/components/Feed.tsx`. CSS scroll-snap, one card per block,
-except that a run of headings shares a card. A card is an *anquar*, the unit
-behind the daily goal and reading stats. `useLazyChapters` loads three
-chapters at a time behind an IntersectionObserver sentinel, and `loadUpTo` pulls
-forward far enough for a contents jump to land.
+**Feed** — `src/components/Feed.tsx`. CSS scroll-snap over cards that
+anquar-core's `paginate` lays out to fill one screen each: whole paragraphs
+where they fit, a paragraph split at a sentence where a card would otherwise
+be mostly empty, headings kept with what they open. A card is an *anquar*, the
+unit behind the daily goal and reading stats. `LayoutProbe`, a hidden card in
+the reader's type, measures how much a card holds (`src/lib/card-layout.ts`)
+and re-measures whenever the screen, type size, line height or margins change,
+and the book is then paginated again. `useLazyChapters` loads three chapters at
+a time behind an IntersectionObserver sentinel, and `loadUpTo` pulls forward
+far enough for a contents jump to land.
 
 **Reader chrome** — `ReaderRail` carries contents, explain, save, share and
 settings; each opens a `BottomSheet`. The rail overlays the page rather than

@@ -1,11 +1,18 @@
 import { useNavigate, useParams } from "@solidjs/router";
-import type {
-	Block,
-	HeadingBlock,
-	HeadingLevel,
-	ImageBlock,
-	ListBlock,
-	StyleRun,
+import {
+	BLOCK_GAP_LINES,
+	type Block,
+	type Card,
+	type CardLayout,
+	HEADING_SCALE,
+	type HeadingBlock,
+	type ImageBlock,
+	ITEM_GAP_LINES,
+	type ListBlock,
+	PHONE_LAYOUT,
+	paginate,
+	type StyleRun,
+	type TextBlock,
 } from "anquar-core";
 import { BookmarkSimple, CaretLeft } from "phosphor-solid";
 import {
@@ -22,6 +29,7 @@ import {
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import toast from "solid-toast";
+import { LAYOUT_SAMPLE, readLayout, reuseCards } from "../lib/card-layout.ts";
 import { chapterLabel } from "../lib/chapters.ts";
 import { coverUrl } from "../lib/covers.ts";
 import {
@@ -33,7 +41,11 @@ import {
 	removeBookmark,
 } from "../lib/db.ts";
 import { imageUrl } from "../lib/images.ts";
-import { getAccentColors, useReaderSettings } from "../lib/reader-settings.tsx";
+import {
+	getAccentColors,
+	type ReaderSettings,
+	useReaderSettings,
+} from "../lib/reader-settings.tsx";
 import { readSelection } from "../lib/selection.ts";
 import { useLazyChapters } from "../lib/useLazyChapters.ts";
 import { useTikTokScroll } from "../lib/useTikTokScroll.ts";
@@ -54,14 +66,18 @@ interface BookMeta {
 	totalChapters: number;
 }
 
-const HEADING_SIZE: Record<HeadingLevel, string> = {
-	1: "2em",
-	2: "1.65em",
-	3: "1.4em",
-	4: "1.2em",
-	5: "1.1em",
-	6: "1em",
-};
+function pageStyle(
+	settings: ReaderSettings,
+	colors: { bgColor: string; textColor: string },
+) {
+	return {
+		background: colors.bgColor,
+		color: colors.textColor,
+		"font-size": `${(settings.fontSize / 100) * 1.15}rem`,
+		"line-height": String(settings.lineHeight),
+		"padding-inline": `${settings.hPadding}rem`,
+	};
+}
 
 function StyledRuns(props: { runs: StyleRun[] }) {
 	return (
@@ -92,28 +108,33 @@ function ImageCard(props: { block: ImageBlock; bookId: string }) {
 	);
 
 	return (
-		<Show
-			fallback={
-				<p class="text-center text-[0.8em] opacity-50">
-					{props.block.alt || "Image unavailable"}
-				</p>
-			}
-			when={url()}
-		>
-			<img
-				alt={props.block.alt}
-				class="max-h-[80dvh] max-w-full rounded-xl object-contain"
-				src={url()}
-			/>
-		</Show>
+		<div class="flex min-h-0 w-full flex-1 items-center justify-center">
+			<Show
+				fallback={
+					<p class="text-center text-[0.8em] opacity-50">
+						{props.block.alt || "Image unavailable"}
+					</p>
+				}
+				when={url()}
+			>
+				<img
+					alt={props.block.alt}
+					class="max-h-full max-w-full rounded-xl object-contain"
+					src={url()}
+				/>
+			</Show>
+		</div>
 	);
 }
 
 function ListCard(props: { block: ListBlock }) {
+	const { settings } = useReaderSettings();
+
 	return (
 		<Dynamic
-			class="flex w-full flex-col gap-[0.7em]"
+			class="flex w-full flex-col"
 			component={props.block.ordered ? "ol" : "ul"}
+			style={{ gap: `${ITEM_GAP_LINES * settings().lineHeight}em` }}
 		>
 			<For each={props.block.items}>
 				{(item, i) => (
@@ -122,9 +143,9 @@ function ListCard(props: { block: ListBlock }) {
 						style={{ "padding-left": `${item.depth * 1.15}em` }}
 					>
 						<span class="shrink-0 opacity-45 tabular-nums">
-							{props.block.ordered ? `${i() + 1}.` : "—"}
+							{props.block.ordered ? `${(props.block.start ?? 1) + i()}.` : "—"}
 						</span>
-						<span>
+						<span class="whitespace-pre-line">
 							<StyledRuns runs={item.runs} />
 						</span>
 					</li>
@@ -134,85 +155,122 @@ function ListCard(props: { block: ListBlock }) {
 	);
 }
 
-function toCards(blocks: Block[]): Block[][] {
-	const cards: Block[][] = [];
-	for (const block of blocks) {
-		const last = cards[cards.length - 1];
-		if (block.type === "heading" && last?.[0].type === "heading") {
-			last.push(block);
-		} else {
-			cards.push([block]);
-		}
-	}
-	return cards;
-}
-
 const asText = (b: Block) => (b.type === "text" ? b : undefined);
+const asHeading = (b: Block) => (b.type === "heading" ? b : undefined);
 const asList = (b: Block) => (b.type === "list" ? b : undefined);
 const asImage = (b: Block) => (b.type === "image" ? b : undefined);
-const asHeadings = (blocks: Block[]) =>
-	blocks[0].type === "heading" ? (blocks as HeadingBlock[]) : undefined;
 
-function BlockCard(props: { blocks: Block[]; bookId: string }) {
+function Paragraph(props: { block: TextBlock }) {
+	return (
+		<p class="w-full whitespace-pre-line">
+			<StyledRuns runs={props.block.runs} />
+		</p>
+	);
+}
+
+function Heading(props: { block: HeadingBlock }) {
+	return (
+		<h2
+			class="w-full text-balance font-semibold tracking-tight"
+			classList={{ "text-center": props.block.level <= 2 }}
+			style={{
+				"font-size": `${HEADING_SCALE[props.block.level]}em`,
+				"line-height": "1.25",
+			}}
+		>
+			<StyledRuns runs={props.block.runs} />
+		</h2>
+	);
+}
+
+function BlockView(props: { block: Block; bookId: string }) {
+	return (
+		<Switch>
+			<Match when={asText(props.block)}>
+				{(text) => <Paragraph block={text()} />}
+			</Match>
+			<Match when={asHeading(props.block)}>
+				{(heading) => <Heading block={heading()} />}
+			</Match>
+			<Match when={asList(props.block)}>
+				{(list) => <ListCard block={list()} />}
+			</Match>
+			<Match when={asImage(props.block)}>
+				{(image) => <ImageCard block={image()} bookId={props.bookId} />}
+			</Match>
+			<Match when={props.block.type === "break"}>
+				<div
+					aria-hidden="true"
+					class="w-full select-none text-center opacity-40"
+				>
+					⁂
+				</div>
+			</Match>
+		</Switch>
+	);
+}
+
+function CardView(props: { card: Card; bookId: string }) {
 	const { settings, themeColors } = useReaderSettings();
 
-	const block = () => props.blocks[0];
-
-	const isFocal = () => block().type === "heading" || block().type === "image";
+	const blocks = () => props.card.blocks;
+	const centred = () =>
+		settings().verticalAlign === "center" ||
+		blocks().some((b) => b.type === "image") ||
+		blocks().every((b) => b.type === "heading");
 
 	return (
 		<section
 			class="snap-page flex h-dvh flex-col overflow-hidden py-[9dvh]"
-			classList={{
-				"justify-center": isFocal() || settings().verticalAlign === "center",
-				"justify-start": !isFocal() && settings().verticalAlign !== "center",
-			}}
-			style={{
-				background: themeColors().bgColor,
-				color: themeColors().textColor,
-				"font-size": `${(settings().fontSize / 100) * 1.15}rem`,
-				"line-height": String(settings().lineHeight),
-				"padding-inline": `${settings().hPadding}rem`,
-			}}
+			style={pageStyle(settings(), themeColors())}
 		>
 			<div
-				class="mx-auto flex w-full flex-col items-center"
-				classList={{ "max-w-prose": block().type !== "image" }}
+				class="mx-auto flex min-h-0 w-full max-w-prose flex-1 flex-col overflow-y-auto"
+				style={{
+					gap: `${BLOCK_GAP_LINES * settings().lineHeight}em`,
+					"justify-content": centred() ? "safe center" : "flex-start",
+				}}
 			>
-				<Switch>
-					<Match when={asText(block())}>
-						{(text) => (
-							<p class="w-full text-pretty">
-								<StyledRuns runs={text().runs} />
-							</p>
-						)}
-					</Match>
+				<For each={blocks()}>
+					{(block) => <BlockView block={block} bookId={props.bookId} />}
+				</For>
+			</div>
+		</section>
+	);
+}
 
-					<Match when={asHeadings(props.blocks)}>
-						{(headings) => (
-							<div class="flex w-full flex-col items-center gap-[0.45em]">
-								<For each={headings()}>
-									{(h) => (
-										<h2
-											class="w-full text-balance text-center font-semibold tracking-tight"
-											style={{ "font-size": HEADING_SIZE[h.level] }}
-										>
-											<StyledRuns runs={h.runs} />
-										</h2>
-									)}
-								</For>
-							</div>
-						)}
-					</Match>
+function LayoutProbe(props: { onLayout: (layout: CardLayout) => void }) {
+	const { settings, themeColors } = useReaderSettings();
+	let page: HTMLElement | undefined;
+	let paragraph: HTMLParagraphElement | undefined;
+	let line: HTMLSpanElement | undefined;
 
-					<Match when={asList(block())}>
-						{(list) => <ListCard block={list()} />}
-					</Match>
+	onMount(() => {
+		const measure = () => {
+			if (!page || !paragraph || !line) return;
+			const layout = readLayout(page, paragraph, line);
+			if (layout) props.onLayout(layout);
+		};
+		const observer = new ResizeObserver(measure);
+		for (const el of [page, paragraph, line]) if (el) observer.observe(el);
+		void document.fonts?.ready.then(measure);
+		onCleanup(() => observer.disconnect());
+	});
 
-					<Match when={asImage(block())}>
-						{(image) => <ImageCard block={image()} bookId={props.bookId} />}
-					</Match>
-				</Switch>
+	return (
+		<section
+			aria-hidden="true"
+			class="pointer-events-none invisible fixed inset-0 flex h-dvh flex-col overflow-hidden py-[9dvh]"
+			ref={page}
+			style={pageStyle(settings(), themeColors())}
+		>
+			<div class="mx-auto w-full max-w-prose">
+				<span class="inline-block" ref={line}>
+					x
+				</span>
+				<p class="w-full whitespace-pre-line" ref={paragraph}>
+					{LAYOUT_SAMPLE}
+				</p>
 			</div>
 		</section>
 	);
@@ -263,6 +321,7 @@ function cardText(blocks: Block[]): string {
 			return b.type === "image" ? (b.alt ?? "") : "";
 		})
 		.join(" ")
+		.replace(/\s+/g, " ")
 		.trim();
 }
 
@@ -278,8 +337,14 @@ export default function Feed() {
 		() => bookMeta()?.id ?? "",
 	);
 
-	const cards = createMemo(() =>
-		toCards(chapters().flatMap((ch) => ch.blocks)),
+	const [layout, setLayout] = createSignal<CardLayout>(PHONE_LAYOUT, {
+		equals: (a, b) =>
+			a.charsPerLine === b.charsPerLine && a.linesPerCard === b.linesPerCard,
+	});
+
+	const cards = createMemo<Card[]>(
+		(prev) => reuseCards(paginate(chapters(), layout()), prev),
+		[],
 	);
 
 	const [container, setContainer] = createSignal<HTMLDivElement>();
@@ -292,9 +357,7 @@ export default function Feed() {
 				.map((ch) => ch.index),
 		);
 		if (frontMatter.size === 0) return 0;
-		const i = cards().findIndex(
-			(card) => !frontMatter.has(card[0].chapterIndex),
-		);
+		const i = cards().findIndex((card) => !frontMatter.has(card.chapterIndex));
 		return i < 0 ? 0 : i + COVER_PAGES;
 	});
 
@@ -328,14 +391,14 @@ export default function Feed() {
 	const chapterSpans = createMemo(() => {
 		const map = new Map<number, { count: number; first: number }>();
 		cards().forEach((card, i) => {
-			const span = map.get(card[0].chapterIndex);
+			const span = map.get(card.chapterIndex);
 			if (span) span.count += 1;
-			else map.set(card[0].chapterIndex, { count: 1, first: i });
+			else map.set(card.chapterIndex, { count: 1, first: i });
 		});
 		return map;
 	});
 
-	const currentChapter = () => currentCard()?.[0].chapterIndex ?? 0;
+	const currentChapter = () => currentCard()?.chapterIndex ?? 0;
 
 	const progress = createMemo(() => {
 		const total = bookMeta()?.totalChapters ?? 0;
@@ -368,16 +431,15 @@ export default function Feed() {
 			await removeBookmark(existing.id);
 			toast.success("Removed from shelf");
 		} else {
-			const chapterIndex = card[0].chapterIndex;
 			await addBookmark({
 				bookId: meta.id,
 				cardIndex: cardIndex(),
-				chapterIndex,
+				chapterIndex: card.chapterIndex,
 				label: chapterLabel(
-					chapters().find((c) => c.index === chapterIndex)?.title ?? "",
-					chapterIndex,
+					chapters().find((c) => c.index === card.chapterIndex)?.title ?? "",
+					card.chapterIndex,
 				),
-				textSnippet: cardText(card).slice(0, 280),
+				textSnippet: cardText(card.blocks).slice(0, 280),
 			});
 			toast.success("Saved to your shelf");
 		}
@@ -402,7 +464,9 @@ export default function Feed() {
 	async function jumpToChapter(chapterIndex: number) {
 		setSheet(null);
 		await loadUpTo(chapterIndex);
-		const i = cards().findIndex((c) => c[0].chapterIndex === chapterIndex);
+		const i = cards().findIndex((c) =>
+			c.blocks.some((b) => b.chapterIndex === chapterIndex),
+		);
 		if (i >= 0) scrollToCard(i);
 	}
 
@@ -411,7 +475,7 @@ export default function Feed() {
 		const card = currentCard();
 		if (!meta || !card) return;
 
-		const text = `"${picked || cardText(card)}"\n— ${meta.title}, ${meta.author}`;
+		const text = `"${picked || cardText(card.blocks)}"\n— ${meta.title}, ${meta.author}`;
 		if (navigator.share) {
 			await navigator.share({ text }).catch(() => {});
 			return;
@@ -427,7 +491,10 @@ export default function Feed() {
 	function explain(picked: string) {
 		const card = currentCard();
 		if (!card) return;
-		setExplaining({ passage: picked || cardText(card), selection: picked });
+		setExplaining({
+			passage: picked || cardText(card.blocks),
+			selection: picked,
+		});
 		setSheet("explain");
 	}
 
@@ -521,6 +588,8 @@ export default function Feed() {
 			>
 				{(meta) => (
 					<>
+						<LayoutProbe onLayout={setLayout} />
+
 						<div
 							class="snap-container h-dvh overflow-y-auto"
 							onPointerDown={(e) => {
@@ -539,7 +608,7 @@ export default function Feed() {
 							/>
 
 							<For each={cards()}>
-								{(card) => <BlockCard blocks={card} bookId={meta().id} />}
+								{(card) => <CardView bookId={meta().id} card={card} />}
 							</For>
 
 							<Show when={!allLoaded()}>

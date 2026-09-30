@@ -1,5 +1,4 @@
 import type { Block } from "anquar-core";
-import { chunkBook, DEFAULT_CHUNK_CONFIG } from "anquar-core";
 import {
 	createEffect,
 	createMemo,
@@ -53,17 +52,7 @@ export function useLazyChapters(getBookId: () => string) {
 			nextOrder = batch[batch.length - 1].index + 1;
 			if (batch.length < BATCH_SIZE) setAllLoaded(true);
 
-			const ready = batch.map((ch) => ({
-				index: ch.index,
-				title: ch.title,
-				frontMatter: ch.frontMatter,
-				blocks: chunkBook(
-					{ title: "", author: "", chapters: [ch] },
-					DEFAULT_CHUNK_CONFIG,
-				),
-			}));
-
-			setChapters((prev) => [...prev, ...ready]);
+			setChapters((prev) => [...prev, ...batch]);
 		} finally {
 			setLoading(false);
 		}
