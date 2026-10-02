@@ -39,6 +39,8 @@ interface BookmarkRecord {
 	createdAt: string;
 	id?: number;
 	label: string;
+	// A passage picked from the card, rather than the whole card; textSnippet then holds the passage.
+	passage?: boolean;
 	textSnippet: string;
 	wordOffset: number;
 }
@@ -292,6 +294,7 @@ export function addBookmark(entry: {
 	cardIndex: number;
 	chapterIndex: number;
 	label: string;
+	passage?: boolean;
 	textSnippet: string;
 }) {
 	return db.bookmarks.add({

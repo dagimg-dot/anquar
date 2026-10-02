@@ -14,7 +14,7 @@ interface ReaderRailProps {
 	coverUrl?: string;
 	onContents: () => void;
 	onExplain: (selection: string) => void;
-	onSave: () => void;
+	onSave: (selection: string) => void;
 	onSettings: () => void;
 	onShare: (selection: string) => void;
 	/** 0–1 through the whole book. */
@@ -165,20 +165,25 @@ export default function ReaderRail(props: ReaderRailProps) {
 				</span>
 			</Item>
 
+			{/* With a selection it saves that passage, beside the card's own save rather than instead of it. */}
 			<Item
 				label="Save"
 				onClick={() => {
-					if (!props.saved) flashSave();
-					props.onSave();
+					const picked = spend();
+					if (picked || !props.saved) flashSave();
+					props.onSave(picked);
 				}}
 				order={2}
-				style={props.saved ? { color: accents().save } : undefined}
+				style={props.saved && !primed() ? { color: accents().save } : undefined}
 			>
 				<span
 					class="rail-glyph relative flex h-10 w-10 items-center justify-center"
 					ref={saveGlyph}
 				>
-					<BookmarkSimple size={27} weight={props.saved ? "fill" : "regular"} />
+					<BookmarkSimple
+						size={27}
+						weight={props.saved && !primed() ? "fill" : "regular"}
+					/>
 					<span
 						class="pointer-events-none absolute inset-0 m-auto h-10 w-10 rounded-full border-2 border-current opacity-0"
 						ref={saveHalo}

@@ -513,7 +513,11 @@ export default function Feed() {
 		});
 	});
 
-	const savedHere = () => savedCardIndexes().includes(cardIndex());
+	// Whether the card itself is saved; passages picked from it are bookmarks of their own.
+	const savedHere = () =>
+		bookmarks().some(
+			(b, i) => !b.passage && savedCardIndexes()[i] === cardIndex(),
+		);
 
 	const chromeOpacity = () => {
 		if (moment()) return 0;
@@ -526,18 +530,23 @@ export default function Feed() {
 		if (id) setBookmarks(await listBookmarks(id));
 	}
 
-	async function toggleSave() {
+	// Saves or unsaves the card, or with a selection that passage: the two never undo each other.
+	async function toggleSave(picked = "") {
 		const meta = bookMeta();
 		const card = currentCard();
 		if (!meta || !card) return;
 
+		const passage = picked.trim();
 		const existing = bookmarks().find(
-			(_, i) => savedCardIndexes()[i] === cardIndex(),
+			(b, i) =>
+				savedCardIndexes()[i] === cardIndex() &&
+				(passage ? b.passage && b.textSnippet === passage : !b.passage),
 		);
 		tick();
+		if (passage) window.getSelection()?.removeAllRanges();
 		if (existing?.id !== undefined) {
 			await removeBookmark(existing.id);
-			toast.success("Removed from shelf");
+			toast.success(passage ? "Passage removed" : "Removed from shelf");
 		} else {
 			await addBookmark({
 				bookId: meta.id,
@@ -548,9 +557,11 @@ export default function Feed() {
 					chapters().find((c) => c.index === card.chapterIndex)?.title ?? "",
 					card.chapterIndex,
 				),
-				textSnippet: cardText(card.blocks).slice(0, 280),
+				...(passage
+					? { passage: true, textSnippet: passage }
+					: { textSnippet: cardText(card.blocks).slice(0, 280) }),
 			});
-			toast.success("Saved to your shelf");
+			toast.success(passage ? "Passage saved" : "Saved to your shelf");
 		}
 		await refreshBookmarks();
 	}
@@ -895,7 +906,7 @@ export default function Feed() {
 							coverUrl={meta().coverUrl}
 							onContents={() => setSheet("contents")}
 							onExplain={explain}
-							onSave={() => void toggleSave()}
+							onSave={(picked) => void toggleSave(picked)}
 							onSettings={() => setSheet("settings")}
 							onShare={(picked) => void share(picked)}
 							progress={progress()}
