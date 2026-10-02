@@ -185,6 +185,12 @@ image on the phone (option B1 of `design/share-card.html`: the cover sharp and
 darkened as a frame, and inset from it a frosted pane of the same cover holding
 the passage, with the cover, title and author at the foot) in Source Serif 4, which
 ships in `src/assets/fonts` (OFL) and is precached.
+The image opens in the Share sheet (`ShareSheet`) before it goes anywhere:
+Share hands the JPEG and the text to the phone's own share sheet, shown only
+where the browser can share files (not Chrome on Linux, not Firefox); Copy
+image puts it on the clipboard as a PNG, made after the tap and handed over as
+a promise, since the clipboard takes no JPEG; Save image downloads it; Copy text
+copies the passage with its book.
 
 **Transitions** — screen changes go through `src/lib/transitions.ts`. A
 book's cover grows into the reader and the reader shrinks back into it on the

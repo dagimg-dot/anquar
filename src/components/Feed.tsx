@@ -85,6 +85,7 @@ import ExplainSheet from "./ExplainSheet.tsx";
 import PulseMoment from "./PulseMoment.tsx";
 import ReaderRail from "./ReaderRail.tsx";
 import ReaderSettingsPanel from "./ReaderSettingsPanel.tsx";
+import ShareSheet from "./ShareSheet.tsx";
 import TextPick from "./TextPick.tsx";
 
 interface BookMeta {
@@ -340,7 +341,7 @@ function StartReadingPill(props: { onClick: () => void }) {
 	);
 }
 
-type SheetName = "contents" | "explain" | "settings";
+type SheetName = "contents" | "explain" | "settings" | "share";
 
 // Only the cards around you are filled with their text and pictures: the one on screen, FILL_AHEAD after it
 // and FILL_BEHIND before, each kept until it is more than KEEP_FILLED away. The rest are empty frames of the
@@ -429,6 +430,11 @@ export default function Feed() {
 		passage: "",
 		selection: "",
 	});
+	const [sharing, setSharing] = createSignal<{
+		image: Blob;
+		name: string;
+		text: string;
+	}>();
 	const [bookmarks, setBookmarks] = createSignal<
 		Awaited<ReturnType<typeof listBookmarks>>
 	>([]);
@@ -752,7 +758,8 @@ export default function Feed() {
 	}
 
 	// A passage leaves as an image of it (lib/share-card.ts) with the passage as text, the book on the line
-	// below, so a chat that shows only words still gets the whole quote.
+	// below, so a chat that shows only words still gets the whole quote. The Share sheet shows the image first
+	// and offers the phone's own share sheet, the clipboard and a download.
 	async function share(picked: string) {
 		const meta = bookMeta();
 		const card = currentCard();
@@ -760,24 +767,22 @@ export default function Feed() {
 
 		const passage = (picked || cardText(card.blocks)).trim();
 		const text = `“${passage}”\n— ${meta.title}, ${meta.author}`;
+		const name =
+			meta.title.replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "") ||
+			"passage";
+		const image = await shareCard({
+			author: meta.author,
+			coverUrl: meta.coverUrl,
+			text: passage,
+			title: meta.title,
+		}).catch(() => undefined);
+		if (image) {
+			setSharing({ image, name, text });
+			setSheet("share");
+			return;
+		}
 		if (navigator.share) {
-			const image = await shareCard({
-				author: meta.author,
-				coverUrl: meta.coverUrl,
-				text: passage,
-				title: meta.title,
-			}).catch(() => undefined);
-			const name =
-				meta.title.replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "") ||
-				"passage";
-			const files = image
-				? [new File([image], `${name}.jpg`, { type: "image/jpeg" })]
-				: [];
-			const withImage =
-				files.length > 0 && navigator.canShare?.({ files, text });
-			await navigator
-				.share(withImage ? { files, text } : { text })
-				.catch(() => {});
+			await navigator.share({ text }).catch(() => {});
 			return;
 		}
 		try {
@@ -1014,6 +1019,23 @@ export default function Feed() {
 							title="Themes & Settings"
 						>
 							<ReaderSettingsPanel />
+						</BottomSheet>
+
+						<BottomSheet
+							onClose={() => setSheet(null)}
+							open={sheet() === "share"}
+							title="Share"
+						>
+							<Show keyed when={sharing()}>
+								{(share) => (
+									<ShareSheet
+										image={share.image}
+										name={share.name}
+										onShared={() => setSheet(null)}
+										text={share.text}
+									/>
+								)}
+							</Show>
 						</BottomSheet>
 
 						<BottomSheet
