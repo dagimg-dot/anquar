@@ -96,6 +96,11 @@ on its own and gets exactly the cards the whole book would. A contents jump
 outside the run opens the book there. The card you're on is the scroll offset
 over a card's measured height, not `clientHeight`, which on most phones is a
 fraction of a pixel short of a `dvh` card and drifts a card over a long book.
+Only the cards around you are filled with their text and pictures: the one on
+screen, 8 ahead and 4 behind, each kept until it is 12 away. The rest are empty
+frames of the same height, so snapping, jumps and keeping your place work as if
+every card were built, and a book of long chapters opens without building
+hundreds of cards.
 
 **Reader chrome** — `ReaderRail` carries contents, explain, save, share and
 settings; each opens a `BottomSheet`. The rail overlays the page rather than

@@ -230,7 +230,7 @@ function BlockView(props: { block: Block; bookId: string }) {
 	);
 }
 
-function CardView(props: { card: Card; bookId: string }) {
+function CardView(props: { card: Card; bookId: string; filled: boolean }) {
 	const { settings, themeColors } = useReaderSettings();
 
 	const blocks = () => props.card.blocks;
@@ -244,17 +244,19 @@ function CardView(props: { card: Card; bookId: string }) {
 			class="snap-page flex h-dvh flex-col overflow-hidden py-[9dvh]"
 			style={pageStyle(settings(), themeColors())}
 		>
-			<div
-				class="mx-auto flex min-h-0 w-full max-w-prose flex-1 flex-col overflow-y-auto"
-				style={{
-					gap: `${BLOCK_GAP_LINES * settings().lineHeight}em`,
-					"justify-content": centred() ? "safe center" : "flex-start",
-				}}
-			>
-				<For each={blocks()}>
-					{(block) => <BlockView block={block} bookId={props.bookId} />}
-				</For>
-			</div>
+			<Show when={props.filled}>
+				<div
+					class="mx-auto flex min-h-0 w-full max-w-prose flex-1 flex-col overflow-y-auto"
+					style={{
+						gap: `${BLOCK_GAP_LINES * settings().lineHeight}em`,
+						"justify-content": centred() ? "safe center" : "flex-start",
+					}}
+				>
+					<For each={blocks()}>
+						{(block) => <BlockView block={block} bookId={props.bookId} />}
+					</For>
+				</div>
+			</Show>
 		</section>
 	);
 }
@@ -328,6 +330,13 @@ function StartReadingPill(props: { onClick: () => void }) {
 }
 
 type SheetName = "contents" | "explain" | "settings";
+
+// Only the cards around you are filled with their text and pictures: the one on screen, FILL_AHEAD after it
+// and FILL_BEHIND before, each kept until it is more than KEEP_FILLED away. The rest are empty frames of the
+// same height, so snapping, jumps and keeping your place work as if every card were built.
+const FILL_AHEAD = 8;
+const FILL_BEHIND = 4;
+const KEEP_FILLED = 12;
 
 // How long the feed has to be still before chapters can go in above it.
 const SCROLL_SETTLE_MS = 150;
@@ -416,6 +425,22 @@ export default function Feed() {
 
 	const cardIndex = () => position() - coverPages();
 	const currentCard = createMemo(() => cards()[cardIndex()]);
+
+	const filledRange = createMemo<[number, number]>(
+		([from, to]) => {
+			const at = cardIndex();
+			const near: [number, number] = [at - FILL_BEHIND, at + FILL_AHEAD];
+			if (to < near[0] || from > near[1]) return near;
+			return [
+				Math.max(Math.min(from, near[0]), at - KEEP_FILLED),
+				Math.min(Math.max(to, near[1]), at + KEEP_FILLED),
+			];
+		},
+		[0, -1],
+		{ equals: (a, b) => a[0] === b[0] && a[1] === b[1] },
+	);
+	const filled = (index: number) =>
+		index >= filledRange()[0] && index <= filledRange()[1];
 
 	const [moment, setMoment] = createSignal<Moment>();
 	async function celebrate() {
@@ -623,6 +648,7 @@ export default function Feed() {
 				if (index < 0) return;
 				anchor = saved.cardId;
 				scrollToCard(index, true);
+				setPosition(index + coverPages());
 			},
 		),
 	);
@@ -812,7 +838,13 @@ export default function Feed() {
 							</Show>
 
 							<For each={cards()}>
-								{(card) => <CardView bookId={meta().id} card={card} />}
+								{(card, i) => (
+									<CardView
+										bookId={meta().id}
+										card={card}
+										filled={filled(i())}
+									/>
+								)}
 							</For>
 
 							<Show when={!allLoaded()}>
