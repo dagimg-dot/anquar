@@ -70,6 +70,44 @@ body {
 	margin: 0;
 }
 
+/* Touch as in a native app: holding a control doesn't select it, holding a picture doesn't open a menu or
+   drag it, pulling at the top doesn't reload, and a quick second tap doesn't zoom. Reading text and the
+   Explain answer stay selectable. Tailwind's base already removes the tap flash and font inflation. */
+html {
+	overscroll-behavior-y: none;
+}
+
+body {
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
+}
+
+.snap-page,
+input,
+textarea,
+.select-text {
+	-webkit-user-select: text;
+	user-select: text;
+	-webkit-touch-callout: default;
+}
+
+img {
+	-webkit-user-drag: none;
+	pointer-events: none;
+}
+
+a,
+button,
+input,
+label,
+select,
+textarea,
+[role="button"],
+.snap-container {
+	touch-action: manipulation;
+}
+
 /* An app, not a page: nothing shows a scrollbar. */
 * {
 	scrollbar-width: none;

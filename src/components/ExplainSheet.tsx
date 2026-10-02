@@ -69,7 +69,7 @@ export default function ExplainSheet(props: ExplainSheetProps) {
 						</p>
 					</Match>
 					<Match when={answer()}>
-						<p class="whitespace-pre-wrap">{answer()}</p>
+						<p class="select-text whitespace-pre-wrap">{answer()}</p>
 					</Match>
 				</Switch>
 			</div>
