@@ -1,4 +1,4 @@
-import { BookmarkSimple, Export, GearSix, Sparkle } from "phosphor-solid";
+import { BookmarkSimple, Export, GearSix, Lightbulb } from "phosphor-solid";
 import type { JSX } from "solid-js";
 import { Show } from "solid-js";
 import {
@@ -155,7 +155,7 @@ export default function ReaderRail(props: ReaderRailProps) {
 				}
 			>
 				<span class="rail-glyph relative flex h-10 w-10 items-center justify-center">
-					<Sparkle size={27} weight={primed() ? "fill" : "regular"} />
+					<Lightbulb size={27} weight={primed() ? "fill" : "regular"} />
 					<Show when={primed()}>
 						<span
 							class="absolute top-0.5 right-0.5 h-[7px] w-[7px] rounded-full bg-current"
