@@ -770,12 +770,22 @@ export default function Feed() {
 		const name =
 			meta.title.replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "") ||
 			"passage";
+		// Drawing the image takes a moment on a phone; anything slower than a blink says so until it's done.
+		let making: string | undefined;
+		const slow = setTimeout(() => {
+			making = toast.loading("Generating image…");
+		}, 200);
 		const image = await shareCard({
 			author: meta.author,
 			coverUrl: meta.coverUrl,
 			text: passage,
 			title: meta.title,
-		}).catch(() => undefined);
+		})
+			.catch(() => undefined)
+			.finally(() => {
+				clearTimeout(slow);
+				if (making) toast.dismiss(making);
+			});
 		if (image) {
 			setSharing({ image, name, text });
 			setSheet("share");
