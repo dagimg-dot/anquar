@@ -1,5 +1,5 @@
 import { createSignal, For } from "solid-js";
-import IconButton from "../components/IconButton";
+import GeminiSettings from "../components/GeminiSettings";
 import LibraryData from "../components/LibraryData";
 import SettingsSection, {
 	SettingsOption,
@@ -23,24 +23,8 @@ const FONT_SIZE_MAP: Record<string, number> = {
 const LINE_SPACINGS = [1.5, 1.7, 2.0] as const;
 const ALIGNMENTS = ["top", "center"] as const;
 const GOALS = [10, 20, 30, 50, 100] as const;
-const MODELS = [
-	"gemini-2.0-flash",
-	"gemini-2.0-pro",
-	"gpt-4o",
-	"gpt-4o-mini",
-	"claude-sonnet-4",
-] as const;
-
 export default function SettingsTab() {
 	const { mode, setMode } = useTheme();
-	const [apiKey, setApiKey] = createSignal(
-		localStorage.getItem("anquar_api_key") || "",
-	);
-	const [showKey, setShowKey] = createSignal(false);
-	const [saved, setSaved] = createSignal(false);
-	const [model, setModel] = createSignal(
-		localStorage.getItem("anquar_model") || MODELS[0],
-	);
 	const [fontSize, setFontSize] = createSignal("M");
 	const [lineSpacing, setLineSpacing] = createSignal(1.7);
 	const [alignment, setAlignment] = createSignal("top");
@@ -69,17 +53,6 @@ export default function SettingsTab() {
 			themeId: "light",
 			verticalAlign: alignment(),
 		});
-	};
-
-	const saveApiKey = () => {
-		localStorage.setItem("anquar_api_key", apiKey());
-		setSaved(true);
-		setTimeout(() => setSaved(false), 2000);
-	};
-
-	const saveModel = (value: string) => {
-		setModel(value);
-		localStorage.setItem("anquar_model", value);
 	};
 
 	return (
@@ -236,74 +209,7 @@ export default function SettingsTab() {
 				</SettingsOptionGroup>
 			</SettingsSection>
 
-			<SettingsSection title="AI">
-				<SettingsRowInfo
-					label="API key"
-					desc="Your Gemini or OpenAI key (stored locally)"
-				/>
-				<div class="flex gap-2">
-					<input
-						type={showKey() ? "text" : "password"}
-						class="flex-1 py-2.5 px-3.5 rounded-xl bg-surface border border-border text-ink text-sm font-mono outline-none transition-colors duration-200 focus:border-brand-500 placeholder:text-ink-muted"
-						placeholder="sk-..."
-						value={apiKey()}
-						onInput={(e) => setApiKey(e.currentTarget.value)}
-					/>
-					<IconButton
-						onClick={() => setShowKey(!showKey())}
-						ariaLabel="Toggle visibility"
-						classList={{
-							"!text-brand-500": showKey(),
-							"!border-brand-500": showKey(),
-						}}
-					>
-						<svg
-							aria-hidden="true"
-							class="w-[18px] h-[18px]"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="1.5"
-						>
-							<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-							<circle cx="12" cy="12" r="3" />
-						</svg>
-					</IconButton>
-					<IconButton
-						onClick={saveApiKey}
-						ariaLabel="Save key"
-						classList={{
-							"!bg-brand-500": saved(),
-							"!text-white": saved(),
-							"!border-brand-500": saved(),
-						}}
-					>
-						<svg
-							aria-hidden="true"
-							class="w-[18px] h-[18px]"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2.5"
-						>
-							<polyline points="20 6 9 17 4 12" />
-						</svg>
-					</IconButton>
-				</div>
-				<div class="mt-3">
-					<SettingsRowInfo
-						label="Model"
-						desc="gemini-2.0-flash, gpt-4o, etc."
-					/>
-				</div>
-				<select
-					class="w-full py-2.5 px-3.5 rounded-xl bg-surface border border-border text-ink text-sm outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2712%27%20height%3D%2712%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%23666%27%20stroke-width%3D%272%27%3E%3Cpath%20d%3D%27m6%209%206%206%206-6%27%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_12px_center] transition-colors duration-200 focus:border-brand-500"
-					value={model()}
-					onChange={(e) => saveModel(e.currentTarget.value)}
-				>
-					<For each={[...MODELS]}>{(m) => <option value={m}>{m}</option>}</For>
-				</select>
-			</SettingsSection>
+			<GeminiSettings />
 
 			<SettingsSection title="Data">
 				<LibraryData />
