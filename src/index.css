@@ -70,6 +70,15 @@ body {
 	margin: 0;
 }
 
+/* An app, not a page: nothing shows a scrollbar. */
+* {
+	scrollbar-width: none;
+}
+
+::-webkit-scrollbar {
+	display: none;
+}
+
 #root {
 	min-height: 100svh;
 	color: var(--color-ink);
@@ -89,11 +98,6 @@ html {
 	overflow-anchor: none;
 	overscroll-behavior: contain;
 	scroll-snap-type: y mandatory;
-	scrollbar-width: none;
-}
-
-.snap-container::-webkit-scrollbar {
-	display: none;
 }
 
 .snap-page {

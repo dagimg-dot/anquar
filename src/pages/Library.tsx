@@ -121,7 +121,7 @@ export default function Library() {
 						</svg>
 					</button>
 				</div>
-				<div class="flex gap-2 pb-4 px-5 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+				<div class="flex gap-2 pb-4 px-5 overflow-x-auto">
 					<For each={FILTERS}>
 						{(f) => (
 							<FilterChip

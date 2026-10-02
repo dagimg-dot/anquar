@@ -5,7 +5,7 @@ interface CarouselRowProps {
 	class?: string;
 }
 
-const carouselRowStyle = `.carousel-row::-webkit-scrollbar { display: none; } .carousel-row > * { flex: 0 0 auto; scroll-snap-align: start; }`;
+const carouselRowStyle = `.carousel-row > * { flex: 0 0 auto; scroll-snap-align: start; }`;
 
 export default function CarouselRow(props: CarouselRowProps) {
 	return (
@@ -17,7 +17,7 @@ export default function CarouselRow(props: CarouselRowProps) {
 			]
 				.filter(Boolean)
 				.join(" ")}
-			style="scroll-snap-type: x proximity; scroll-padding-left: 20px; scrollbar-width: none;"
+			style="scroll-snap-type: x proximity; scroll-padding-left: 20px;"
 		>
 			<style>{carouselRowStyle}</style>
 			{props.children}
