@@ -681,9 +681,16 @@
 	border-radius: 12px;
 	background: color-mix(in oklab, var(--r-fg) 8%, transparent);
 	color: var(--r-fg);
+	border: 0;
 	font-size: 12.5px;
 	font-weight: 600;
-	transition: opacity 230ms var(--ease);
+	transition:
+		opacity 230ms var(--ease),
+		transform 0.2s var(--ease);
+}
+
+.back-chip:active {
+	transform: scale(0.95);
 }
 
 .back-chip .ic {

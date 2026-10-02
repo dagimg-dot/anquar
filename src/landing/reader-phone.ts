@@ -121,7 +121,7 @@ function phoneBody() {
 			.join("");
 
 	return `<div class="r-scroll" tabindex="0" role="region" aria-label="Moby-Dick, chapter 1, as anquar cards. Scroll to read."></div>
-		<span class="back-chip" aria-hidden="true">${icon("caret-left-bold")}Library</span>
+		<button class="back-chip" type="button" aria-label="Back to the Feed tab">${icon("caret-left-bold")}Library</button>
 		<div class="rail" data-shown="true">
 			${railItem("contents", "Contents", `<span class="ring"><span class="cover">${coverHTML("moby")}</span><svg viewBox="0 0 42 42" aria-hidden="true"><circle cx="21" cy="21" r="18.4" fill="none" stroke="currentColor" stroke-width="2.7" opacity="0.22"/><circle class="ring-arc" cx="21" cy="21" r="18.4" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-dasharray="${RING}" stroke-dashoffset="${RING}"/></svg></span>`, 4)}
 			${railItem("explain", "Explain", `<span class="rail-glyph">${icon("lightbulb")}</span>`, 3)}
@@ -337,6 +337,15 @@ export function mountReaderPhone(slot: HTMLElement, controls: HTMLElement) {
 	});
 	screen.addEventListener("keydown", (e) => {
 		if (e.key === "Escape") closeSheets();
+	});
+	// Library leaves the book as it does in the app: here, back up to the hero's Feed tab.
+	screen.querySelector(".back-chip")?.addEventListener("click", () => {
+		document.querySelector('[data-phone="feed"]')?.scrollIntoView({
+			behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+				? "auto"
+				: "smooth",
+			block: "center",
+		});
 	});
 	// The rail rests once you start reading, and a tap on the page brings it back, as in the app.
 	reader.addEventListener(
