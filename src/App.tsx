@@ -13,11 +13,14 @@ import Library from "./pages/Library.tsx";
 import Saved from "./pages/Saved.tsx";
 import SettingsTab from "./pages/SettingsTab.tsx";
 
+// Outside App, which the router mounts afresh for "/" and for a book: back from a book returns to the tab
+// it was opened from.
+const [activeTab, setActiveTab] = createSignal("feed");
+
 function App() {
 	const params = useParams();
 	const location = useLocation();
 	const navigate = useNavigate();
-	const [activeTab, setActiveTab] = createSignal("feed");
 
 	const isReaderPage = () => location.pathname.startsWith("/book/");
 	const bookId = () => params.id || null;
