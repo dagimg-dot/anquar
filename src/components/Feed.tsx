@@ -67,6 +67,7 @@ import {
 	readingGoal,
 } from "../lib/reading.ts";
 import { readSelection } from "../lib/selection.ts";
+import { leaveBook, readerLanded } from "../lib/transitions.ts";
 import { useLazyChapters } from "../lib/useLazyChapters.ts";
 import { useReadingTracker } from "../lib/useReadingTracker.ts";
 import { useScreenAwake } from "../lib/useScreenAwake.ts";
@@ -648,12 +649,16 @@ export default function Feed() {
 				const saved = await getProgress(id);
 				if (id !== bookMeta()?.id) return;
 				await openAt(saved?.chapterIndex ?? 0);
-				if (!saved?.cardId || id !== bookMeta()?.id) return;
-				const index = findCardHolding(cards(), saved.cardId);
-				if (index < 0) return;
-				anchor = saved.cardId;
-				scrollToCard(index, true);
-				setPosition(index + coverPages());
+				if (id !== bookMeta()?.id) return;
+				const index = saved?.cardId
+					? findCardHolding(cards(), saved.cardId)
+					: -1;
+				if (saved?.cardId && index >= 0) {
+					anchor = saved.cardId;
+					scrollToCard(index, true);
+					setPosition(index + coverPages());
+				}
+				readerLanded();
 			},
 		),
 	);
@@ -818,6 +823,7 @@ export default function Feed() {
 
 						<div
 							class="snap-container h-dvh overflow-y-auto"
+							data-book={meta().id}
 							onPointerDown={(e) => {
 								downX = e.clientX;
 								downY = e.clientY;
@@ -860,7 +866,7 @@ export default function Feed() {
 						<button
 							aria-label="Back to library"
 							class="fixed top-0 left-0 z-40 m-3 flex h-[34px] items-center gap-1.5 rounded-xl px-2.5 font-semibold text-[12.5px] transition-opacity duration-[230ms] active:scale-95"
-							onClick={() => navigate("/")}
+							onClick={() => leaveBook(() => navigate("/"), meta().id)}
 							style={{
 								background: `color-mix(in oklab, ${themeColors().textColor} 8%, transparent)`,
 								color: themeColors().textColor,

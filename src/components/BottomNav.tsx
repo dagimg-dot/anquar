@@ -28,6 +28,7 @@ export default function BottomNav(props: BottomNavProps) {
 
 	return (
 		<nav
+			style={{ "view-transition-name": "tab-nav" }}
 			class="fixed inset-x-0 bottom-0 z-50 pb-[env(safe-area-inset-bottom)]"
 			data-splash-slide
 		>

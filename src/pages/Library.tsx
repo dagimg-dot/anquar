@@ -14,6 +14,7 @@ import FilterChip from "../components/FilterChip";
 import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
 import { libraryVersion, pickBooks } from "../lib/imports";
+import { openBook } from "../lib/transitions";
 
 interface BookWithProgress {
 	addedAt: string;
@@ -139,9 +140,16 @@ export default function Library() {
 								<button
 									type="button"
 									class="block w-full p-0 m-0 border-0 bg-none text-left cursor-pointer font-[inherit] text-[color:inherit] active:scale-95 transition-transform duration-300"
-									onClick={() => navigate(`/book/${book.id}`)}
+									onClick={(e) =>
+										openBook(
+											() => navigate(`/book/${book.id}`),
+											book.id,
+											e.currentTarget,
+										)
+									}
 								>
 									<BookCover
+										data-cover={book.id}
 										src={book.coverImage}
 										progress={book.progressPercent}
 									/>

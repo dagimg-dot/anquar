@@ -9,7 +9,7 @@ interface NowReadingProps {
 		coverImage?: string;
 		progress?: number;
 	};
-	onClick?: () => void;
+	onClick?: (e: MouseEvent & { currentTarget: HTMLButtonElement }) => void;
 }
 
 export default function NowReading(props: NowReadingProps) {
@@ -21,6 +21,7 @@ export default function NowReading(props: NowReadingProps) {
 				onClick={props.onClick}
 			>
 				<BookCover
+					data-cover={props.book.id}
 					src={props.book.coverImage}
 					progress={props.book.progress ?? 0}
 					class="w-20 h-[120px] rounded-lg overflow-hidden shrink-0 bg-surface"

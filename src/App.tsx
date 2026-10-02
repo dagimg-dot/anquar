@@ -7,6 +7,7 @@ import ImportSheet from "./components/ImportSheet.tsx";
 import { lastOpenedBook } from "./lib/db.ts";
 import { importShared, pickBooks } from "./lib/imports.ts";
 import { ReaderSettingsProvider } from "./lib/reader-settings.tsx";
+import { switchTab } from "./lib/transitions.ts";
 import PWABadge from "./PWABadge.tsx";
 import FeedPage from "./pages/Feed.tsx";
 import Library from "./pages/Library.tsx";
@@ -101,7 +102,12 @@ function App() {
 			</main>
 
 			<Show when={!isReaderPage()}>
-				<BottomNav activeTab={activeTab()} setActiveTab={setActiveTab} />
+				<BottomNav
+					activeTab={activeTab()}
+					setActiveTab={(tab) =>
+						tab !== activeTab() && switchTab(() => setActiveTab(tab))
+					}
+				/>
 			</Show>
 			<Show when={!isReaderPage() && activeTab() === "feed"}>
 				<button

@@ -14,6 +14,7 @@ import {
 	readingTime,
 	registerPicker,
 } from "../lib/imports";
+import { openBook } from "../lib/transitions";
 import { useCloseOnBack } from "../lib/useCloseOnBack";
 import { useSheetDrag } from "../lib/useSheetDrag";
 
@@ -244,10 +245,10 @@ export default function ImportSheet() {
 			.join(" · ");
 	};
 
-	const openBook = (id: string | undefined) => {
+	const startReading = (id: string | undefined) => {
 		if (!id) return;
 		closeImports();
-		navigate(`/book/${id}`);
+		openBook(() => navigate(`/book/${id}`), id);
 	};
 
 	return (
@@ -335,13 +336,13 @@ export default function ImportSheet() {
 					<div class="mt-5 flex flex-col gap-2.5">
 						<Switch>
 							<Match when={single()?.state === "added"}>
-								<Button onClick={() => openBook(single()?.bookId)} primary>
+								<Button onClick={() => startReading(single()?.bookId)} primary>
 									Start reading
 								</Button>
 								<Button onClick={closeImports}>Done</Button>
 							</Match>
 							<Match when={single()?.state === "already"}>
-								<Button onClick={() => openBook(single()?.bookId)} primary>
+								<Button onClick={() => startReading(single()?.bookId)} primary>
 									Open it
 								</Button>
 								<Button onClick={() => void addCopy(single()?.key ?? 0)}>
@@ -356,7 +357,7 @@ export default function ImportSheet() {
 							</Match>
 							<Match when={firstAdded()}>
 								{(book) => (
-									<Button onClick={() => openBook(book().bookId)} primary>
+									<Button onClick={() => startReading(book().bookId)} primary>
 										Start reading {book().title}
 									</Button>
 								)}
