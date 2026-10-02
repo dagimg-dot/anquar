@@ -41,7 +41,8 @@ small bookkeeping there too: `anquar_last_read_at` (for sessions),
 ## Architecture
 
 Entirely client-side: no server, no telemetry, no build-time content. The only
-request that ever leaves the device is an explicit Explain call.
+request that ever leaves the device is an explicit Explain call; a cover
+search only opens Google in the browser.
 
 **Stack** — Solid.js, Vite, Tailwind v4, `vite-plugin-pwa`.
 

@@ -1,6 +1,8 @@
-import { createEffect, createSignal, on, onCleanup } from "solid-js";
+import { ClipboardText, GoogleLogo, Image } from "phosphor-solid";
+import { createEffect, createSignal, on, onCleanup, Show } from "solid-js";
 import toast from "solid-toast";
 import { deleteBook, updateBook } from "../lib/db";
+import { tick } from "../lib/haptics";
 import { libraryChanged } from "../lib/imports";
 import BookCover from "./BookCover";
 import BottomSheet from "./BottomSheet";
@@ -16,7 +18,7 @@ export interface EditableBook {
 const COVER_MAX_PX = 900;
 const CONFIRM_MS = 3000;
 
-async function shrink(file: File): Promise<Blob> {
+async function shrink(file: Blob): Promise<Blob> {
 	const image = await createImageBitmap(file);
 	const scale = Math.min(1, COVER_MAX_PX / Math.max(image.width, image.height));
 	const canvas = document.createElement("canvas");
@@ -28,6 +30,20 @@ async function shrink(file: File): Promise<Blob> {
 		canvas.toBlob((blob) => resolve(blob ?? file), "image/jpeg", 0.88),
 	);
 }
+
+const pill =
+	"flex h-9 items-center gap-2 rounded-full border px-3.5 font-medium text-[13.5px] transition-[transform,background-color,color,border-color] active:scale-95";
+
+// Pasting needs the async clipboard's read, which only some browsers have.
+const canPaste = typeof navigator.clipboard?.read === "function";
+
+// Anquar can't fetch a cover from the web itself (no server, and image sites don't share their pictures
+// with other pages), so it opens the search: a cover copied there comes back through Paste cover, or one
+// saved there through Change cover.
+const coverSearch = (title: string, author: string) =>
+	`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(
+		[title, author, "book cover"].filter(Boolean).join(" "),
+	)}`;
 
 const field =
 	"h-12 w-full rounded-xl border border-border bg-surface px-4 text-[15px] text-ink outline-none transition-colors focus:border-brand-500";
@@ -45,6 +61,8 @@ export default function BookEditor(props: {
 	const [cover, setCover] = createSignal<Blob>();
 	const [preview, setPreview] = createSignal<string>();
 	const [confirming, setConfirming] = createSignal(false);
+	// After a search, Paste cover is the next step, so it stands out.
+	const [searched, setSearched] = createSignal(false);
 	let picker: HTMLInputElement | undefined;
 	let unconfirm: ReturnType<typeof setTimeout> | undefined;
 
@@ -59,6 +77,7 @@ export default function BookEditor(props: {
 				setCover(undefined);
 				setPreview(undefined);
 				setConfirming(false);
+				setSearched(false);
 			},
 		),
 	);
@@ -79,11 +98,31 @@ export default function BookEditor(props: {
 		);
 	};
 
-	async function pickCover(file: File | undefined) {
+	async function pickCover(file: Blob | undefined) {
 		if (!file) return;
 		const blob = await shrink(file);
 		setCover(blob);
 		setPreview(URL.createObjectURL(blob));
+	}
+
+	async function pasteCover() {
+		try {
+			for (const item of await navigator.clipboard.read()) {
+				const type = item.types.find((t) => t.startsWith("image/"));
+				if (!type) continue;
+				await pickCover(await item.getType(type));
+				setSearched(false);
+				tick();
+				return;
+			}
+			toast.error(
+				"No image copied. In Google, hold a cover and choose Copy image.",
+			);
+		} catch {
+			toast.error(
+				"Anquar can't read the clipboard. Allow it in the site's settings.",
+			);
+		}
 	}
 
 	async function save() {
@@ -138,13 +177,40 @@ export default function BookEditor(props: {
 						class="w-20 shrink-0"
 						src={preview() ?? book()?.coverImage}
 					/>
-					<button
-						class="h-10 rounded-full border border-border px-4 font-medium text-[14px] text-ink transition-transform active:scale-95"
-						onClick={() => picker?.click()}
-						type="button"
-					>
-						Change cover
-					</button>
+					<div class="flex flex-col items-start gap-1.5">
+						<a
+							class={`${pill} border-border text-ink`}
+							href={coverSearch(title().trim(), author().trim())}
+							onClick={() => setSearched(true)}
+							rel="noopener noreferrer"
+							target="_blank"
+						>
+							<GoogleLogo aria-hidden="true" size={17} weight="bold" />
+							Search Google
+						</a>
+						<Show when={canPaste}>
+							<button
+								class={pill}
+								classList={{
+									"border-brand-500 bg-brand-500 text-canvas": searched(),
+									"border-border text-ink": !searched(),
+								}}
+								onClick={() => void pasteCover()}
+								type="button"
+							>
+								<ClipboardText aria-hidden="true" size={17} />
+								Paste cover
+							</button>
+						</Show>
+						<button
+							class={`${pill} border-border text-ink`}
+							onClick={() => picker?.click()}
+							type="button"
+						>
+							<Image aria-hidden="true" size={17} />
+							Change cover
+						</button>
+					</div>
 				</div>
 				<label class="flex flex-col gap-1.5">
 					<span class="text-ink-soft text-xs">Title</span>
