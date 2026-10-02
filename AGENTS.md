@@ -73,7 +73,7 @@ when Chrome rebuilds it, which can take a day; reinstalling is immediate.
 schema v2. Tables: `books`, `chapters`, `progress`, `bookmarks`,
 `readerSettings`, `reading`, `images`. Image bytes are split into `images`
 so chapter JSON stays small; `saveBook` strips them with a replacer. `progress`
-keeps the id of the card you're on, and the reader loads forward to it on open.
+keeps the id of the card you're on, and the reader opens at it.
 `reading` has one row per book per reading day; deleting a book keeps its rows,
 because the streak belongs to you, not the book.
 
@@ -86,12 +86,16 @@ the reader's type, measures how much a card holds (`src/lib/card-layout.ts`)
 and re-measures whenever the screen, type size, line height or margins change;
 the book is then paginated again and the reader returned to the card holding
 the words they were on. Card ids name a place in the book (`c3-12@480`), which
-is how that return, and bookmarks, survive a relayout. `useLazyChapters` loads
-three chapters at a time behind an IntersectionObserver sentinel, and `loadUpTo`
-pulls forward far enough for a contents jump to land. The card you're on is
-the scroll offset over a card's measured height, not `clientHeight`, which on
-most phones is a fraction of a pixel short of a `dvh` card and drifts a card
-over a long book.
+is how that return, and bookmarks, survive a relayout. A book opens at your
+chapter rather than paging everything before it: `useLazyChapters` keeps a run
+of chapters around you, loading three more as you near either end, and the
+reader puts earlier ones in above you without moving the card on screen. A run
+starts after a chapter that doesn't carry into the next (anquar-core's
+`carriesIntoNext`; a closing part title does), so `createPager` pages each run
+on its own and gets exactly the cards the whole book would. A contents jump
+outside the run opens the book there. The card you're on is the scroll offset
+over a card's measured height, not `clientHeight`, which on most phones is a
+fraction of a pixel short of a `dvh` card and drifts a card over a long book.
 
 **Reader chrome** — `ReaderRail` carries contents, explain, save, share and
 settings; each opens a `BottomSheet`. The rail overlays the page rather than

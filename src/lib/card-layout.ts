@@ -1,4 +1,11 @@
-import type { Block, Card, CardLayout } from "anquar-core";
+import {
+	type Block,
+	type Card,
+	type CardLayout,
+	carriesIntoNext,
+	type PageableChapter,
+	paginate,
+} from "anquar-core";
 
 export const LAYOUT_SAMPLE =
 	"The rain had not stopped since morning, and by the time she reached the station the streets were running like shallow rivers. She stood under the awning for a while, watching the buses pull away one after another, each of them full of tired faces pressed against fogged windows. Somewhere behind her a door opened and closed, letting out a smell of coffee and warm bread that made her realize she had not eaten anything all day. It was strange, she thought, how quickly a plan could fall apart. A week ago everything had seemed so simple: finish the work, pack the car, drive north before the weather turned. Now the car was in a garage on the other side of town, the work was still unfinished, and the weather had turned anyway. She pulled her coat tighter and stepped back into the crowd, letting it carry her toward the platform. There would be another train, and another after that. There always was. What mattered was deciding where to go once she was on it, and that, for the first time in years, was a question she could answer however she liked.";
@@ -77,4 +84,35 @@ export function reuseCards(next: Card[], prev: readonly Card[]): Card[] {
 			);
 		return same ? old : card;
 	});
+}
+
+// Pages chapters in runs that each start after a chapter that doesn't carry into the next, which gives the
+// cards paging the whole book would, and keeps each run's cards until the layout changes: chapters loaded
+// before or after are paged on their own, never the ones already on screen.
+export function createPager() {
+	let pagedAt: CardLayout | undefined;
+	let runs = new WeakMap<PageableChapter, { length: number; cards: Card[] }>();
+
+	return (chapters: readonly PageableChapter[], layout: CardLayout): Card[] => {
+		if (layout !== pagedAt) {
+			runs = new WeakMap();
+			pagedAt = layout;
+		}
+		const cards: Card[] = [];
+		let start = 0;
+		for (let i = 1; i <= chapters.length; i++) {
+			if (i < chapters.length && carriesIntoNext(chapters[i - 1])) continue;
+			let paged = runs.get(chapters[start]);
+			if (paged?.length !== i - start) {
+				paged = {
+					length: i - start,
+					cards: paginate(chapters.slice(start, i), layout),
+				};
+				runs.set(chapters[start], paged);
+			}
+			for (const card of paged.cards) cards.push(card);
+			start = i;
+		}
+		return cards;
+	};
 }

@@ -10,12 +10,12 @@ import {
 	ITEM_GAP_LINES,
 	type ListBlock,
 	PHONE_LAYOUT,
-	paginate,
 	type StyleRun,
 	type TextBlock,
 } from "anquar-core";
 import { BookmarkSimple, CaretLeft } from "phosphor-solid";
 import {
+	batch,
 	createEffect,
 	createMemo,
 	createResource,
@@ -31,6 +31,7 @@ import {
 import { Dynamic } from "solid-js/web";
 import toast from "solid-toast";
 import {
+	createPager,
 	findCardHolding,
 	LAYOUT_SAMPLE,
 	readLayout,
@@ -76,8 +77,6 @@ import ExplainSheet from "./ExplainSheet.tsx";
 import PulseMoment from "./PulseMoment.tsx";
 import ReaderRail from "./ReaderRail.tsx";
 import ReaderSettingsPanel from "./ReaderSettingsPanel.tsx";
-
-const COVER_PAGES = 1;
 
 interface BookMeta {
 	author: string;
@@ -330,6 +329,9 @@ function StartReadingPill(props: { onClick: () => void }) {
 
 type SheetName = "contents" | "explain" | "settings";
 
+// How long the feed has to be still before chapters can go in above it.
+const SCROLL_SETTLE_MS = 150;
+
 // A card is a dynamic viewport tall, which on most phones isn't the whole number of pixels clientHeight
 // is; dividing by clientHeight drifts by a card over a long book.
 const cardHeight = (feed: HTMLElement) =>
@@ -360,24 +362,34 @@ export default function Feed() {
 	const [bookMeta, setBookMeta] = createSignal<BookMeta | null>(null);
 	const [metaLoaded, setMetaLoaded] = createSignal(false);
 
-	const { chapters, allLoaded, loadUpTo, observeSentinel } = useLazyChapters(
-		() => bookMeta()?.id ?? "",
-	);
+	const {
+		chapters,
+		allLoaded,
+		atStart,
+		openAt,
+		reach,
+		observeSentinel,
+		observeTop,
+	} = useLazyChapters(() => bookMeta()?.id ?? "");
 
 	const [layout, setLayout] = createSignal<CardLayout>(PHONE_LAYOUT, {
 		equals: (a, b) =>
 			a.charsPerLine === b.charsPerLine && a.linesPerCard === b.linesPerCard,
 	});
 
+	const page = createPager();
 	const cards = createMemo<Card[]>(
-		(prev) => reuseCards(paginate(chapters(), layout()), prev),
+		(prev) => reuseCards(page(chapters(), layout()), prev),
 		[],
 	);
+	// The cover leads the book only once its first chapter is loaded.
+	const coverPages = () => (atStart() ? 1 : 0);
 
 	const [container, setContainer] = createSignal<HTMLDivElement>();
 	useTikTokScroll(container);
 
 	const bodyStart = createMemo(() => {
+		if (!atStart()) return 0;
 		const frontMatter = new Set(
 			chapters()
 				.filter((ch) => ch.frontMatter)
@@ -385,7 +397,7 @@ export default function Feed() {
 		);
 		if (frontMatter.size === 0) return 0;
 		const i = cards().findIndex((card) => !frontMatter.has(card.chapterIndex));
-		return i < 0 ? 0 : i + COVER_PAGES;
+		return i < 0 ? 0 : i + coverPages();
 	});
 
 	const [position, setPosition] = createSignal(0);
@@ -402,8 +414,8 @@ export default function Feed() {
 
 	const inFrontMatter = () => bodyStart() > 0 && position() < bodyStart();
 
-	const cardIndex = () => position() - COVER_PAGES;
-	const currentCard = () => cards()[cardIndex()];
+	const cardIndex = () => position() - coverPages();
+	const currentCard = createMemo(() => cards()[cardIndex()]);
 
 	const [moment, setMoment] = createSignal<Moment>();
 	async function celebrate() {
@@ -459,9 +471,14 @@ export default function Feed() {
 
 	const savedCardIndexes = createMemo(() => {
 		const list = cards();
-		return bookmarks().map((b) =>
-			b.cardId ? findCardHolding(list, b.cardId) : (b.cardIndex ?? -1),
-		);
+		const loaded = chapters();
+		const from = loaded[0]?.index ?? 0;
+		const to = from + loaded.length;
+		return bookmarks().map((b) => {
+			if (b.chapterIndex < from || b.chapterIndex >= to) return -1;
+			if (b.cardId) return findCardHolding(list, b.cardId);
+			return atStart() ? (b.cardIndex ?? -1) : -1;
+		});
 	});
 
 	const savedHere = () => savedCardIndexes().includes(cardIndex());
@@ -514,7 +531,7 @@ export default function Feed() {
 
 	function scrollToCard(index: number, instant = false) {
 		const pages = container()?.querySelectorAll<HTMLElement>(".snap-page");
-		pages?.[index + COVER_PAGES]?.scrollIntoView({
+		pages?.[index + coverPages()]?.scrollIntoView({
 			behavior: instant || reduceMotion() ? "auto" : "smooth",
 			block: "start",
 		});
@@ -591,35 +608,58 @@ export default function Feed() {
 		});
 	});
 
+	// The book opens at your chapter and lands on your card in the same task its cards arrive in, so the
+	// first thing drawn is your place.
 	createEffect(
 		on(
 			() => bookMeta()?.id,
 			async (id) => {
 				if (!id) return;
 				const saved = await getProgress(id);
+				if (id !== bookMeta()?.id) return;
+				await openAt(saved?.chapterIndex ?? 0);
 				if (!saved?.cardId || id !== bookMeta()?.id) return;
-				await loadUpTo(saved.chapterIndex);
 				const index = findCardHolding(cards(), saved.cardId);
 				if (index < 0) return;
-				requestAnimationFrame(() => {
-					// A deep place takes a moment to load; anyone who has scrolled off the cover by then has
-					// chosen where to start.
-					const el = container();
-					if (el && Math.round(el.scrollTop / el.clientHeight) !== 0) return;
-					anchor = saved.cardId;
-					scrollToCard(index, true);
-				});
+				anchor = saved.cardId;
+				scrollToCard(index, true);
 			},
 		),
 	);
 
+	// Chapters loaded above you go in while the feed is still, and the feed moves down by what they add, so
+	// the card you are on stays where it is. Chrome re-snaps to that card by itself; setting the offset
+	// outright, rather than adding to it, holds either way.
+	let lastScroll = 0;
+	const still = () =>
+		new Promise<void>((resolve) => {
+			const check = () =>
+				performance.now() - lastScroll > SCROLL_SETTLE_MS
+					? resolve()
+					: setTimeout(check, SCROLL_SETTLE_MS);
+			check();
+		});
+	async function keepPlace(commit: () => void) {
+		await still();
+		const el = container();
+		if (!el) return commit();
+		const height = cardHeight(el);
+		const at = Math.round(el.scrollTop / height);
+		const before = cards().length + coverPages();
+		batch(() => {
+			commit();
+			setPosition(at + cards().length + coverPages() - before);
+		});
+		el.scrollTop = position() * height;
+	}
+
 	async function jumpToChapter(chapterIndex: number) {
 		setSheet(null);
-		await loadUpTo(chapterIndex);
+		const how = await reach(chapterIndex);
 		const i = cards().findIndex((c) =>
 			c.blocks.some((b) => b.chapterIndex === chapterIndex),
 		);
-		if (i >= 0) scrollToCard(i);
+		if (i >= 0) scrollToCard(i, how === "opened");
 	}
 
 	async function share(picked: string) {
@@ -651,6 +691,7 @@ export default function Feed() {
 	}
 
 	function trackPosition(e: Event) {
+		lastScroll = performance.now();
 		const el = e.currentTarget as HTMLElement;
 		const height = cardHeight(el);
 		if (height > 0) {
@@ -745,7 +786,7 @@ export default function Feed() {
 						<LayoutProbe onLayout={setLayout} />
 
 						<div
-							class="snap-container h-dvh overflow-y-auto"
+							class="snap-container h-dvh overflow-y-auto [overflow-anchor:none]"
 							onPointerDown={(e) => {
 								downX = e.clientX;
 								downY = e.clientY;
@@ -754,12 +795,21 @@ export default function Feed() {
 							onScroll={trackPosition}
 							ref={setContainer}
 						>
-							<CoverCard
-								author={meta().author}
-								chapterCount={meta().totalChapters}
-								coverUrl={meta().coverUrl}
-								title={meta().title}
-							/>
+							<Show
+								fallback={
+									<Show when={chapters().length > 0}>
+										<div ref={(el) => observeTop(el, keepPlace)} />
+									</Show>
+								}
+								when={atStart()}
+							>
+								<CoverCard
+									author={meta().author}
+									chapterCount={meta().totalChapters}
+									coverUrl={meta().coverUrl}
+									title={meta().title}
+								/>
+							</Show>
 
 							<For each={cards()}>
 								{(card) => <CardView bookId={meta().id} card={card} />}
