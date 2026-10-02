@@ -77,7 +77,7 @@ export default function BottomSheet(props: BottomSheetProps) {
 						{props.title}
 					</h2>
 					<button
-						aria-label="Close settings"
+						aria-label={`Close ${props.title}`}
 						class="flex h-7 w-7 items-center justify-center rounded-full bg-surface-elevated text-ink-soft transition-transform active:scale-90"
 						onClick={props.onClose}
 						type="button"
