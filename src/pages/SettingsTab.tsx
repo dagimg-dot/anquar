@@ -1,5 +1,6 @@
 import { createSignal, For } from "solid-js";
 import IconButton from "../components/IconButton";
+import LibraryData from "../components/LibraryData";
 import SettingsSection, {
 	SettingsOption,
 	SettingsOptionGroup,
@@ -321,6 +322,7 @@ export default function SettingsTab() {
 			</SettingsSection>
 
 			<SettingsSection title="Data">
+				<LibraryData />
 				<SettingsRowInfo
 					label="Clear library"
 					desc="Remove all books and reading data"

@@ -83,6 +83,14 @@ keeps the id of the card you're on, and the reader opens at it.
 `reading` has one row per book per reading day; deleting a book keeps its rows,
 because the streak belongs to you, not the book.
 
+**Library file** — Settings → Data exports every table, the covers and the
+pictures as one zip (`src/lib/library-file.ts`, format `anquar-library` v1),
+with the `anquar_*` settings but never the Gemini key, so a library moves to
+another phone or origin without its EPUBs. Import adds to the library instead
+of replacing it: the place read last wins, a day read on both phones counts
+each card once, and saves already there are skipped, so importing a file twice
+changes nothing. A file from a newer format is refused, not guessed at.
+
 **Feed** — `src/components/Feed.tsx`. CSS scroll-snap over cards that
 anquar-core's `paginate` lays out to fill one screen each: whole paragraphs
 where they fit, a paragraph split at a sentence where a card would otherwise

@@ -2,9 +2,18 @@ import type { Block, ParsedBook } from "anquar-core";
 import Dexie, { type EntityTable, type Table } from "dexie";
 import { releaseCoverUrl } from "./covers.ts";
 import { sameBook } from "./import-check.ts";
+import {
+	freshBookmarks,
+	type LibraryDump,
+	later,
+	mergeReading,
+	newerProgress,
+	readSettings,
+	writeSettings,
+} from "./library-file.ts";
 import type { ReaderSettings } from "./reader-settings.tsx";
 
-interface BookRecord {
+export interface BookRecord {
 	addedAt: string;
 	author: string;
 	chapterCount: number;
@@ -14,7 +23,7 @@ interface BookRecord {
 	coverImage?: Blob;
 }
 
-interface ChapterRecord {
+export interface ChapterRecord {
 	bookId: string;
 	blocks: string;
 	frontMatter: boolean;
@@ -23,7 +32,7 @@ interface ChapterRecord {
 	title: string;
 }
 
-interface ProgressRecord {
+export interface ProgressRecord {
 	bookId: string;
 	cardId: string;
 	chapterIndex: number;
@@ -31,7 +40,7 @@ interface ProgressRecord {
 	progressPercent: number;
 }
 
-interface BookmarkRecord {
+export interface BookmarkRecord {
 	bookId: string;
 	cardId?: string;
 	cardIndex?: number;
@@ -45,7 +54,7 @@ interface BookmarkRecord {
 	wordOffset: number;
 }
 
-interface ReaderSettingsRecord {
+export interface ReaderSettingsRecord {
 	bgColor: string;
 	bookId: string;
 	fontSize: number;
@@ -57,13 +66,13 @@ interface ReaderSettingsRecord {
 	verticalAlign?: string;
 }
 
-interface ImageRecord {
+export interface ImageRecord {
 	bookId: string;
 	data: Blob;
 	id: string;
 }
 
-interface ReadingRecord {
+export interface ReadingRecord {
 	anquars: number;
 	bookId: string;
 	cards: string[];
@@ -318,6 +327,77 @@ export function saveReaderSettings(bookId: string, settings: ReaderSettings) {
 
 export function loadReaderSettings(bookId: string) {
 	return db.readerSettings.get(bookId);
+}
+
+const libraryTables = () =>
+	[
+		db.books,
+		db.chapters,
+		db.images,
+		db.progress,
+		db.bookmarks,
+		db.readerSettings,
+		db.reading,
+	] as const;
+
+export async function dumpLibrary(): Promise<LibraryDump> {
+	const [
+		books,
+		chapters,
+		images,
+		progress,
+		bookmarks,
+		readerSettings,
+		reading,
+	] = await db.transaction("r", libraryTables(), () =>
+		Promise.all([
+			db.books.toArray(),
+			db.chapters.toArray(),
+			db.images.toArray(),
+			db.progress.toArray(),
+			db.bookmarks.toArray(),
+			db.readerSettings.toArray(),
+			db.reading.toArray(),
+		]),
+	);
+	return {
+		books,
+		chapters,
+		images,
+		progress,
+		bookmarks,
+		readerSettings,
+		reading,
+		settings: readSettings(),
+	};
+}
+
+// A restore adds to the library rather than replacing it: a book already here is updated, the place read
+// last wins, and a day read on both phones is merged (library-file.ts).
+export async function restoreLibrary(dump: LibraryDump) {
+	await db.transaction("rw", libraryTables(), async () => {
+		for (const book of dump.books) {
+			const here = await db.books.get(book.id);
+			const lastOpenedAt = later(here?.lastOpenedAt, book.lastOpenedAt);
+			await db.books.put(lastOpenedAt ? { ...book, lastOpenedAt } : book);
+		}
+		await db.chapters.bulkPut(dump.chapters);
+		await db.images.bulkPut(dump.images);
+		for (const place of dump.progress)
+			await db.progress.put(
+				newerProgress(await db.progress.get(place.bookId), place),
+			);
+		await db.bookmarks.bulkAdd(
+			freshBookmarks(await db.bookmarks.toArray(), dump.bookmarks),
+		);
+		await db.readerSettings.bulkPut(dump.readerSettings);
+		for (const day of dump.reading)
+			await db.reading.put(
+				mergeReading(await db.reading.get([day.date, day.bookId]), day),
+			);
+	});
+	writeSettings(dump.settings);
+	for (const book of dump.books) releaseCoverUrl(book.id);
 }
 
 export { db };
