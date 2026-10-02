@@ -26,11 +26,11 @@ export default function Saved() {
 	const navigate = useNavigate();
 	const [groups, setGroups] = createSignal<BookGroup[]>([]);
 	const [loading, setLoading] = createSignal(true);
-	// A book shows its three latest saves until it's opened out.
-	const [expanded, setExpanded] = createSignal<string[]>([]);
-	const isOpen = (id: string) => expanded().includes(id);
+	// Each book is a dropdown of its saves, open until its name is tapped.
+	const [closed, setClosed] = createSignal<string[]>([]);
+	const isOpen = (id: string) => !closed().includes(id);
 	const toggle = (id: string) =>
-		setExpanded((ids) =>
+		setClosed((ids) =>
 			ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
 		);
 	// A save opens the book at its card, which shows it without making it your reading place (Feed.tsx).
@@ -77,6 +77,7 @@ export default function Saved() {
 						<div class="mb-6">
 							<button
 								class="flex w-full cursor-pointer items-center gap-3 px-5 py-3 text-left transition-opacity duration-150 active:opacity-70"
+								aria-expanded={isOpen(group.bookId)}
 								onClick={() => toggle(group.bookId)}
 								type="button"
 							>
@@ -100,39 +101,31 @@ export default function Saved() {
 									›
 								</div>
 							</button>
-							<div class="px-5">
-								<For
-									each={
-										isOpen(group.bookId)
-											? group.bookmarks
-											: group.bookmarks.slice(0, 3)
-									}
-								>
-									{(bm) => (
-										<button
-											class="block w-full cursor-pointer text-left transition-opacity duration-150 active:opacity-60"
-											onClick={() => visit(bm)}
-											type="button"
-										>
-											<HighlightCard
-												meta={new Date(bm.createdAt).toLocaleDateString()}
-												text={bm.textSnippet}
-											/>
-										</button>
-									)}
-								</For>
+							{/* Rows from 0 to their full height, so the saves slide open and shut rather than jump. */}
+							<div
+								class="grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.2,0,0,1)]"
+								style={{
+									"grid-template-rows": isOpen(group.bookId) ? "1fr" : "0fr",
+								}}
+							>
+								<div class="overflow-hidden px-5">
+									<For each={group.bookmarks}>
+										{(bm) => (
+											<button
+												class="block w-full cursor-pointer text-left transition-opacity duration-150 active:opacity-60"
+												onClick={() => visit(bm)}
+												tabIndex={isOpen(group.bookId) ? 0 : -1}
+												type="button"
+											>
+												<HighlightCard
+													meta={new Date(bm.createdAt).toLocaleDateString()}
+													text={bm.textSnippet}
+												/>
+											</button>
+										)}
+									</For>
+								</div>
 							</div>
-							<Show when={group.bookmarks.length > 3}>
-								<button
-									class="cursor-pointer px-5 py-2 font-medium text-brand-500 text-sm"
-									onClick={() => toggle(group.bookId)}
-									type="button"
-								>
-									{isOpen(group.bookId)
-										? "Show fewer"
-										: `View all ${group.bookmarks.length} highlights →`}
-								</button>
-							</Show>
 						</div>
 					)}
 				</For>
