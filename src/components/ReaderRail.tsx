@@ -150,7 +150,7 @@ export default function ReaderRail(props: ReaderRailProps) {
 				order={3}
 				style={
 					primed()
-						? { color: accents().ai, opacity: "1", transform: "none" }
+						? { color: accents().save, opacity: "1", transform: "none" }
 						: undefined
 				}
 			>

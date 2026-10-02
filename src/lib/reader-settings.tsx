@@ -109,21 +109,18 @@ export function setRailRest(value: RailRest) {
  * clear five backgrounds the app theme knows nothing about. A custom page
  * colour has no matching pair, so those fall back to the reader's own ink.
  */
-const ACCENTS: Record<string, { ai: string; save: string }> = {
-	light: { save: "#2f6b4a", ai: "#5a4fcf" },
-	dark: { save: "#7fc79b", ai: "#a99bf5" },
-	sepia: { save: "#4a6b52", ai: "#6455a8" },
-	cream: { save: "#3f6b4f", ai: "#6a5acd" },
-	amoled: { save: "#7fc79b", ai: "#b6aaff" },
+const ACCENTS: Record<string, { save: string }> = {
+	light: { save: "#2f6b4a" },
+	dark: { save: "#7fc79b" },
+	sepia: { save: "#4a6b52" },
+	cream: { save: "#3f6b4f" },
+	amoled: { save: "#7fc79b" },
 };
 
-export function getAccentColors(settings: ReaderSettings): {
-	ai: string;
-	save: string;
-} {
+export function getAccentColors(settings: ReaderSettings): { save: string } {
 	const ink = getThemeColors(settings).textColor;
-	if (settings.bgColor || settings.textColor) return { save: ink, ai: ink };
-	return ACCENTS[settings.themeId] ?? { save: ink, ai: ink };
+	if (settings.bgColor || settings.textColor) return { save: ink };
+	return ACCENTS[settings.themeId] ?? { save: ink };
 }
 
 export function getThemeColors(settings: ReaderSettings): {

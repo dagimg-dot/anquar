@@ -781,10 +781,7 @@ export default function Feed() {
 	function explain(picked: string) {
 		const card = currentCard();
 		if (!card) return;
-		setExplaining({
-			passage: picked || cardText(card.blocks),
-			selection: picked,
-		});
+		setExplaining({ passage: cardText(card.blocks), selection: picked });
 		setSheet("explain");
 	}
 
@@ -1012,12 +1009,17 @@ export default function Feed() {
 							open={sheet() === "explain"}
 							title="Explain"
 						>
-							<ExplainSheet
-								author={meta().author}
-								passage={explaining().passage}
-								selection={explaining().selection}
-								title={meta().title}
-							/>
+							{/* Afresh for each ask, even one made while the sheet is open. */}
+							<Show keyed when={explaining()}>
+								{(ask) => (
+									<ExplainSheet
+										author={meta().author}
+										passage={ask.passage}
+										selection={ask.selection}
+										title={meta().title}
+									/>
+								)}
+							</Show>
 						</BottomSheet>
 					</>
 				)}

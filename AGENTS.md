@@ -123,6 +123,14 @@ hundreds of cards.
 settings; each opens a `BottomSheet`. The rail overlays the page rather than
 reserving a gutter, so it drops `pointer-events` whenever it is not shown.
 
+**Explain** — what was selected (or the card, with nothing selected) is the
+context, and `ExplainSheet` sets each of its words as a chip
+(`explain-words.ts`). All start on; the first tap picks one word and drops the
+rest, later taps add or remove one, and Explain asks what those words mean in
+that context, or what all of it says. One word selected is asked about at once,
+with the card as context. `explain.ts` streams the answer from Gemini, a gist
+line and then its detail, and the sheet sets it in Newsreader word by word.
+
 **Sharing** — Share sends an image of the passage with the passage as text
 and `— Title, Author` on the line below. `src/lib/share-card.ts` draws the
 image on the phone (option B1 of `design/share-card.html`: the cover sharp and
