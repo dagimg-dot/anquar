@@ -70,7 +70,7 @@ export default function BottomNav(props: BottomNavProps) {
 					style={{ "max-width": small() ? "60px" : "calc(100% - 70px)" }}
 				>
 					<span
-						class="absolute top-1 left-1 h-[52px] w-[calc((100%-8px)/4)] rounded-full bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-[transform,opacity] duration-[420ms] ease-spring"
+						class="absolute top-1 left-1 h-[52px] w-[calc((100%-8px)/4)] rounded-full bg-brand-500/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-[transform,opacity] duration-[420ms] ease-spring"
 						classList={{ "opacity-0": small() }}
 						ref={lozenge}
 						style={{ transform: `translateX(${index() * 100}%)` }}
@@ -86,7 +86,7 @@ export default function BottomNav(props: BottomNavProps) {
 										class="grid place-items-center rounded-full transition-[opacity,color] duration-200"
 										classList={{
 											"text-brand-500": active(),
-											"text-ink-soft": !active(),
+											"text-ink-muted": !active(),
 											"pointer-events-none opacity-0": small() && !active(),
 											"absolute inset-0": small() && active(),
 										}}
