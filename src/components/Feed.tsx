@@ -50,6 +50,7 @@ import {
 	removeBookmark,
 	saveProgress,
 } from "../lib/db.ts";
+import { flourish, tick } from "../lib/haptics.ts";
 import { imageUrl } from "../lib/images.ts";
 import {
 	getAccentColors,
@@ -456,6 +457,7 @@ export default function Feed() {
 		if (!next) return;
 		markMomentShown(today, next.kind);
 		setMoment(next);
+		flourish();
 	}
 
 	useReadingTracker({
@@ -529,6 +531,7 @@ export default function Feed() {
 		const existing = bookmarks().find(
 			(_, i) => savedCardIndexes()[i] === cardIndex(),
 		);
+		tick();
 		if (existing?.id !== undefined) {
 			await removeBookmark(existing.id);
 			toast.success("Removed from shelf");
