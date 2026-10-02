@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+		<title>anquar: guilt-free bookscrolling</title>
+		<meta name="description" content="anquar turns your EPUBs into a vertical feed: one screen of a book per swipe, on your phone, offline, with nothing leaving it.">
+		<meta name="theme-color" content="#0B1210">
+		<meta property="og:type" content="website">
+		<meta property="og:title" content="anquar: guilt-free bookscrolling">
+		<meta property="og:description" content="Your EPUBs as a vertical feed, one screen of a book per swipe.">
+		<meta property="og:url" content="https://anquar.netlify.app/">
+		<link rel="icon" href="/favicon.ico" sizes="48x48">
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+		<link rel="apple-touch-icon" href="/icons/apple-touch-icon-180x180.png">
+		<script>
+			// Before the first paint: the app's own theme setting, and a hook for the entrance animations.
+			document.documentElement.classList.add("js");
+			try {
+				const theme = localStorage.getItem("theme");
+				if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+			} catch {}
+		</script>
+		<script type="module" src="/src/landing/main.ts"></script>
+	</head>
+	<body>
+		<nav class="nav" aria-label="Main">
+			<div class="wrap nav-in">
+				<a class="brand" href="#top" aria-label="anquar, back to top">
+					<svg class="mark" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" aria-hidden="true">
+						<line x1="8" y1="16" x2="56" y2="16" />
+						<line x1="14" y1="28" x2="50" y2="28" />
+						<line x1="20" y1="40" x2="44" y2="40" />
+						<line x1="26" y1="52" x2="38" y2="52" />
+					</svg>
+					<span class="word">anquar</span>
+				</a>
+				<div class="nav-links">
+					<a href="#read">How it reads</a>
+					<a href="#pulse">Pulse</a>
+					<a href="#private">Privacy</a>
+					<a href="#install">Install</a>
+				</div>
+				<button class="icon-btn" type="button" data-theme-toggle aria-label="Switch theme">
+					<svg class="ic theme-moon" aria-hidden="true"><use href="/landing/icons.svg#i-moon" /></svg>
+					<svg class="ic theme-sun" aria-hidden="true"><use href="/landing/icons.svg#i-sun" /></svg>
+				</button>
+				<a class="btn btn-primary" href="/app/">Open anquar</a>
+			</div>
+		</nav>
+
+		<main>
+			<header class="hero" id="top">
+				<div class="manuscript" data-manuscript aria-hidden="true"></div>
+				<div class="wrap hero-grid">
+					<div class="hero-copy">
+						<h1 class="display rise">Guilt-free <em>bookscrolling.</em></h1>
+						<p class="lede rise">anquar turns your EPUBs into a vertical feed: one screen of a book per swipe, on your phone, offline.</p>
+						<div class="ctas rise">
+							<a class="btn btn-primary" href="/app/">Open anquar<svg class="ic" aria-hidden="true"><use href="/landing/icons.svg#i-arrow-right-bold" /></svg></a>
+							<a class="btn btn-ghost" href="#read">See it read</a>
+						</div>
+					</div>
+					<div class="hero-phone" data-phone="feed"></div>
+				</div>
+			</header>
+
+			<section class="band" id="read" aria-labelledby="read-title">
+				<div class="wrap">
+					<div class="read-head" data-reveal>
+						<h2 class="h2" id="read-title">A book, one screen at a time.</h2>
+						<p class="lede">This is the opening of Moby-Dick, cut into cards by the same engine the app uses. Swipe the page, or tap it for the rail.</p>
+					</div>
+
+					<div class="read-grid">
+						<div class="notes left notes-pair" data-reveal>
+							<div class="note">
+								<h3>Cut to fit your screen</h3>
+								<p>Whole paragraphs where they fit. A long one breaks at a sentence, and a heading stays with what it opens.</p>
+							</div>
+							<div class="note">
+								<h3>It counts once you've read it</h3>
+								<p>A card becomes an anquar after it has been on screen long enough to read at 600 words a minute. Flicking past doesn't count.</p>
+							</div>
+						</div>
+
+						<div class="read-phone" data-reveal>
+							<div class="phone-holder" data-phone="reader"></div>
+							<div class="reader-controls" data-reader-controls></div>
+						</div>
+
+						<div class="notes right notes-pair" data-reveal>
+							<div class="note">
+								<h3>Your place, to the word</h3>
+								<p>Change the type size or the margins and the book is laid out again, with you back on the words you were reading.</p>
+							</div>
+							<div class="note">
+								<h3>Opens where you left off</h3>
+								<p>Long books open at your chapter, not at page one. The next chapters load as you get near them.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="band" id="pulse" aria-labelledby="pulse-title">
+				<div class="wrap pulse-grid">
+					<div data-reveal>
+						<h2 class="h2" id="pulse-title">Close the core, every day.</h2>
+						<p class="lede pulse-lede">The mark is your daily meter. Each line is a quarter of your goal, filled from the core outward, so a full mark means today is done.</p>
+						<div class="rules">
+							<div class="rule"><b>5</b><p><strong>anquars keep your streak.</strong> A busy day still counts if you read a few minutes.</p></div>
+							<div class="rule"><b>7</b><p><strong>reading days bank a rest day</strong>, two at most. A missed day spends one instead of your streak.</p></div>
+							<div class="rule"><b>4 a.m.</b><p><strong>is when the day ends</strong>, so a chapter after midnight still counts for tonight.</p></div>
+						</div>
+					</div>
+					<div class="pulse-stage" data-demo="pulse" data-reveal></div>
+				</div>
+			</section>
+
+			<section class="band" id="more" aria-labelledby="more-title">
+				<div class="wrap">
+					<div class="more-head" data-reveal>
+						<h2 class="h2" id="more-title">Everything a reader reaches for.</h2>
+					</div>
+
+					<div class="bento">
+						<article class="tile t-explain" data-reveal>
+							<div>
+								<h3>Ask about a word</h3>
+								<p>Select a passage and tap the words you mean. The answer comes in over the page: a few words of meaning first, then the detail.</p>
+							</div>
+							<div class="explain-demo" aria-hidden="true">
+								<div class="page-snip">and especially whenever my <mark>hypos</mark> get such an upper hand of me, that it requires a strong moral principle to prevent me from deliberately stepping into the street</div>
+								<div class="explain-pop">
+									<div class="asked">hypos</div>
+									<p class="gist">Low spirits; a fit of gloom.</p>
+									<p>Short for hypochondria, which in Melville's day meant melancholy. Ishmael means the moods that send him to sea.</p>
+								</div>
+							</div>
+						</article>
+
+						<article class="tile t-share" data-reveal>
+							<div>
+								<h3>Share a passage</h3>
+								<p>It goes out as an image framed by the book's own cover, with the words as text for anyone who'd rather copy them.</p>
+							</div>
+							<div class="share-art" data-share-tile></div>
+						</article>
+
+						<article class="tile t-save" data-reveal>
+							<div>
+								<h3>Save the good bits</h3>
+								<p>Save a whole card, or only the lines you selected. They wait for you in Saved.</p>
+							</div>
+							<div class="saved-list" aria-hidden="true">
+								<div class="saved-item"><svg class="ic" aria-hidden="true"><use href="/landing/icons.svg#i-bookmark-simple-fill" /></svg><div><span>“meditation and water are wedded for ever.”</span><small>Moby-Dick</small></div></div>
+								<div class="saved-item"><svg class="ic" aria-hidden="true"><use href="/landing/icons.svg#i-bookmark-simple-fill" /></svg><div><span>“The happiness of your life depends upon the quality of your thoughts.”</span><small>Meditations</small></div></div>
+							</div>
+						</article>
+
+						<article class="tile t-import" data-reveal>
+							<div>
+								<h3>Bring your books</h3>
+								<p>Share an EPUB to anquar from any Android app, or pick one from your files. DRM-free books only.</p>
+							</div>
+							<div class="import-art" aria-hidden="true">
+								<span class="file-chip"><svg class="ic" aria-hidden="true"><use href="/landing/icons.svg#i-book-open-fill" /></svg>walden.epub</span>
+								<svg class="ic arrow" aria-hidden="true"><use href="/landing/icons.svg#i-arrow-right-bold" /></svg>
+								<img class="app-icon" src="/icons/pwa-192x192.png" alt="" width="52" height="52">
+							</div>
+						</article>
+					</div>
+				</div>
+			</section>
+
+			<section class="band" id="private" aria-labelledby="private-title">
+				<div class="wrap">
+					<h2 class="private-statement" id="private-title" data-reveal>Your books never <em>leave your phone.</em></h2>
+					<div class="facts">
+						<div class="fact" data-reveal>
+							<svg class="ic" aria-hidden="true"><use href="/landing/icons.svg#i-lock-simple" /></svg>
+							<h3>No account, no server</h3>
+							<p>Books, places, saves and streaks live in your browser's storage on this phone. There is nothing to sign up for and nothing tracking you.</p>
+						</div>
+						<div class="fact" data-reveal>
+							<svg class="ic" aria-hidden="true"><use href="/landing/icons.svg#i-wifi-slash" /></svg>
+							<h3>Reads offline</h3>
+							<p>Once it's on your home screen, anquar opens and reads with no connection at all. A flight is a fine place for a chapter.</p>
+						</div>
+						<div class="fact" data-reveal>
+							<svg class="ic" aria-hidden="true"><use href="/landing/icons.svg#i-lightbulb" /></svg>
+							<h3>One request, on your tap</h3>
+							<p>Explain is the only thing that leaves the phone, and only when you ask. It goes to Gemini with your own key.</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="band" id="install" aria-labelledby="install-title">
+				<div class="wrap install-grid">
+					<div class="install-copy" data-reveal>
+						<h2 class="h2" id="install-title">Put it where your thumb already goes.</h2>
+						<p class="lede">anquar is a web app you add to your home screen. It opens full screen, like any other app, and keeps working offline.</p>
+						<a class="btn btn-primary" href="/app/">Open anquar<svg class="ic" aria-hidden="true"><use href="/landing/icons.svg#i-arrow-right-bold" /></svg></a>
+					</div>
+					<div class="platforms">
+						<div class="platform" data-reveal>
+							<div class="platform-head"><svg class="ic" aria-hidden="true"><use href="/landing/icons.svg#i-android-logo" /></svg>Android, in Chrome</div>
+							<ol class="steps">
+								<li><span>Open anquar and tap <strong>Install app</strong>, or <strong>Add to Home screen</strong> from the menu.</span></li>
+								<li><span>anquar now shows up in the share sheet. Send it an EPUB from Files, Telegram or your browser.</span></li>
+							</ol>
+						</div>
+						<div class="platform" data-reveal>
+							<div class="platform-head"><svg class="ic" aria-hidden="true"><use href="/landing/icons.svg#i-apple-logo" /></svg>iPhone, in Safari</div>
+							<ol class="steps">
+								<li><span>Open anquar and tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.</span></li>
+								<li><span>Open it from the home screen and add books with the <strong>+</strong> button.</span></li>
+							</ol>
+						</div>
+					</div>
+				</div>
+			</section>
+		</main>
+
+		<footer>
+			<div class="wrap foot">
+				<a class="brand" href="#top">
+					<svg class="mark" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" aria-hidden="true">
+						<line x1="8" y1="16" x2="56" y2="16" />
+						<line x1="14" y1="28" x2="50" y2="28" />
+						<line x1="20" y1="40" x2="44" y2="40" />
+						<line x1="26" y1="52" x2="38" y2="52" />
+					</svg>
+					<span class="word">anquar</span>
+				</a>
+				<p class="foot-meaning"><span class="am">anquar</span> (<span lang="am">አንኳር</span>) is Amharic for the core of a thing. Four lines, running to a point.</p>
+				<nav class="foot-links" aria-label="Footer">
+					<a href="#read">How it reads</a>
+					<a href="#pulse">Pulse</a>
+					<a href="#private">Privacy</a>
+					<a href="#install">Install</a>
+				</nav>
+			</div>
+		</footer>
+	</body>
+</html>

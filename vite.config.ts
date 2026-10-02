@@ -65,6 +65,7 @@ export default defineConfig({
 	build: {
 		rollupOptions: {
 			input: {
+				landing: fileURLToPath(new URL("index.html", import.meta.url)),
 				app: fileURLToPath(new URL("app/index.html", import.meta.url)),
 			},
 		},
@@ -160,7 +161,7 @@ export default defineConfig({
 			// the page at / never offers the installed app an update.
 			workbox: {
 				globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
-				globIgnores: ["share-target.js", "index.html"],
+				globIgnores: ["share-target.js", "index.html", "assets/landing-*", "landing/**"],
 				importScripts: ["share-target.js"],
 				navigateFallback: "/app/index.html",
 				navigateFallbackAllowlist: [/^\/app\//],
