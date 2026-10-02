@@ -812,7 +812,7 @@ export default function Feed() {
 						<LayoutProbe onLayout={setLayout} />
 
 						<div
-							class="snap-container h-dvh overflow-y-auto [overflow-anchor:none]"
+							class="snap-container h-dvh overflow-y-auto"
 							onPointerDown={(e) => {
 								downX = e.clientX;
 								downY = e.clientY;
