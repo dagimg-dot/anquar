@@ -82,22 +82,6 @@ export default function SettingsTab() {
 		localStorage.setItem("anquar_model", value);
 	};
 
-	const clearLibrary = async () => {
-		if (
-			confirm(
-				"Are you sure you want to clear all books? This cannot be undone.",
-			)
-		) {
-			await db.books.clear();
-			await db.chapters.clear();
-			await db.progress.clear();
-			await db.bookmarks.clear();
-			await db.readerSettings.clear();
-			await db.images.clear();
-			window.location.reload();
-		}
-	};
-
 	return (
 		<div class="pb-24">
 			<SettingsSection title="Appearance">
@@ -323,18 +307,6 @@ export default function SettingsTab() {
 
 			<SettingsSection title="Data">
 				<LibraryData />
-				<SettingsRowInfo
-					label="Clear library"
-					desc="Remove all books and reading data"
-				>
-					<button
-						type="button"
-						class="py-2 px-4 rounded-xl bg-[oklch(0.5_0.18_30/0.12)] border border-[oklch(0.5_0.18_30/0.25)] text-[oklch(0.6_0.2_30)] text-sm font-semibold shrink-0 cursor-pointer transition-colors duration-300 active:bg-[oklch(0.5_0.18_30/0.2)]"
-						onClick={clearLibrary}
-					>
-						Clear
-					</button>
-				</SettingsRowInfo>
 			</SettingsSection>
 
 			<div class="text-center py-8 px-5 text-xs text-ink-muted">

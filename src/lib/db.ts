@@ -400,4 +400,30 @@ export async function restoreLibrary(dump: LibraryDump) {
 	for (const book of dump.books) releaseCoverUrl(book.id);
 }
 
+// The Reading Pulse's bookkeeping in localStorage, which a reset clears with the history it describes.
+const PULSE_KEYS = [
+	"anquar_last_read_at",
+	"anquar_moments",
+	"anquar_pulse_stepped",
+];
+
+// A reset erases everything read and saved, reading history included. Preferences stay: the reader
+// defaults (the "global" row), the goal, theme and Gemini key.
+export async function eraseLibrary() {
+	for (const id of await db.books.toCollection().primaryKeys())
+		releaseCoverUrl(id);
+	await db.transaction("rw", libraryTables(), () =>
+		Promise.all([
+			db.books.clear(),
+			db.chapters.clear(),
+			db.images.clear(),
+			db.progress.clear(),
+			db.bookmarks.clear(),
+			db.reading.clear(),
+			db.readerSettings.where("bookId").notEqual("global").delete(),
+		]),
+	);
+	for (const key of PULSE_KEYS) localStorage.removeItem(key);
+}
+
 export { db };

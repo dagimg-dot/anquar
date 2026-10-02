@@ -89,7 +89,10 @@ with the `anquar_*` settings but never the Gemini key, so a library moves to
 another phone or origin without its EPUBs. Import adds to the library instead
 of replacing it: the place read last wins, a day read on both phones counts
 each card once, and saves already there are skipped, so importing a file twice
-changes nothing. A file from a newer format is refused, not guessed at.
+changes nothing. A file from a newer format is refused, not guessed at. Clear
+library (`eraseLibrary`) is a true reset of what was read: books, places,
+saves, reading history and the Pulse's keys all go, after a sheet asks; the
+reader defaults, the goal, the theme and the Gemini key stay.
 
 **Feed** — `src/components/Feed.tsx`. CSS scroll-snap over cards that
 anquar-core's `paginate` lays out to fill one screen each: whole paragraphs
