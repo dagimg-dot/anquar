@@ -37,7 +37,7 @@ const pill =
 // Pasting needs the async clipboard's read, which only some browsers have.
 const canPaste = typeof navigator.clipboard?.read === "function";
 
-// Anquar can't fetch a cover from the web itself (no server, and image sites don't share their pictures
+// anquar can't fetch a cover from the web itself (no server, and image sites don't share their pictures
 // with other pages), so it opens the search: a cover copied there comes back through Paste cover, or one
 // saved there through Change cover.
 const coverSearch = (title: string, author: string) =>
@@ -120,7 +120,7 @@ export default function BookEditor(props: {
 			);
 		} catch {
 			toast.error(
-				"Anquar can't read the clipboard. Allow it in the site's settings.",
+				"anquar can't read the clipboard. Allow it in the site's settings.",
 			);
 		}
 	}

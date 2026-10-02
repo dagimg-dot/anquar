@@ -159,7 +159,7 @@ export default function Library() {
 							Your library is empty
 						</div>
 						<p class="mt-1 mb-6 text-ink-soft text-sm leading-relaxed">
-							Add an EPUB from your phone, or share one to Anquar from Telegram
+							Add an EPUB from your phone, or share one to anquar from Telegram
 							or Files.
 						</p>
 						<button

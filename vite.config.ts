@@ -67,15 +67,15 @@ export default defineConfig({
 			// splash and the Feed tab are one surface.
 			manifest: {
 				id: "/",
-				name: "Anquar",
-				short_name: "Anquar",
+				name: "anquar",
+				short_name: "anquar",
 				description: "Guilt-free doomscrolling — books in a TikTok-style feed",
 				theme_color: GROUND,
 				background_color: GROUND,
 				display: "standalone",
 				scope: "/",
 				start_url: "/",
-				// Share → Anquar from other apps; public/share-target.js takes the post.
+				// Share → anquar from other apps; public/share-target.js takes the post.
 				share_target: {
 					action: "/share-target",
 					method: "POST",

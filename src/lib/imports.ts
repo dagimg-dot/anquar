@@ -182,7 +182,7 @@ function reset() {
 	setJobs(reconcile([]));
 }
 
-// Where the service worker leaves books shared to Anquar (public/share-target.js).
+// Where the service worker leaves books shared to anquar (public/share-target.js).
 const SHARED_CACHE = "anquar-shared";
 
 export async function importShared() {

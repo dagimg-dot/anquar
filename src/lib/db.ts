@@ -81,7 +81,7 @@ export interface ReadingRecord {
 	sessions: number;
 }
 
-class AnquarDB extends Dexie {
+class LibraryDB extends Dexie {
 	books!: EntityTable<BookRecord, "id">;
 	chapters!: EntityTable<ChapterRecord, "id">;
 	progress!: EntityTable<ProgressRecord, "bookId">;
@@ -109,7 +109,7 @@ class AnquarDB extends Dexie {
 	}
 }
 
-const db = new AnquarDB();
+const db = new LibraryDB();
 
 function withoutImageBytes(key: string, value: unknown): unknown {
 	return key === "data" ? undefined : value;

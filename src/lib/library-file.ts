@@ -33,8 +33,8 @@ export class LibraryFileError extends Error {
 	constructor(kind: "not-library" | "newer") {
 		super(
 			kind === "newer"
-				? "This file comes from a newer Anquar. Update the app, then try again."
-				: "That isn't a library file exported from Anquar.",
+				? "This file comes from a newer anquar. Update the app, then try again."
+				: "That isn't a library file exported from anquar.",
 		);
 		this.kind = kind;
 	}

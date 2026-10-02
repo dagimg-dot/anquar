@@ -28,7 +28,7 @@ function App() {
 	const isReaderPage = () => location.pathname.startsWith("/book/");
 	const bookId = () => params.id || null;
 
-	// A book shared to Anquar from another app arrives as a redirect to "/?shared", with the files left in
+	// A book shared to anquar from another app arrives as a redirect to "/?shared", with the files left in
 	// the service worker's cache.
 	onMount(() => {
 		if (!new URLSearchParams(location.search).has("shared")) return;

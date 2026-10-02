@@ -1,4 +1,4 @@
-// Books shared to Anquar from another app (Telegram, Files, Drive) arrive as a form post. They wait in a
+// Books shared to anquar from another app (Telegram, Files, Drive) arrive as a form post. They wait in a
 // cache until the page picks them up after the redirect; see importShared in src/lib/imports.ts.
 self.addEventListener("fetch", (event) => {
 	const url = new URL(event.request.url);

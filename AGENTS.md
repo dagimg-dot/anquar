@@ -1,4 +1,4 @@
-# Anquar
+# anquar
 
 Guilt-free doomscrolling — a Solid.js PWA that turns books into a TikTok-style vertical scroll feed.
 
@@ -56,7 +56,7 @@ the tabs (Feed, Library, Saved, Settings, switched by signal rather than URL)
 and `/book/:id` for the reader.
 
 **Import** — every way in (the Feed tab's +, the Library tab's +, and books
-shared to Anquar from other apps) goes through the queue in `src/lib/imports.ts`
+shared to anquar from other apps) goes through the queue in `src/lib/imports.ts`
 and the sheet in `ImportSheet`. Books import one at a time, each in its own
 `src/workers/epub.worker.ts`, which `parseEpub` always shuts down afterwards. The
 worker judges the file by its bytes, not its name (`import-check.ts`: not a zip,
@@ -68,7 +68,7 @@ cover, title and copyright pages, contents, praise, notes and index — and with
 dedications, epigraphs and prefaces marked `frontMatter`. `libraryVersion`
 ticks when a book lands, and the Feed and Library tabs load again on it.
 
-**Share target** — the manifest's `share_target` makes Anquar a target for
+**Share target** — the manifest's `share_target` makes anquar a target for
 EPUBs in Android's share sheet. `public/share-target.js`, imported into the
 generated service worker, takes the post, leaves the files in the
 `anquar-shared` cache and redirects to `/?shared`, where `importShared` hands

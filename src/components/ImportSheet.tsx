@@ -206,7 +206,7 @@ function Row(props: { job: ImportJob }) {
 	);
 }
 
-// The sheet every import goes through, from the + buttons or a file shared to Anquar. One book gets the
+// The sheet every import goes through, from the + buttons or a file shared to anquar. One book gets the
 // book itself, several get a list, and nothing closes it while a book is still being read except ×.
 export default function ImportSheet() {
 	const navigate = useNavigate();

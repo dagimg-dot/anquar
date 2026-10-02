@@ -2,14 +2,14 @@ export type ImportFailure = "not-epub" | "drm" | "damaged" | "unreadable";
 
 export const FAILURE_TEXT: Record<ImportFailure, string> = {
 	"not-epub": "That file isn't an EPUB.",
-	drm: "This book is locked with DRM, so Anquar can't open it.",
+	drm: "This book is locked with DRM, so anquar can't open it.",
 	damaged: "This EPUB is damaged and couldn't be read.",
 	unreadable:
 		"Your phone couldn't hand over that file. If it's in the cloud, download it first.",
 };
 
 export const FAILURE_HINT: Record<ImportFailure, string> = {
-	"not-epub": "Anquar reads .epub books.",
+	"not-epub": "anquar reads .epub books.",
 	drm: "Books from Kindle, Kobo or Google Play usually are.",
 	damaged: "Downloading it again often helps.",
 	unreadable: "",
