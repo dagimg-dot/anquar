@@ -1,7 +1,7 @@
 {
 	"dependencies": {
 		"@solidjs/router": "^0.16.1",
-		"anquar-core": "^0.1.0",
+		"anquar-core": "^0.1.1",
 		"dexie": "^4.4.4",
 		"jszip": "^3.10.1",
 		"phosphor-solid": "^1.1.5",

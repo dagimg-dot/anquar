@@ -6,7 +6,7 @@
       "name": "anquar",
       "dependencies": {
         "@solidjs/router": "^0.16.1",
-        "anquar-core": "^0.1.0",
+        "anquar-core": "^0.1.1",
         "dexie": "^4.4.4",
         "jszip": "^3.10.1",
         "phosphor-solid": "^1.1.5",
@@ -433,7 +433,7 @@
 
     "ajv": ["ajv@8.20.0", "", { "dependencies": { "fast-deep-equal": "^3.1.3", "fast-uri": "^3.0.1", "json-schema-traverse": "^1.0.0", "require-from-string": "^2.0.2" } }, "sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA=="],
 
-    "anquar-core": ["anquar-core@0.1.0", "", { "dependencies": { "@mozilla/readability": "^0.6.0", "adm-zip": "^0.6.0", "linkedom": "^0.18.13" } }, "sha512-TM2HYrJeXbrxcrzJvHS2dAXozspj2a7j4oPrySsVCn4eeWWA98mj9WkQI5c+xcYde7sGjNIDCeFEFd5ulreAnw=="],
+    "anquar-core": ["anquar-core@0.1.1", "", { "dependencies": { "@mozilla/readability": "^0.6.0", "adm-zip": "^0.6.0", "linkedom": "^0.18.13" } }, "sha512-1PAXhaemSCjWFW5HwFpVHoAl+XJbcMxx+EKQGff3Rmk+QktZ3lLvFk4clU7XU+3yrSFyTr/zOnbsFV1W2LR/vA=="],
 
     "array-buffer-byte-length": ["array-buffer-byte-length@1.0.2", "", { "dependencies": { "call-bound": "^1.0.3", "is-array-buffer": "^3.0.5" } }, "sha512-LHE+8BuR7RYGDKvnrmcuSq3tDcKv9OFEXQt/HpbZhY7V6h0zlUXutnAD82GiFx9rdieCMjkvtcsPqBwgUl1Iiw=="],
 
