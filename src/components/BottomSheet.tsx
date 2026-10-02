@@ -7,6 +7,9 @@ import {
 	Show,
 } from "solid-js";
 import { useCloseOnBack } from "../lib/useCloseOnBack";
+import { useSheetDrag } from "../lib/useSheetDrag";
+
+const SLIDE_MS = 400;
 
 interface BottomSheetProps {
 	children: JSX.Element;
@@ -15,21 +18,18 @@ interface BottomSheetProps {
 	title: string;
 }
 
-const DISMISS_DISTANCE = 90;
-const SLIDE_MS = 400;
-
 /**
  * A non-modal sheet: nothing dims behind it, because these controls change the
  * page the reader is looking at and they need to see it happen. The catcher is
  * transparent for that reason — it takes the outside tap without taking the view.
  */
 export default function BottomSheet(props: BottomSheetProps) {
-	const [drag, setDrag] = createSignal(0);
-	let startY = 0;
+	const [sheet, setSheet] = createSignal<HTMLDivElement>();
 	useCloseOnBack(
 		() => props.open,
 		() => props.onClose(),
 	);
+	const drag = useSheetDrag(sheet, () => props.onClose());
 
 	// The content stays until the sheet has slid off, so it leaves whole, the way it arrived.
 	const [shown, setShown] = createSignal(props.open);
@@ -44,20 +44,6 @@ export default function BottomSheet(props: BottomSheetProps) {
 		),
 	);
 
-	function onTouchStart(e: TouchEvent) {
-		startY = e.touches[0].clientY;
-	}
-
-	function onTouchMove(e: TouchEvent) {
-		// Downward only — dragging up must not tear the sheet off its edge.
-		setDrag(Math.max(0, e.touches[0].clientY - startY));
-	}
-
-	function onTouchEnd() {
-		if (drag() > DISMISS_DISTANCE) props.onClose();
-		setDrag(0);
-	}
-
 	return (
 		<>
 			<Show when={props.open}>
@@ -68,26 +54,21 @@ export default function BottomSheet(props: BottomSheetProps) {
 
 			<div
 				aria-hidden={!props.open}
-				class="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg select-none rounded-t-[1.25rem] bg-canvas shadow-[0_-8px_40px_rgba(0,0,0,0.18)]"
-				classList={{
-					"pointer-events-none": !props.open,
-					"transition-transform duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)]":
-						drag() === 0,
-				}}
+				class="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg select-none rounded-t-[1.25rem] bg-canvas shadow-[0_-8px_40px_rgba(0,0,0,0.18)] after:absolute after:inset-x-0 after:top-full after:h-24 after:bg-canvas"
+				classList={{ "pointer-events-none": !props.open }}
 				onClick={(e) => e.stopPropagation()}
+				ref={setSheet}
 				style={{
 					transform: props.open
-						? `translateY(${drag()}px)`
+						? `translateY(${drag.offset()}px)`
 						: "translateY(110%)",
+					transition: drag.transition(
+						`transform ${SLIDE_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`,
+					),
 					"padding-bottom": "max(1.25rem, env(safe-area-inset-bottom))",
 				}}
 			>
-				<div
-					class="flex justify-center pt-2.5 pb-1"
-					onTouchEnd={onTouchEnd}
-					onTouchMove={onTouchMove}
-					onTouchStart={onTouchStart}
-				>
+				<div class="flex justify-center pt-2.5 pb-1">
 					<div class="h-[5px] w-9 rounded-full bg-ink-muted/50" />
 				</div>
 

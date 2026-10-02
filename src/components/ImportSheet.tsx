@@ -1,5 +1,5 @@
 import { useNavigate } from "@solidjs/router";
-import { For, type JSX, Match, Show, Switch } from "solid-js";
+import { createSignal, For, type JSX, Match, Show, Switch } from "solid-js";
 import { FAILURE_HINT, FAILURE_TEXT } from "../lib/import-check";
 import {
 	addCopy,
@@ -15,6 +15,7 @@ import {
 	registerPicker,
 } from "../lib/imports";
 import { useCloseOnBack } from "../lib/useCloseOnBack";
+import { useSheetDrag } from "../lib/useSheetDrag";
 
 const STEPS = ["Opening", "Reading", "Saving"] as const;
 const STEP_OF: Partial<Record<ImportJob["state"], number>> = {
@@ -217,6 +218,9 @@ export default function ImportSheet() {
 	useCloseOnBack(importsOpen, () =>
 		working() ? cancelImports() : closeImports(),
 	);
+	// Pulled down it closes like any sheet, except while a book is still being read: then it only gives.
+	const [panel, setPanel] = createSignal<HTMLDivElement>();
+	const drag = useSheetDrag(panel, closeImports, () => !working());
 
 	const title = () => {
 		const one = single();
@@ -267,16 +271,30 @@ export default function ImportSheet() {
 				class="fixed inset-0 z-[70] bg-black/55 transition-opacity duration-300"
 				classList={{ "pointer-events-none opacity-0": !importsOpen() }}
 				onClick={closeImports}
+				style={
+					importsOpen()
+						? {
+								opacity: 1 - drag.pulled(),
+								transition: drag.dragging() ? "none" : undefined,
+							}
+						: undefined
+				}
 			/>
 
 			<div
 				aria-hidden={!importsOpen()}
 				aria-label={title()}
 				aria-modal="true"
-				class="fixed inset-x-0 bottom-0 z-[71] mx-auto max-w-lg rounded-t-[1.5rem] border-border border-t bg-surface px-5 pt-2.5 transition-transform duration-[560ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+				class="fixed inset-x-0 bottom-0 z-[71] mx-auto max-w-lg rounded-t-[1.5rem] border-border border-t bg-surface px-5 pt-2.5 after:absolute after:inset-x-0 after:top-full after:h-24 after:bg-surface"
+				ref={setPanel}
 				role="dialog"
 				style={{
-					transform: importsOpen() ? "none" : "translateY(105%)",
+					transform: importsOpen()
+						? `translateY(${drag.offset()}px)`
+						: "translateY(105%)",
+					transition: drag.transition(
+						"transform 560ms cubic-bezier(0.16, 1, 0.3, 1)",
+					),
 					"padding-bottom": "max(1.5rem, env(safe-area-inset-bottom))",
 				}}
 			>
