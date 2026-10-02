@@ -6,6 +6,7 @@ import {
 	onCleanup,
 	Show,
 } from "solid-js";
+import { Portal } from "solid-js/web";
 import { useCloseOnBack } from "../lib/useCloseOnBack";
 import { useSheetDrag } from "../lib/useSheetDrag";
 
@@ -24,6 +25,10 @@ interface BottomSheetProps {
  * A non-modal sheet: nothing dims behind it, because these controls change the
  * page the reader is looking at and they need to see it happen. The catcher is
  * transparent for that reason — it takes the outside tap without taking the view.
+ *
+ * It lives on the body, not where it's used: a tab fades in with a transform, and
+ * a transformed ancestor would hold a closed sheet to the tab's bottom instead of
+ * the screen's, flashing it up for as long as the fade runs.
  */
 export default function BottomSheet(props: BottomSheetProps) {
 	const [sheet, setSheet] = createSignal<HTMLDivElement>();
@@ -47,7 +52,7 @@ export default function BottomSheet(props: BottomSheetProps) {
 	);
 
 	return (
-		<>
+		<Portal>
 			{/* biome-ignore lint/a11y/noStaticElementInteractions: dismiss target, not a control */}
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents: Escape and back close the sheet too */}
 			<div
@@ -76,7 +81,7 @@ export default function BottomSheet(props: BottomSheetProps) {
 				style={{
 					transform: props.open
 						? `translateY(${drag.offset()}px)`
-						: "translateY(110%)",
+						: "translateY(calc(100% + 3.5rem))",
 					transition: drag.transition(
 						`transform ${SLIDE_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`,
 					),
@@ -116,6 +121,6 @@ export default function BottomSheet(props: BottomSheetProps) {
 					</div>
 				</Show>
 			</div>
-		</>
+		</Portal>
 	);
 }
