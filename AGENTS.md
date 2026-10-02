@@ -143,14 +143,28 @@ every card were built, and a book of long chapters opens without building
 hundreds of cards.
 
 **Reader chrome** — `ReaderRail` carries contents, explain, save, share and
-settings; each opens a `BottomSheet`. The rail overlays the page rather than
-reserving a gutter, so it drops `pointer-events` whenever it is not shown.
+settings for the card on screen; each opens a `BottomSheet`. The rail overlays
+the page rather than reserving a gutter, so it drops `pointer-events` whenever
+it is not shown.
 
-**Explain** — what was selected (or the card, with nothing selected) is the
+**Picking text** — the reader's text is never selectable, so Chrome's handles
+and menu never appear; `TextPick` is the reader's own selection. Holding a word
+for 380 ms picks it, and sliding on takes more a word at a time, with
+`touchmove` cancelled so the feed holds still. `PageText` (`src/lib/text-pick.ts`)
+reads one card's text, finds the word under a finger with
+`caretPositionFromPoint` and `Intl.Segmenter`, and maps a pick back to a
+`Range`, which the Custom Highlight API draws without touching the card's
+nodes. One word is picked bare; a passage takes its quotes and punctuation. Two
+handles snap to words and can't cross, and lifting the finger opens a pill above
+the pick with Explain, Save, Share and Copy. A tap off the pick, another card, a
+new layout or a sheet lets it go. A pick's events never reach the feed's own tap,
+so it doesn't toggle the rail or count toward a double-tap save.
+
+**Explain** — what was picked (or the card, with nothing picked) is the
 context, and `ExplainSheet` sets each of its words as a chip
 (`explain-words.ts`). All start on; the first tap picks one word and drops the
 rest, later taps add or remove one, and Explain asks what those words mean in
-that context, or what all of it says. One word selected is asked about at once,
+that context, or what all of it says. One word picked is asked about at once,
 with the card as context. `explain.ts` streams the answer from Gemini, a gist
 line and then its detail, and the sheet sets it in Newsreader word by word.
 

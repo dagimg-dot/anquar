@@ -13,16 +13,14 @@ const RING = 115.6;
 interface ReaderRailProps {
 	coverUrl?: string;
 	onContents: () => void;
-	onExplain: (selection: string) => void;
-	onSave: (selection: string) => void;
+	onExplain: () => void;
+	onSave: () => void;
 	onSettings: () => void;
-	onShare: (selection: string) => void;
+	onShare: () => void;
 	/** 0–1 through the whole book. */
 	progress: number;
 	rest: RailRest;
 	saved: boolean;
-	/** Live selection inside the feed, "" when there is none. */
-	selection: string;
 	/** Toggled by a tap on the page; overrides the rest level while true. */
 	shown: boolean;
 }
@@ -56,23 +54,9 @@ export default function ReaderRail(props: ReaderRailProps) {
 
 	let saveGlyph: HTMLSpanElement | undefined;
 	let saveHalo: HTMLSpanElement | undefined;
-	let snapshot = "";
 
 	const reduceMotion = () =>
 		window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-	const primed = () => props.selection.length > 2;
-
-	/**
-	 * The tap that opens a click handler has already collapsed the selection, so
-	 * pointerdown is the last moment the text is still readable. Spent once, or a
-	 * stale selection leaks into the next tap.
-	 */
-	function spend(): string {
-		const picked = snapshot || props.selection;
-		snapshot = "";
-		return picked;
-	}
 
 	function flashSave() {
 		if (reduceMotion()) return;
@@ -92,9 +76,6 @@ export default function ReaderRail(props: ReaderRailProps) {
 			class="rail fixed right-3 z-40 flex flex-col items-center gap-4"
 			data-shown={props.shown}
 			data-rest={props.rest}
-			onPointerDown={() => {
-				snapshot = props.selection;
-			}}
 			style={{
 				bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)",
 				color: themeColors().textColor,
@@ -143,47 +124,26 @@ export default function ReaderRail(props: ReaderRailProps) {
 				</span>
 			</Item>
 
-			{/* Primed by a selection: it says what it is about to send before you send it. */}
-			<Item
-				label={primed() ? "Selection" : "Explain"}
-				onClick={() => props.onExplain(spend())}
-				order={3}
-				style={
-					primed()
-						? { color: accents().save, opacity: "1", transform: "none" }
-						: undefined
-				}
-			>
-				<span class="rail-glyph relative flex h-10 w-10 items-center justify-center">
-					<Lightbulb size={27} weight={primed() ? "fill" : "regular"} />
-					<Show when={primed()}>
-						<span
-							class="absolute top-0.5 right-0.5 h-[7px] w-[7px] rounded-full bg-current"
-							style={{ "box-shadow": `0 0 0 2px ${themeColors().bgColor}` }}
-						/>
-					</Show>
+			<Item label="Explain" onClick={props.onExplain} order={3}>
+				<span class="rail-glyph flex h-10 w-10 items-center justify-center">
+					<Lightbulb size={27} />
 				</span>
 			</Item>
 
-			{/* With a selection it saves that passage, beside the card's own save rather than instead of it. */}
 			<Item
 				label="Save"
 				onClick={() => {
-					const picked = spend();
-					if (picked || !props.saved) flashSave();
-					props.onSave(picked);
+					if (!props.saved) flashSave();
+					props.onSave();
 				}}
 				order={2}
-				style={props.saved && !primed() ? { color: accents().save } : undefined}
+				style={props.saved ? { color: accents().save } : undefined}
 			>
 				<span
 					class="rail-glyph relative flex h-10 w-10 items-center justify-center"
 					ref={saveGlyph}
 				>
-					<BookmarkSimple
-						size={27}
-						weight={props.saved && !primed() ? "fill" : "regular"}
-					/>
+					<BookmarkSimple size={27} weight={props.saved ? "fill" : "regular"} />
 					<span
 						class="pointer-events-none absolute inset-0 m-auto h-10 w-10 rounded-full border-2 border-current opacity-0"
 						ref={saveHalo}
@@ -191,7 +151,7 @@ export default function ReaderRail(props: ReaderRailProps) {
 				</span>
 			</Item>
 
-			<Item label="Share" onClick={() => props.onShare(spend())} order={1}>
+			<Item label="Share" onClick={props.onShare} order={1}>
 				<span class="rail-glyph flex h-10 w-10 items-center justify-center">
 					<Export size={27} />
 				</span>

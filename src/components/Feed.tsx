@@ -70,7 +70,6 @@ import {
 	readingGoal,
 } from "../lib/reading.ts";
 import { HOME } from "../lib/routes";
-import { readSelection } from "../lib/selection.ts";
 import { shareCard } from "../lib/share-card.ts";
 import { leaveBook, readerLanded } from "../lib/transitions.ts";
 import { useLazyChapters } from "../lib/useLazyChapters.ts";
@@ -86,6 +85,7 @@ import ExplainSheet from "./ExplainSheet.tsx";
 import PulseMoment from "./PulseMoment.tsx";
 import ReaderRail from "./ReaderRail.tsx";
 import ReaderSettingsPanel from "./ReaderSettingsPanel.tsx";
+import TextPick from "./TextPick.tsx";
 
 interface BookMeta {
 	author: string;
@@ -171,7 +171,7 @@ function ListCard(props: { block: ListBlock }) {
 						class="flex gap-[0.6em]"
 						style={{ "padding-left": `${item.depth * 1.15}em` }}
 					>
-						<span class="shrink-0 opacity-45 tabular-nums">
+						<span class="shrink-0 opacity-45 tabular-nums" data-pick-skip>
 							{props.block.ordered ? `${(props.block.start ?? 1) + i()}.` : "—"}
 						</span>
 						<span class="whitespace-pre-line">
@@ -251,6 +251,7 @@ function CardView(props: { card: Card; bookId: string; filled: boolean }) {
 	return (
 		<section
 			class="snap-page flex h-dvh flex-col overflow-hidden py-[9dvh]"
+			data-card
 			style={pageStyle(settings(), themeColors())}
 		>
 			<Show when={props.filled}>
@@ -422,7 +423,6 @@ export default function Feed() {
 
 	const [position, setPosition] = createSignal(0);
 	const [shown, setShown] = createSignal(false);
-	const [selection, setSelection] = createSignal("");
 	const [sheet, setSheet] = createSignal<SheetName | null>(null);
 	const [explaining, setExplaining] = createSignal({
 		passage: "",
@@ -482,7 +482,7 @@ export default function Feed() {
 	const reduceMotion = () =>
 		window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-	const railShown = () => shown() || selection().length > 0;
+	const railShown = shown;
 
 	const chapterSpans = createMemo(() => {
 		const map = new Map<number, { count: number; first: number }>();
@@ -535,7 +535,16 @@ export default function Feed() {
 		if (id) setBookmarks(await listBookmarks(id));
 	}
 
-	// Saves or unsaves the card, or with a selection that passage: the two never undo each other.
+	// Whether a passage picked from the card on screen is already saved.
+	const passageSaved = (passage: string) =>
+		bookmarks().some(
+			(b, i) =>
+				b.passage &&
+				b.textSnippet === passage &&
+				savedCardIndexes()[i] === cardIndex(),
+		);
+
+	// Saves or unsaves the card, or with a picked passage that passage: the two never undo each other.
 	async function toggleSave(picked = "") {
 		const meta = bookMeta();
 		const card = currentCard();
@@ -548,7 +557,6 @@ export default function Feed() {
 				(passage ? b.passage && b.textSnippet === passage : !b.passage),
 		);
 		tick();
-		if (passage) window.getSelection()?.removeAllRanges();
 		if (existing?.id !== undefined) {
 			await removeBookmark(existing.id);
 			toast.success(passage ? "Passage removed" : "Removed from shelf");
@@ -800,7 +808,6 @@ export default function Feed() {
 		const wasSwipe =
 			Math.abs(e.clientX - downX) > 10 || Math.abs(e.clientY - downY) > 10;
 		if (wasSwipe) return;
-		if (readSelection(container())) return;
 
 		const now = Date.now();
 		if (now - lastTap < 320) {
@@ -821,14 +828,6 @@ export default function Feed() {
 		const page = el?.querySelectorAll<HTMLElement>(".snap-page")[bodyStart()];
 		page?.scrollIntoView({ behavior: "smooth", block: "start" });
 	}
-
-	onMount(() => {
-		const onSelectionChange = () => setSelection(readSelection(container()));
-		document.addEventListener("selectionchange", onSelectionChange);
-		onCleanup(() =>
-			document.removeEventListener("selectionchange", onSelectionChange),
-		);
-	});
 
 	createEffect(() => {
 		if (bookMeta()) void refreshBookmarks();
@@ -952,15 +951,26 @@ export default function Feed() {
 						<ReaderRail
 							coverUrl={meta().coverUrl}
 							onContents={() => setSheet("contents")}
-							onExplain={explain}
-							onSave={(picked) => void toggleSave(picked)}
+							onExplain={() => explain("")}
+							onSave={() => void toggleSave()}
 							onSettings={() => setSheet("settings")}
-							onShare={(picked) => void share(picked)}
+							onShare={() => void share("")}
 							progress={progress()}
 							rest={settings().railRest}
 							saved={savedHere()}
-							selection={selection()}
 							shown={railShown()}
+						/>
+
+						<TextPick
+							accent={getAccentColors(settings()).save}
+							container={container()}
+							ink={themeColors().textColor}
+							isSaved={passageSaved}
+							letGo={[position(), layout(), sheet()]}
+							onExplain={explain}
+							onSave={(passage) => void toggleSave(passage)}
+							onShare={(passage) => void share(passage)}
+							paper={themeColors().bgColor}
 						/>
 
 						<div

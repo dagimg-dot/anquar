@@ -44,8 +44,8 @@ body {
 }
 
 /* Touch as in a native app: holding a control doesn't select it, holding a picture doesn't open a menu or
-   drag it, pulling at the top doesn't reload, and a quick second tap doesn't zoom. Reading text and the
-   Explain answer stay selectable. Tailwind's base already removes the tap flash and font inflation. */
+   drag it, pulling at the top doesn't reload, and a quick second tap doesn't zoom. The reader's text is
+   picked by TextPick rather than selected, and the Explain answer stays selectable. Tailwind's base already removes the tap flash and font inflation. */
 html {
 	overscroll-behavior-y: none;
 }
@@ -56,7 +56,6 @@ body {
 	-webkit-touch-callout: none;
 }
 
-.snap-page,
 input,
 textarea,
 .select-text {
@@ -212,6 +211,86 @@ textarea,
 }
 
 /* A passage opened from Saved, marked on its card until you read on (Feed.tsx). */
+/* The reader's pick (TextPick): the highlight, and a handle at each end, a stem the height of the line with
+   a knob above the first word and below the last. The hit box is far bigger than the drawing and takes the
+   touch itself, so the feed never scrolls under a drag. */
+::highlight(pick) {
+	background-color: var(--pick);
+}
+
+.pick-handle {
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 41;
+	width: 44px;
+	touch-action: none;
+}
+
+.pick-handle[data-glide="true"] {
+	transition: transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pick-handle::before,
+.pick-handle::after {
+	position: absolute;
+	content: "";
+	background: currentColor;
+}
+
+.pick-handle::before {
+	left: 21px;
+	width: 2px;
+	height: var(--line);
+	border-radius: 1px;
+}
+
+.pick-handle::after {
+	left: 15px;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+}
+
+.pick-handle[data-side="start"]::before {
+	top: 30px;
+}
+
+.pick-handle[data-side="start"]::after {
+	top: 18px;
+}
+
+.pick-handle[data-side="end"]::before {
+	top: 0;
+}
+
+.pick-handle[data-side="end"]::after {
+	top: calc(var(--line) - 2px);
+}
+
+.pick-menu {
+	pointer-events: none;
+	box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.45);
+	opacity: 0;
+	transform: translateY(4px) scale(0.97);
+	transition:
+		opacity 140ms ease,
+		transform 140ms ease;
+}
+
+.pick-menu[data-shown="true"] {
+	pointer-events: auto;
+	opacity: 1;
+	transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pick-handle[data-glide="true"],
+	.pick-menu {
+		transition: none;
+	}
+}
+
 ::highlight(saved-passage) {
 	background-color: color-mix(in srgb, var(--color-brand-500) 32%, transparent);
 }
