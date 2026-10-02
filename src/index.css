@@ -108,9 +108,9 @@ textarea,
 	touch-action: manipulation;
 }
 
-/* Screen changes (src/lib/transitions.ts), timed and eased as Material motion. Tabs fade through: the old
-   one out quickly, the new one in from slightly smaller. A cover grows into the reader as a container
-   transform, its contents crossing early and in step so it stays solid, while the screen behind recedes; the reader shrinks back into it. */
+/* A book's screen changes (src/lib/transitions.ts), timed and eased as Material motion. A cover grows
+   into the reader as a container transform, its contents crossing early and in step so it stays solid,
+   while the screen behind recedes; the reader shrinks back into it. */
 @keyframes vt-out {
 	to {
 		opacity: 0;
@@ -123,26 +123,11 @@ textarea,
 	}
 }
 
-@keyframes vt-in-grow {
-	from {
-		opacity: 0;
-		transform: scale(0.92);
-	}
-}
-
 @keyframes vt-recede {
 	to {
 		opacity: 0;
 		transform: scale(0.94);
 	}
-}
-
-:root[data-transition="tab"]::view-transition-old(root) {
-	animation: 90ms cubic-bezier(0.4, 0, 1, 1) both vt-out;
-}
-
-:root[data-transition="tab"]::view-transition-new(root) {
-	animation: 210ms cubic-bezier(0, 0, 0.2, 1) 90ms both vt-in-grow;
 }
 
 /* biome-ignore lint/correctness/noUnknownTypeSelector: a view transition's name, not an element */
@@ -479,17 +464,6 @@ html {
 	mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
 }
 
-.glass-nav {
-	transition:
-		background-color 0.2s ease,
-		backdrop-filter 0.2s ease;
-}
-
-.glass-nav[data-scrolled="true"] {
-	background-color: oklch(0.13 0.01 240 / 0.6);
-	backdrop-filter: blur(20px) saturate(180%);
-}
-
 @supports (backdrop-filter: url("#liquid-glass")) {
 	.glass-refract {
 		backdrop-filter: url("#liquid-glass-refraction") blur(12px) saturate(150%);
@@ -530,6 +504,14 @@ html {
 	box-shadow:
 		inset 0 1px 1px rgba(255, 255, 255, 0.15),
 		inset 0 -1px 1px rgba(255, 255, 255, 0.05);
+}
+
+/* The tab bar's glass: tinted enough that its labels read over any cover, blurred enough that what passes
+   beneath is only colour. */
+.glass-bar {
+	background: color-mix(in oklab, var(--color-canvas) 62%, transparent);
+	-webkit-backdrop-filter: blur(22px) saturate(180%);
+	backdrop-filter: blur(22px) saturate(180%);
 }
 
 .apple-toast {

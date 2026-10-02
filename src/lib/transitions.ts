@@ -1,12 +1,12 @@
-// Screen changes move the way Material motion moves them on Android, through the View Transitions API: tabs
-// fade through, a book's cover grows into the reader, and the reader shrinks back into its cover. Without
-// the API, or with reduced motion, the screen just changes. The look is in index.css (data-transition).
+// Screen changes move the way Material motion moves them on Android: tabs fade through, a book's cover grows
+// into the reader, and the reader shrinks back into its cover. Books go through the View Transitions API,
+// with the look in index.css (data-transition); tabs fade in the page itself (switchTab). With reduced
+// motion, or without the API, the screen just changes.
 
-type Kind = "tab" | "open" | "back";
+type Kind = "open" | "back";
 
-const animates = () =>
-	"startViewTransition" in document &&
-	!matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const animates = () => "startViewTransition" in document && !reduced();
 
 const named = new Set<HTMLElement>();
 function name(el: Element | null | undefined, as: string) {
@@ -65,12 +65,36 @@ const untilLanded = () =>
 		setTimeout(resolve, LANDING_WAIT_MS);
 	});
 
+// Material's fade through, run on the tab's content rather than as a view transition, which would show the
+// glass tab bar as a snapshot whose blur is a hard rectangle. The header and the bar stay live throughout.
+let fading: Animation | undefined;
 export function switchTab(update: () => void) {
-	run(
-		"tab",
-		() => {},
-		async () => update(),
-	);
+	const content = document.querySelector<HTMLElement>("[data-tab-content]");
+	const scroller = content?.closest("main");
+	if (fading) fading.finish();
+	if (!content || !scroller || reduced()) return update();
+	const out = content.animate([{ opacity: 1 }, { opacity: 0 }], {
+		duration: 90,
+		easing: "cubic-bezier(0.4, 0, 1, 1)",
+		fill: "forwards",
+	});
+	fading = out;
+	out.onfinish = () => {
+		if (fading === out) fading = undefined;
+		update();
+		out.cancel();
+		// Grown from the middle of what's on screen, not of the whole tab.
+		const middle =
+			scroller.scrollTop + scroller.clientHeight / 2 - content.offsetTop;
+		content.style.transformOrigin = `50% ${middle}px`;
+		content.animate(
+			[
+				{ opacity: 0, transform: "scale(0.92)" },
+				{ opacity: 1, transform: "none" },
+			],
+			{ duration: 210, easing: "cubic-bezier(0, 0, 0.2, 1)" },
+		);
+	};
 }
 
 // From the cover that was tapped, or else the book's cover wherever it shows.

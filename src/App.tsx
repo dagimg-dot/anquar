@@ -1,11 +1,12 @@
 import { useLocation, useNavigate, useParams } from "@solidjs/router";
 import { createSignal, Match, onMount, Show, Switch } from "solid-js";
+import AppHeader from "./components/AppHeader.tsx";
 import AppleToaster from "./components/AppleToaster.tsx";
 import BottomNav from "./components/BottomNav.tsx";
 import Feed from "./components/Feed.tsx";
 import ImportSheet from "./components/ImportSheet.tsx";
 import { lastOpenedBook } from "./lib/db.ts";
-import { importShared, pickBooks } from "./lib/imports.ts";
+import { importShared } from "./lib/imports.ts";
 import { ReaderSettingsProvider } from "./lib/reader-settings.tsx";
 import { switchTab } from "./lib/transitions.ts";
 import PWABadge from "./PWABadge.tsx";
@@ -22,6 +23,7 @@ function App() {
 	const params = useParams();
 	const location = useLocation();
 	const navigate = useNavigate();
+	const [main, setMain] = createSignal<HTMLElement>();
 
 	const isReaderPage = () => location.pathname.startsWith("/book/");
 	const bookId = () => params.id || null;
@@ -70,6 +72,7 @@ function App() {
 			</svg>
 
 			<main
+				ref={setMain}
 				class="h-dvh"
 				classList={{
 					"overflow-hidden": isReaderPage(),
@@ -78,20 +81,26 @@ function App() {
 			>
 				<Show
 					fallback={
-						<Switch>
-							<Match when={activeTab() === "feed" && !continuing()}>
-								<FeedPage />
-							</Match>
-							<Match when={activeTab() === "library"}>
-								<Library />
-							</Match>
-							<Match when={activeTab() === "saved"}>
-								<Saved />
-							</Match>
-							<Match when={activeTab() === "settings"}>
-								<SettingsTab />
-							</Match>
-						</Switch>
+						<>
+							<AppHeader />
+							{/* What fades when the tab changes; the header and the tab bar stay (lib/transitions.ts). */}
+							<div data-tab-content>
+								<Switch>
+									<Match when={activeTab() === "feed" && !continuing()}>
+										<FeedPage />
+									</Match>
+									<Match when={activeTab() === "library"}>
+										<Library />
+									</Match>
+									<Match when={activeTab() === "saved"}>
+										<Saved />
+									</Match>
+									<Match when={activeTab() === "settings"}>
+										<SettingsTab />
+									</Match>
+								</Switch>
+							</div>
+						</>
 					}
 					when={isReaderPage() && bookId()}
 				>
@@ -104,30 +113,11 @@ function App() {
 			<Show when={!isReaderPage()}>
 				<BottomNav
 					activeTab={activeTab()}
+					scroller={main}
 					setActiveTab={(tab) =>
 						tab !== activeTab() && switchTab(() => setActiveTab(tab))
 					}
 				/>
-			</Show>
-			<Show when={!isReaderPage() && activeTab() === "feed"}>
-				<button
-					class="fixed right-4 bottom-22 z-40 flex h-13 w-13 items-center justify-center rounded-2xl bg-brand-500 text-white shadow-lg cursor-pointer border-none transition-all duration-[400ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.92]"
-					onClick={pickBooks}
-					type="button"
-					aria-label="Import EPUB"
-					data-splash-slide
-				>
-					<svg
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-						stroke-width="2.5"
-						class="h-6 w-6"
-						aria-hidden="true"
-					>
-						<path d="M12 4v16m-8-8h16" />
-					</svg>
-				</button>
 			</Show>
 			<ImportSheet />
 			<AppleToaster />

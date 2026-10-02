@@ -106,10 +106,13 @@ hundreds of cards.
 settings; each opens a `BottomSheet`. The rail overlays the page rather than
 reserving a gutter, so it drops `pointer-events` whenever it is not shown.
 
-**Transitions** — screen changes go through `src/lib/transitions.ts`, on the
-View Transitions API, with the motion in `index.css` under `data-transition`:
-tabs fade through, a book's cover grows into the reader and the reader shrinks
-back into it. A cover takes part only if it carries `data-cover` (the book's
+**Transitions** — screen changes go through `src/lib/transitions.ts`. A
+book's cover grows into the reader and the reader shrinks back into it on the
+View Transitions API, with the motion in `index.css` under `data-transition`.
+Tabs fade through in the page itself (`[data-tab-content]`), because a view
+transition would show the glass tab bar as a snapshot, its blur a hard
+rectangle; for the same reason nothing in the bar has a view-transition name,
+which would also stop its blur seeing the page. A cover takes part only if it carries `data-cover` (the book's
 id), which `BookCover` passes through. Opening waits briefly for the reader's
 `readerLanded()`, so the cover grows into your page rather than an empty one.
 Back out of the reader is caught by a `popstate` listener that `index.tsx` adds

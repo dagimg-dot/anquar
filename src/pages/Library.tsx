@@ -7,7 +7,6 @@ import {
 	on,
 	Show,
 } from "solid-js";
-import AppHeader from "../components/AppHeader";
 import BookCover from "../components/BookCover";
 import BookEditor, { type EditableBook } from "../components/BookEditor";
 import CoverGrid from "../components/CoverGrid";
@@ -83,7 +82,6 @@ export default function Library() {
 
 	return (
 		<>
-			<AppHeader />
 			<div class="pb-24">
 				<div class="mx-5 mb-4 flex gap-2.5">
 					<div class="relative flex-1">
@@ -106,24 +104,6 @@ export default function Library() {
 							onInput={(e) => setSearch(e.currentTarget.value)}
 						/>
 					</div>
-					<button
-						aria-label="Add books"
-						class="flex size-[46px] shrink-0 cursor-pointer items-center justify-center rounded-xl bg-brand-500 text-canvas transition-transform active:scale-95"
-						onClick={pickBooks}
-						type="button"
-					>
-						<svg
-							aria-hidden="true"
-							class="size-5"
-							fill="none"
-							stroke="currentColor"
-							stroke-linecap="round"
-							stroke-width="2.6"
-							viewBox="0 0 24 24"
-						>
-							<path d="M12 5v14M5 12h14" />
-						</svg>
-					</button>
 				</div>
 				<div class="flex gap-2 pb-4 px-5 overflow-x-auto">
 					<For each={FILTERS}>
