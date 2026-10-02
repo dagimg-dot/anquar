@@ -4,25 +4,28 @@ Guilt-free doomscrolling — a Solid.js PWA that turns books into a TikTok-style
 
 ## Setup
 
-Anquar depends on **`anquar-core`**, the book parser and paginator, as a local
-path dependency (`file:../anquar-core`). It is not published, so it must be
-cloned as a sibling directory or `bun install` fails:
-
-```
-TYPESCRIPT/
-├── anquar-core/
-└── anquar/
-```
-
 ```bash
 bun install
 bun run dev      # http://localhost:5173
 ```
 
-`bun install` copies anquar-core into `node_modules` rather than linking it,
-and Vite pre-bundles that copy into `node_modules/.vite`. After changing
-anquar-core, run `bun install` and start with `bun run dev --force`, or the app
-keeps running the old core.
+The book parser and paginator is **`anquar-core`**, published to npm from its
+own repo (`../anquar-core`). An engine change ships as a new version: test it
+there (`bun run src/test.ts --epub`), bump its `version`, run `npm publish`
+(which builds `dist/` first, and npm asks you to confirm in the browser), then
+`bun add anquar-core@<version>` here.
+
+To run the app on an unpublished engine change, link the repo:
+
+```bash
+cd ../anquar-core && bun link && bun run build
+cd ../anquar && bun link anquar-core
+```
+
+The app then reads `../anquar-core/dist`, so rebuild it after each change.
+Linking leaves `package.json` and `bun.lock` alone, and a plain `bun install`
+keeps the link; `rm node_modules/anquar-core && bun install` goes back to the
+npm version.
 
 No environment variables and no `.env`. The Gemini key is entered in the app
 (Settings tab) and lives in `localStorage` under `anquar_api_key`, alongside
