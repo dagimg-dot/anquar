@@ -2,7 +2,7 @@ import { MARK, markLines } from "../brand/mark";
 
 export default function AppHeader() {
 	return (
-		<header class="flex items-center justify-between px-5 pt-4 pb-3 sticky top-0 z-20 bg-gradient-to-b from-canvas/100 via-canvas/100 to-transparent">
+		<header class="glass-mask sticky top-0 z-20 flex items-center justify-between bg-canvas/80 px-5 pt-4 pb-5 backdrop-blur-xl">
 			<span class="flex items-center gap-2 text-[22px] font-extrabold tracking-tight">
 				<svg
 					class="w-[26px] h-[26px] text-brand-500 shrink-0"
