@@ -8,7 +8,7 @@ export const STREAK_MIN = 5;
 const REST_EVERY = 7;
 const RESTS_MAX = 2;
 const DEFAULT_PACE = 25;
-const DEFAULT_GOAL = 30;
+export const DEFAULT_GOAL = 30;
 const GOAL_KEY = "anquar_goal";
 
 export function readingGoal(): number {

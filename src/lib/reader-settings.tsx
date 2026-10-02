@@ -7,21 +7,9 @@ import {
 	useContext,
 } from "solid-js";
 import { loadReaderSettings, saveReaderSettings } from "./db.ts";
+import { READER_THEMES, THEME_ACCENTS } from "./reader-themes.ts";
 
-export interface ReaderTheme {
-	bgColor: string;
-	id: string;
-	label: string;
-	textColor: string;
-}
-
-export const READER_THEMES: ReaderTheme[] = [
-	{ id: "light", label: "Light", textColor: "#1a1a1a", bgColor: "#ffffff" },
-	{ id: "dark", label: "Dark", textColor: "#e0e0e0", bgColor: "#1a1a1a" },
-	{ id: "sepia", label: "Sepia", textColor: "#5b4636", bgColor: "#f1e8d0" },
-	{ id: "cream", label: "Cream", textColor: "#3c3836", bgColor: "#fbf1c7" },
-	{ id: "amoled", label: "AMOLED", textColor: "#ffffff", bgColor: "#000000" },
-];
+export { READER_THEMES, type ReaderTheme } from "./reader-themes.ts";
 
 // 1.4 is the lower bound for the narrow measure of a phone; 1.6 is the
 // recommended body-text value and clears the 1.5 WCAG 1.4.12 baseline; past
@@ -104,23 +92,10 @@ export function setRailRest(value: RailRest) {
 	}
 }
 
-/**
- * The rail sits on the reader's page, not the app's, so its accents have to
- * clear five backgrounds the app theme knows nothing about. A custom page
- * colour has no matching pair, so those fall back to the reader's own ink.
- */
-const ACCENTS: Record<string, { save: string }> = {
-	light: { save: "#2f6b4a" },
-	dark: { save: "#7fc79b" },
-	sepia: { save: "#4a6b52" },
-	cream: { save: "#3f6b4f" },
-	amoled: { save: "#7fc79b" },
-};
-
 export function getAccentColors(settings: ReaderSettings): { save: string } {
 	const ink = getThemeColors(settings).textColor;
 	if (settings.bgColor || settings.textColor) return { save: ink };
-	return ACCENTS[settings.themeId] ?? { save: ink };
+	return THEME_ACCENTS[settings.themeId] ?? { save: ink };
 }
 
 export function getThemeColors(settings: ReaderSettings): {
