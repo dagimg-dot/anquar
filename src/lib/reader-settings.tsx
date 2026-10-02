@@ -168,11 +168,13 @@ export const ReaderSettingsProvider: ParentComponent<{ bookId?: string }> = (
 		}
 	});
 
+	// Read here, not in the timer, so that every change is tracked and saved, not just the first.
 	createEffect(() => {
 		const bid = props.bookId;
+		const current = settings();
 		if (loaded() && bid) {
 			const timer = setTimeout(() => {
-				saveReaderSettings(bid, settings());
+				saveReaderSettings(bid, current);
 			}, 300);
 			onCleanup(() => clearTimeout(timer));
 		}
