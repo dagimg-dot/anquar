@@ -88,7 +88,10 @@ the book is then paginated again and the reader returned to the card holding
 the words they were on. Card ids name a place in the book (`c3-12@480`), which
 is how that return, and bookmarks, survive a relayout. `useLazyChapters` loads
 three chapters at a time behind an IntersectionObserver sentinel, and `loadUpTo`
-pulls forward far enough for a contents jump to land.
+pulls forward far enough for a contents jump to land. The card you're on is
+the scroll offset over a card's measured height, not `clientHeight`, which on
+most phones is a fraction of a pixel short of a `dvh` card and drifts a card
+over a long book.
 
 **Reader chrome** — `ReaderRail` carries contents, explain, save, share and
 settings; each opens a `BottomSheet`. The rail overlays the page rather than

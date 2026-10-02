@@ -330,6 +330,12 @@ function StartReadingPill(props: { onClick: () => void }) {
 
 type SheetName = "contents" | "explain" | "settings";
 
+// A card is a dynamic viewport tall, which on most phones isn't the whole number of pixels clientHeight
+// is; dividing by clientHeight drifts by a card over a long book.
+const cardHeight = (feed: HTMLElement) =>
+	feed.querySelector(".snap-page")?.getBoundingClientRect().height ||
+	feed.clientHeight;
+
 function cardText(blocks: Block[]): string {
 	return blocks
 		.map((b) => {
@@ -646,8 +652,9 @@ export default function Feed() {
 
 	function trackPosition(e: Event) {
 		const el = e.currentTarget as HTMLElement;
-		if (el.clientHeight > 0) {
-			setPosition(Math.round(el.scrollTop / el.clientHeight));
+		const height = cardHeight(el);
+		if (height > 0) {
+			setPosition(Math.round(el.scrollTop / height));
 		}
 	}
 
