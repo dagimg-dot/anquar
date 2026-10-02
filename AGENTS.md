@@ -75,7 +75,10 @@ both pages follow one choice.
 **Theme and type** — `src/theme/tokens.css` holds every colour once, as
 `light-dark()` pairs, with `data-theme` forcing one side; the app's Tailwind
 `@theme` and the landing page both read it. `src/theme/fonts.css` self-hosts
-Geist (UI) and Newsreader (reading) from `src/assets/fonts`. The reader's five
+Hanken Grotesk (the interface) and Source Serif 4 (the books, Explain and the
+share card) from `src/assets/fonts`; `pageStyle` sets the reader's cards and
+`LayoutProbe` in the book face, so a card is measured in the type it's read
+in. The reader's five
 themes are data in `src/lib/reader-themes.ts`, shared with the landing reader.
 
 **Import** — every way in (the Feed tab's +, the Library tab's +, and books
@@ -166,13 +169,13 @@ context, and `ExplainSheet` sets each of its words as a chip
 rest, later taps add or remove one, and Explain asks what those words mean in
 that context, or what all of it says. One word picked is asked about at once,
 with the card as context. `explain.ts` streams the answer from Gemini, a gist
-line and then its detail, and the sheet sets it in Newsreader word by word.
+line and then its detail, and the sheet sets it in Source Serif 4 word by word.
 
 **Sharing** — Share sends an image of the passage with the passage as text
 and `— Title, Author` on the line below. `src/lib/share-card.ts` draws the
 image on the phone (option B1 of `design/share-card.html`: the cover sharp and
 darkened as a frame, and inset from it a frosted pane of the same cover holding
-the passage, with the cover, title and author at the foot) in Newsreader, which
+the passage, with the cover, title and author at the foot) in Source Serif 4, which
 ships in `src/assets/fonts` (OFL) and is precached.
 
 **Transitions** — screen changes go through `src/lib/transitions.ts`. A

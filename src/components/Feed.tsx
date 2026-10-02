@@ -102,6 +102,7 @@ function pageStyle(
 	return {
 		background: colors.bgColor,
 		color: colors.textColor,
+		"font-family": "var(--font-read)",
 		"font-size": `${(settings.fontSize / 100) * 1.15}rem`,
 		"line-height": String(settings.lineHeight),
 		"padding-inline": `${settings.hPadding}rem`,

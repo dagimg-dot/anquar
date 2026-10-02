@@ -34,8 +34,8 @@
 	--glass-border: light-dark(oklch(1 0 0 / 0.25), oklch(1 0 0 / 0.15));
 	--glass-shadow: light-dark(oklch(0 0 0 / 0.25), oklch(0 0 0 / 0.5));
 
-	--sans: "Geist", system-ui, -apple-system, sans-serif;
-	--serif: "Newsreader", Georgia, serif;
+	--sans: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
+	--serif: "Source Serif 4", Georgia, serif;
 }
 
 [data-theme="light"] {

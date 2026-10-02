@@ -610,6 +610,7 @@
 	padding: 72px 24px;
 	scroll-snap-align: start;
 	scroll-snap-stop: always;
+	font-family: var(--serif);
 	font-size: 18.4px;
 	line-height: 1.6;
 	cursor: pointer;
@@ -651,7 +652,7 @@
 	width: 390px;
 	visibility: hidden;
 	pointer-events: none;
-	font-family: var(--sans);
+	font-family: var(--serif);
 }
 
 .r-measure {

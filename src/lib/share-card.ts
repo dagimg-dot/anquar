@@ -1,4 +1,4 @@
-import newsreader from "../assets/fonts/newsreader-latin.woff2";
+import sourceSerif from "../assets/fonts/source-serif-4-latin.woff2";
 import { GROUND, MARK, markLines } from "../brand/mark";
 
 // The image a shared passage travels with (design/share-card.html, option B1): the book's cover sharp and
@@ -21,11 +21,14 @@ const COVER_W = 150;
 const COVER_H = 225;
 const FOOT_GAP = 64;
 const SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
-const SERIF = "Newsreader";
+const SERIF_FAMILY = "Source Serif 4";
+const SERIF = `"${SERIF_FAMILY}"`;
 
 let fontLoaded: Promise<void> | undefined;
 const loadFont = () => {
-	fontLoaded ??= new FontFace(SERIF, `url(${newsreader})`)
+	fontLoaded ??= new FontFace(SERIF_FAMILY, `url(${sourceSerif})`, {
+		weight: "200 900",
+	})
 		.load()
 		.then((face) => {
 			document.fonts.add(face);
