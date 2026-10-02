@@ -106,6 +106,17 @@ hundreds of cards.
 settings; each opens a `BottomSheet`. The rail overlays the page rather than
 reserving a gutter, so it drops `pointer-events` whenever it is not shown.
 
+**Transitions** — screen changes go through `src/lib/transitions.ts`, on the
+View Transitions API, with the motion in `index.css` under `data-transition`:
+tabs fade through, a book's cover grows into the reader and the reader shrinks
+back into it. A cover takes part only if it carries `data-cover` (the book's
+id), which `BookCover` passes through. Opening waits briefly for the reader's
+`readerLanded()`, so the cover grows into your page rather than an empty one.
+Back out of the reader is caught by a `popstate` listener that `index.tsx` adds
+before the router starts, and replayed to the router once the reader has been
+captured; added after the router, back stops animating. Without the API, or
+with reduced motion, screens change at once.
+
 **Reader settings** — `ReaderSettingsProvider` holds them in context, persisted
 per book with a `"global"` row as the fallback for a book opened for the first
 time.
