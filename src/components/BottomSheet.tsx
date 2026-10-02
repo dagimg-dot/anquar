@@ -1,4 +1,11 @@
-import { createSignal, type JSX, Show } from "solid-js";
+import {
+	createEffect,
+	createSignal,
+	type JSX,
+	on,
+	onCleanup,
+	Show,
+} from "solid-js";
 import { useCloseOnBack } from "../lib/useCloseOnBack";
 
 interface BottomSheetProps {
@@ -9,6 +16,7 @@ interface BottomSheetProps {
 }
 
 const DISMISS_DISTANCE = 90;
+const SLIDE_MS = 400;
 
 /**
  * A non-modal sheet: nothing dims behind it, because these controls change the
@@ -21,6 +29,19 @@ export default function BottomSheet(props: BottomSheetProps) {
 	useCloseOnBack(
 		() => props.open,
 		() => props.onClose(),
+	);
+
+	// The content stays until the sheet has slid off, so it leaves whole, the way it arrived.
+	const [shown, setShown] = createSignal(props.open);
+	createEffect(
+		on(
+			() => props.open,
+			(open) => {
+				if (open) return setShown(true);
+				const gone = setTimeout(() => setShown(false), SLIDE_MS);
+				onCleanup(() => clearTimeout(gone));
+			},
+		),
 	);
 
 	function onTouchStart(e: TouchEvent) {
@@ -93,7 +114,7 @@ export default function BottomSheet(props: BottomSheetProps) {
 					</button>
 				</div>
 
-				<Show when={props.open}>
+				<Show when={shown()}>
 					<div class="max-h-[70dvh] overflow-y-auto overscroll-contain px-5">
 						{props.children}
 					</div>
