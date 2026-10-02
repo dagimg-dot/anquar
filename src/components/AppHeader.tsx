@@ -1,5 +1,4 @@
 import { MARK, markLines } from "../brand/mark";
-import IconButton from "./IconButton";
 
 export default function AppHeader() {
 	return (
@@ -25,21 +24,6 @@ export default function AppHeader() {
 				>
 					anquar
 				</span>
-			</span>
-			<span class="flex" data-splash-word>
-				<IconButton size="sm" shape="round" ariaLabel="Profile">
-					<svg
-						class="w-[18px] h-[18px]"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-						stroke-width="2"
-						aria-hidden="true"
-					>
-						<circle cx="12" cy="8" r="4" />
-						<path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" />
-					</svg>
-				</IconButton>
 			</span>
 		</header>
 	);
