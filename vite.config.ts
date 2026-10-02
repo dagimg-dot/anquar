@@ -86,6 +86,22 @@ export default defineConfig({
 						],
 					},
 				},
+				// Long-pressing the app's icon offers Continue reading; App.tsx opens the book read last.
+				shortcuts: [
+					{
+						name: "Continue reading",
+						short_name: "Continue",
+						url: "/?continue",
+						icons: [
+							{
+								src: "icons/maskable-192x192.png",
+								sizes: "192x192",
+								type: "image/png",
+								purpose: "maskable",
+							},
+						],
+					},
+				],
 				icons: [
 					{
 						src: "icons/pwa-192x192.png",

@@ -166,6 +166,11 @@ export function listBooks() {
 	return db.books.orderBy("addedAt").reverse().toArray();
 }
 
+// Books never opened have no lastOpenedAt and so aren't in its index.
+export function lastOpenedBook() {
+	return db.books.orderBy("lastOpenedAt").last();
+}
+
 export async function getChaptersRange(
 	bookId: string,
 	fromOrder: number,

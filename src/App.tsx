@@ -4,6 +4,7 @@ import AppleToaster from "./components/AppleToaster.tsx";
 import BottomNav from "./components/BottomNav.tsx";
 import Feed from "./components/Feed.tsx";
 import ImportSheet from "./components/ImportSheet.tsx";
+import { lastOpenedBook } from "./lib/db.ts";
 import { importShared, pickBooks } from "./lib/imports.ts";
 import { ReaderSettingsProvider } from "./lib/reader-settings.tsx";
 import PWABadge from "./PWABadge.tsx";
@@ -27,6 +28,18 @@ function App() {
 		if (!new URLSearchParams(location.search).has("shared")) return;
 		navigate("/", { replace: true });
 		void importShared();
+	});
+
+	// Continue reading, the shortcut on the app's icon, opens "/?continue": straight into the book read last,
+	// or home when none has been opened. Home waits for the answer, so the splash lands only once.
+	const [continuing, setContinuing] = createSignal(
+		new URLSearchParams(location.search).has("continue"),
+	);
+	onMount(async () => {
+		if (!continuing()) return;
+		const book = await lastOpenedBook();
+		navigate(book ? `/book/${book.id}` : "/", { replace: true });
+		setContinuing(false);
 	});
 
 	return (
@@ -62,7 +75,7 @@ function App() {
 				<Show
 					fallback={
 						<Switch>
-							<Match when={activeTab() === "feed"}>
+							<Match when={activeTab() === "feed" && !continuing()}>
 								<FeedPage />
 							</Match>
 							<Match when={activeTab() === "library"}>
