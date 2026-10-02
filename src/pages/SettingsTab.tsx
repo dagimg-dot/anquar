@@ -7,6 +7,7 @@ import SettingsSection, {
 	SettingsThemeOption,
 } from "../components/SettingsSection";
 import { db } from "../lib/db";
+import { RAIL_RESTS, railRest, setRailRest } from "../lib/reader-settings";
 import { readingGoal, setReadingGoal } from "../lib/reading";
 import { useTheme } from "../theme/ThemeContext";
 
@@ -206,6 +207,23 @@ export default function SettingsTab() {
 									setAlignment(a);
 									saveGlobalDefaults();
 								}}
+							/>
+						)}
+					</For>
+				</SettingsOptionGroup>
+				<div style="margin-top: 14px;">
+					<SettingsRowInfo
+						desc="How much the reader's buttons show between taps"
+						label="Rail"
+					/>
+				</div>
+				<SettingsOptionGroup>
+					<For each={[...RAIL_RESTS]}>
+						{(rest) => (
+							<SettingsOption
+								active={railRest() === rest.value}
+								label={rest.label}
+								onClick={() => setRailRest(rest.value)}
 							/>
 						)}
 					</For>

@@ -78,6 +78,32 @@ const DEFAULTS: ReaderSettings = {
 const isRailRest = (v: unknown): v is RailRest =>
 	RAIL_RESTS.some((r) => r.value === v);
 
+// How present the rail is is a habit rather than a property of a book: one setting for every book, kept
+// beside the app's other preferences and set from the reader or the Settings tab.
+const RAIL_KEY = "anquar_rail";
+
+function storedRail(): RailRest {
+	try {
+		const stored = localStorage.getItem(RAIL_KEY);
+		return isRailRest(stored) ? stored : DEFAULTS.railRest;
+	} catch {
+		return DEFAULTS.railRest;
+	}
+}
+
+const [railRest, setRail] = createSignal<RailRest>(storedRail());
+
+export { railRest };
+
+export function setRailRest(value: RailRest) {
+	setRail(value);
+	try {
+		localStorage.setItem(RAIL_KEY, value);
+	} catch {
+		// Without storage it holds for this visit only.
+	}
+}
+
 /**
  * The rail sits on the reader's page, not the app's, so its accents have to
  * clear five backgrounds the app theme knows nothing about. A custom page
@@ -126,9 +152,14 @@ export const ReaderSettingsProvider: ParentComponent<{ bookId?: string }> = (
 	const [settings, setSettings] = createSignal<ReaderSettings>({ ...DEFAULTS });
 	const [loaded, setLoaded] = createSignal(false);
 
-	const updateSettings = (updates: Partial<ReaderSettings>) => {
+	const updateSettings = ({
+		railRest: rail,
+		...updates
+	}: Partial<ReaderSettings>) => {
+		if (rail) setRailRest(rail);
 		setSettings((prev) => ({ ...prev, ...updates }));
 	};
+	const withRail = () => ({ ...settings(), railRest: railRest() });
 
 	const resetSettings = () => {
 		setSettings({ ...DEFAULTS });
@@ -151,9 +182,7 @@ export const ReaderSettingsProvider: ParentComponent<{ bookId?: string }> = (
 						lineHeight: nearestLineHeight(
 							record.lineHeight ?? DEFAULTS.lineHeight,
 						),
-						railRest: isRailRest(record.railRest)
-							? record.railRest
-							: DEFAULTS.railRest,
+						railRest: DEFAULTS.railRest,
 						textColor: record.textColor ?? "",
 						themeId: record.themeId ?? DEFAULTS.themeId,
 						verticalAlign:
@@ -183,7 +212,7 @@ export const ReaderSettingsProvider: ParentComponent<{ bookId?: string }> = (
 	return (
 		<ReaderSettingsCtx.Provider
 			value={{
-				settings,
+				settings: withRail,
 				setSettings: updateSettings,
 				resetSettings,
 				themeColors,

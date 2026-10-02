@@ -26,7 +26,8 @@ keeps running the old core.
 
 No environment variables and no `.env`. The Gemini key is entered in the app
 (Settings tab) and lives in `localStorage` under `anquar_api_key`, alongside
-`anquar_model` and the daily goal, `anquar_goal`. The Reading Pulse keeps its
+`anquar_model`, the daily goal, `anquar_goal`, and how much the reader's rail
+shows between taps, `anquar_rail` (one setting for every book). The Reading Pulse keeps its
 small bookkeeping there too: `anquar_last_read_at` (for sessions),
 `anquar_moments` and `anquar_pulse_stepped` (what has been celebrated today).
 
@@ -123,7 +124,8 @@ with reduced motion, screens change at once.
 
 **Reader settings** — `ReaderSettingsProvider` holds them in context, persisted
 per book with a `"global"` row as the fallback for a book opened for the first
-time.
+time. The rail's visibility is the exception: one setting for every book,
+kept in `anquar_rail`.
 
 **Object URLs** — `covers.ts` and `images.ts` cache one URL per blob, because
 minting a fresh one each render reloads the image and flickers. Only covers are
