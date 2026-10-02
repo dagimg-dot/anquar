@@ -1,4 +1,5 @@
 import { createSignal, type JSX, Show } from "solid-js";
+import { useCloseOnBack } from "../lib/useCloseOnBack";
 
 interface BottomSheetProps {
 	children: JSX.Element;
@@ -17,6 +18,10 @@ const DISMISS_DISTANCE = 90;
 export default function BottomSheet(props: BottomSheetProps) {
 	const [drag, setDrag] = createSignal(0);
 	let startY = 0;
+	useCloseOnBack(
+		() => props.open,
+		() => props.onClose(),
+	);
 
 	function onTouchStart(e: TouchEvent) {
 		startY = e.touches[0].clientY;

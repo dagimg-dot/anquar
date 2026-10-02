@@ -14,6 +14,7 @@ import {
 	readingTime,
 	registerPicker,
 } from "../lib/imports";
+import { useCloseOnBack } from "../lib/useCloseOnBack";
 
 const STEPS = ["Opening", "Reading", "Saving"] as const;
 const STEP_OF: Partial<Record<ImportJob["state"], number>> = {
@@ -212,6 +213,10 @@ export default function ImportSheet() {
 	const count = (state: ImportJob["state"]) =>
 		jobs.filter((j) => j.state === state).length;
 	const firstAdded = () => jobs.find((j) => j.state === "added");
+	// Back does what the sheet's × does: cancels a running import, otherwise closes.
+	useCloseOnBack(importsOpen, () =>
+		working() ? cancelImports() : closeImports(),
+	);
 
 	const title = () => {
 		const one = single();
