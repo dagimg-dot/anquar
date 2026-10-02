@@ -49,12 +49,12 @@ export default function BottomSheet(props: BottomSheetProps) {
 			<Show when={props.open}>
 				{/* biome-ignore lint/a11y/noStaticElementInteractions: dismiss target, not a control */}
 				{/* biome-ignore lint/a11y/useKeyWithClickEvents: Escape is handled by the sheet's owner */}
-				<div class="fixed inset-0 z-40" onClick={props.onClose} />
+				<div class="fixed inset-0 z-[60]" onClick={props.onClose} />
 			</Show>
 
 			<div
 				aria-hidden={!props.open}
-				class="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-lg select-none rounded-t-[1.25rem] bg-canvas shadow-[0_-8px_40px_rgba(0,0,0,0.18)] after:absolute after:inset-x-0 after:top-full after:h-24 after:bg-canvas"
+				class="fixed inset-x-0 bottom-0 z-[61] mx-auto max-w-lg select-none rounded-t-[1.25rem] bg-canvas shadow-[0_-8px_40px_rgba(0,0,0,0.18)] after:absolute after:inset-x-0 after:top-full after:h-24 after:bg-canvas"
 				classList={{ "pointer-events-none": !props.open }}
 				onClick={(e) => e.stopPropagation()}
 				ref={setSheet}
