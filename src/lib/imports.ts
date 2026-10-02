@@ -54,6 +54,9 @@ const [libraryVersion, setLibraryVersion] = createSignal(0);
 
 export { jobs, libraryVersion, open as importsOpen };
 
+// For a book changed or deleted outside an import.
+export const libraryChanged = () => setLibraryVersion((v) => v + 1);
+
 const files = new Map<number, File>();
 // A book that turned out to be in the library already is held until you say whether to add a copy.
 const held = new Map<number, ParsedBook>();

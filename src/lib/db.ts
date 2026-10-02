@@ -253,6 +253,15 @@ export function listReading() {
 	return db.reading.toArray();
 }
 
+// A new cover drops the cached URL of the old one, so every list shows the new.
+export function updateBook(
+	bookId: string,
+	changes: Partial<Pick<BookRecord, "title" | "author" | "coverImage">>,
+) {
+	if (changes.coverImage) releaseCoverUrl(bookId);
+	return db.books.update(bookId, changes);
+}
+
 export async function deleteBook(bookId: string) {
 	releaseCoverUrl(bookId);
 	const tables = [

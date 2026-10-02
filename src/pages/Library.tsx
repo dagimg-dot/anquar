@@ -9,10 +9,12 @@ import {
 } from "solid-js";
 import AppHeader from "../components/AppHeader";
 import BookCover from "../components/BookCover";
+import BookEditor, { type EditableBook } from "../components/BookEditor";
 import CoverGrid from "../components/CoverGrid";
 import FilterChip from "../components/FilterChip";
 import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
+import { tick } from "../lib/haptics";
 import { libraryVersion, pickBooks } from "../lib/imports";
 import { openBook } from "../lib/transitions";
 
@@ -34,6 +36,7 @@ export default function Library() {
 	const [search, setSearch] = createSignal("");
 	const [filter, setFilter] = createSignal("All");
 	const [loading, setLoading] = createSignal(true);
+	const [editing, setEditing] = createSignal<EditableBook>();
 
 	createEffect(on(libraryVersion, () => void load()));
 
@@ -147,6 +150,12 @@ export default function Library() {
 											e.currentTarget,
 										)
 									}
+									// Held (or right-clicked), a book opens its editor instead.
+									onContextMenu={(e) => {
+										e.preventDefault();
+										tick();
+										setEditing(book);
+									}}
 								>
 									<BookCover
 										data-cover={book.id}
@@ -192,6 +201,7 @@ export default function Library() {
 					</div>
 				</Show>
 			</div>
+			<BookEditor book={editing()} onClose={() => setEditing(undefined)} />
 		</>
 	);
 }

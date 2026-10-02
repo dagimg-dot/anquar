@@ -13,6 +13,8 @@ const SLIDE_MS = 400;
 
 interface BottomSheetProps {
 	children: JSX.Element;
+	// Dims what's behind, for a sheet that is a task of its own rather than a control over the page.
+	dim?: boolean;
 	onClose: () => void;
 	open: boolean;
 	title: string;
@@ -46,11 +48,24 @@ export default function BottomSheet(props: BottomSheetProps) {
 
 	return (
 		<>
-			<Show when={props.open}>
-				{/* biome-ignore lint/a11y/noStaticElementInteractions: dismiss target, not a control */}
-				{/* biome-ignore lint/a11y/useKeyWithClickEvents: Escape is handled by the sheet's owner */}
-				<div class="fixed inset-0 z-[60]" onClick={props.onClose} />
-			</Show>
+			{/* biome-ignore lint/a11y/noStaticElementInteractions: dismiss target, not a control */}
+			{/* biome-ignore lint/a11y/useKeyWithClickEvents: Escape and back close the sheet too */}
+			<div
+				class="fixed inset-0 z-[60] transition-opacity duration-300"
+				classList={{
+					"bg-black/50": props.dim,
+					"pointer-events-none opacity-0": !props.open,
+				}}
+				onClick={props.onClose}
+				style={
+					props.open && props.dim
+						? {
+								opacity: 1 - drag.pulled(),
+								transition: drag.dragging() ? "none" : undefined,
+							}
+						: undefined
+				}
+			/>
 
 			<div
 				aria-hidden={!props.open}
