@@ -1,4 +1,4 @@
-import { createSignal, For } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 import GeminiSettings from "../components/GeminiSettings";
 import LibraryData from "../components/LibraryData";
 import SettingsSection, {
@@ -8,6 +8,7 @@ import SettingsSection, {
 	SettingsThemeOption,
 } from "../components/SettingsSection";
 import { db } from "../lib/db";
+import { canInstall, install } from "../lib/install";
 import { RAIL_RESTS, railRest, setRailRest } from "../lib/reader-settings";
 import { readingGoal, setReadingGoal } from "../lib/reading";
 import { useTheme } from "../theme/ThemeContext";
@@ -57,6 +58,24 @@ export default function SettingsTab() {
 
 	return (
 		<div class="pb-24">
+			{/* Still there for anyone who said not now to the Feed tab's card. */}
+			<Show when={canInstall()}>
+				<SettingsSection title="App">
+					<SettingsRowInfo
+						desc="Full screen, offline, and in your share sheet"
+						label="Install anquar"
+					>
+						<button
+							class="shrink-0 rounded-full bg-brand-500 px-4 py-2 font-semibold text-[13.5px] text-canvas transition-transform active:scale-95"
+							onClick={() => void install()}
+							type="button"
+						>
+							Install
+						</button>
+					</SettingsRowInfo>
+				</SettingsSection>
+			</Show>
+
 			<SettingsSection title="Appearance">
 				<SettingsRowInfo
 					label="App theme"

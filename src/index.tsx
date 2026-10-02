@@ -1,5 +1,7 @@
 /* @refresh reload */
 import "./splash.ts";
+// Chrome's install offer comes once and early, so it's listened for before anything else (lib/install.ts).
+import "./lib/install.ts";
 import { Route, Router } from "@solidjs/router";
 import { render } from "solid-js/web";
 import App from "./App.tsx";

@@ -35,6 +35,7 @@ shows between taps, `anquar_rail` (one setting for every book), as is the
 reader's brightness, `anquar_brightness`. The Reading Pulse keeps its
 small bookkeeping there too: `anquar_last_read_at` (for sessions),
 `anquar_moments` and `anquar_pulse_stepped` (what has been celebrated today).
+`anquar_install_later` is when the install card was last put off.
 
 ## Commands
 
@@ -100,6 +101,13 @@ generated service worker, takes the post to `/app/share-target`, leaves the file
 `anquar-shared` cache and redirects to `/app/?shared`, where `importShared` hands
 them to the queue. An installed app only picks up a change to the share target
 when Chrome rebuilds it, which can take a day; reinstalling is immediate.
+
+**Install** — `src/lib/install.ts`, imported first thing in `src/index.tsx`,
+catches Chrome's `beforeinstallprompt` (which also keeps Chrome's mini-infobar
+away) and holds it. While it's held and the app isn't installed, `InstallCard`
+sits at the top of the Feed tab, and Settings has an App section with the same
+button; "Not now" puts the card off for two weeks, but not the Settings row.
+Safari has no such event, so an iPhone never sees either.
 
 **Storage** — Dexie over IndexedDB in `src/lib/db.ts`, database `anquar`,
 schema v2. Tables: `books`, `chapters`, `progress`, `bookmarks`,

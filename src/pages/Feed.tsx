@@ -2,6 +2,7 @@ import { useNavigate } from "@solidjs/router";
 import { createEffect, createSignal, on, Show } from "solid-js";
 import FinishedList from "../components/FinishedList";
 import InProgressRow from "../components/InProgressRow";
+import InstallCard from "../components/InstallCard";
 import NowReading from "../components/NowReading";
 import ReadingPulse from "../components/ReadingPulse";
 import { coverUrl } from "../lib/covers";
@@ -93,6 +94,7 @@ export default function FeedPage() {
 
 	return (
 		<div class="pb-24" data-splash-rise="children">
+			<InstallCard />
 			<Show
 				when={!loading()}
 				fallback={
