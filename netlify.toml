@@ -1,0 +1,32 @@
+[build]
+  command = "bun run build"
+  publish = "dist"
+
+# The landing page is /, the app is /app/. A path under /app/ without a file is one of the app's own routes
+# (a book), so it gets the app's page; files there, app/index.html among them, are served as they are.
+[[redirects]]
+  from = "/app"
+  to = "/app/"
+  status = 301
+
+[[redirects]]
+  from = "/app/*"
+  to = "/app/index.html"
+  status = 200
+
+# Hashed by Vite, so a file there never changes under the same name.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Checked on every visit, so the installed app learns of an update straight away.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
