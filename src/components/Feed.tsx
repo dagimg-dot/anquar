@@ -68,6 +68,7 @@ import {
 	readingGoal,
 } from "../lib/reading.ts";
 import { readSelection } from "../lib/selection.ts";
+import { shareCard } from "../lib/share-card.ts";
 import { leaveBook, readerLanded } from "../lib/transitions.ts";
 import { useLazyChapters } from "../lib/useLazyChapters.ts";
 import { useReadingTracker } from "../lib/useReadingTracker.ts";
@@ -711,14 +712,33 @@ export default function Feed() {
 		if (i >= 0) scrollToCard(i, how === "opened");
 	}
 
+	// A passage leaves as an image of it (lib/share-card.ts) with the passage as text, the book on the line
+	// below, so a chat that shows only words still gets the whole quote.
 	async function share(picked: string) {
 		const meta = bookMeta();
 		const card = currentCard();
 		if (!meta || !card) return;
 
-		const text = `"${picked || cardText(card.blocks)}"\n— ${meta.title}, ${meta.author}`;
+		const passage = (picked || cardText(card.blocks)).trim();
+		const text = `“${passage}”\n— ${meta.title}, ${meta.author}`;
 		if (navigator.share) {
-			await navigator.share({ text }).catch(() => {});
+			const image = await shareCard({
+				author: meta.author,
+				coverUrl: meta.coverUrl,
+				text: passage,
+				title: meta.title,
+			}).catch(() => undefined);
+			const name =
+				meta.title.replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "") ||
+				"passage";
+			const files = image
+				? [new File([image], `${name}.jpg`, { type: "image/jpeg" })]
+				: [];
+			const withImage =
+				files.length > 0 && navigator.canShare?.({ files, text });
+			await navigator
+				.share(withImage ? { files, text } : { text })
+				.catch(() => {});
 			return;
 		}
 		try {

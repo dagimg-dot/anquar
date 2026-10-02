@@ -109,6 +109,13 @@ hundreds of cards.
 settings; each opens a `BottomSheet`. The rail overlays the page rather than
 reserving a gutter, so it drops `pointer-events` whenever it is not shown.
 
+**Sharing** — Share sends an image of the passage with the passage as text
+and `— Title, Author` on the line below. `src/lib/share-card.ts` draws the
+image on the phone (option B1 of `design/share-card.html`: the cover sharp and
+darkened as a frame, and inset from it a frosted pane of the same cover holding
+the passage, with the cover, title and author at the foot) in Newsreader, which
+ships in `src/assets/fonts` (OFL) and is precached.
+
 **Transitions** — screen changes go through `src/lib/transitions.ts`. A
 book's cover grows into the reader and the reader shrinks back into it on the
 View Transitions API, with the motion in `index.css` under `data-transition`.

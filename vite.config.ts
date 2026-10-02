@@ -130,7 +130,7 @@ export default defineConfig({
 				],
 			},
 			workbox: {
-				globPatterns: ["**/*.{js,css,html,svg,png,ico}"],
+				globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
 				globIgnores: ["share-target.js"],
 				importScripts: ["share-target.js"],
 				cleanupOutdatedCaches: true,
