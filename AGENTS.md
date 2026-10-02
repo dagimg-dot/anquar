@@ -27,7 +27,8 @@ keeps running the old core.
 No environment variables and no `.env`. The Gemini key is entered in the app
 (Settings tab) and lives in `localStorage` under `anquar_api_key`, alongside
 `anquar_model`, the daily goal, `anquar_goal`, and how much the reader's rail
-shows between taps, `anquar_rail` (one setting for every book). The Reading Pulse keeps its
+shows between taps, `anquar_rail` (one setting for every book), as is the
+reader's brightness, `anquar_brightness`. The Reading Pulse keeps its
 small bookkeeping there too: `anquar_last_read_at` (for sessions),
 `anquar_moments` and `anquar_pulse_stepped` (what has been celebrated today).
 

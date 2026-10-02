@@ -30,6 +30,7 @@ import {
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import toast from "solid-toast";
+import { brightness } from "../lib/brightness.ts";
 import {
 	createPager,
 	findCardHolding,
@@ -74,6 +75,7 @@ import { useScreenAwake } from "../lib/useScreenAwake.ts";
 import { useTikTokScroll } from "../lib/useTikTokScroll.ts";
 import { splashReady } from "../splash.ts";
 import BottomSheet from "./BottomSheet.tsx";
+import BrightnessSlider from "./BrightnessSlider.tsx";
 import ContentsSheet from "./ContentsSheet.tsx";
 import CoverCard from "./CoverCard.tsx";
 import ExplainSheet from "./ExplainSheet.tsx";
@@ -879,6 +881,15 @@ export default function Feed() {
 							<CaretLeft size={16} weight="bold" />
 							Library
 						</button>
+
+						{/* The page dims beneath the controls, so they stay findable however dark it gets. */}
+						<div
+							aria-hidden="true"
+							class="pointer-events-none fixed inset-0 z-[35] bg-black"
+							style={{ opacity: 1 - brightness() }}
+						/>
+
+						<BrightnessSlider rest={settings().railRest} shown={railShown()} />
 
 						<ReaderRail
 							coverUrl={meta().coverUrl}
