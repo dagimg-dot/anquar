@@ -1,0 +1,47 @@
+/* The palette shared by the app (src/index.css) and the landing page (src/landing): each colour once, light
+   and dark together. light-dark() follows color-scheme, which follows the system until data-theme picks. */
+:root {
+	color-scheme: light dark;
+
+	--canvas: light-dark(oklch(0.99 0.002 146), oklch(0.174 0.012 176));
+	--surface: light-dark(oklch(0.966 0.006 154), oklch(0.212 0.015 166));
+	--surface-elevated: light-dark(oklch(0.94 0.008 157), oklch(0.247 0.02 163));
+	--ink: light-dark(oklch(0.192 0.012 167), oklch(0.952 0.009 161));
+	--ink-soft: light-dark(oklch(0.496 0.016 167), oklch(0.689 0.024 160));
+	--ink-muted: light-dark(oklch(0.654 0.013 162), oklch(0.515 0.019 162));
+	--border: light-dark(oklch(0.911 0.012 154), oklch(0.272 0.02 163));
+	--border-light: light-dark(
+		oklch(0.192 0.012 167 / 0.1),
+		oklch(0.952 0.009 161 / 0.09)
+	);
+
+	--brand-50: light-dark(oklch(0.97 0.016 160), oklch(0.24 0.05 158));
+	--brand-100: light-dark(oklch(0.935 0.032 160), oklch(0.3 0.07 155));
+	--brand-200: light-dark(oklch(0.88 0.052 160), oklch(0.38 0.095 154));
+	--brand-300: light-dark(oklch(0.79 0.072 160), oklch(0.5 0.125 153));
+	--brand-400: light-dark(oklch(0.63 0.082 161), oklch(0.66 0.155 152));
+	--brand-500: light-dark(oklch(0.479 0.078 161), oklch(0.8 0.182 152));
+	--brand-600: light-dark(oklch(0.418 0.07 161), oklch(0.72 0.17 152));
+	--brand-700: light-dark(oklch(0.355 0.06 162), oklch(0.61 0.145 153));
+	--brand-800: light-dark(oklch(0.295 0.05 163), oklch(0.5 0.12 154));
+	--brand-900: light-dark(oklch(0.245 0.04 164), oklch(0.4 0.095 156));
+	--brand-950: light-dark(oklch(0.195 0.028 166), oklch(0.3 0.07 158));
+
+	--ice: light-dark(oklch(0.52 0.1 235), oklch(0.8 0.075 230));
+	--flame: light-dark(oklch(0.55 0.16 48), oklch(0.78 0.15 58));
+
+	--glass-bg: light-dark(oklch(1 0 0 / 0.12), oklch(0 0 0 / 0.25));
+	--glass-border: light-dark(oklch(1 0 0 / 0.25), oklch(1 0 0 / 0.15));
+	--glass-shadow: light-dark(oklch(0 0 0 / 0.25), oklch(0 0 0 / 0.5));
+
+	--sans: "Geist", system-ui, -apple-system, sans-serif;
+	--serif: "Newsreader", Georgia, serif;
+}
+
+[data-theme="light"] {
+	color-scheme: light;
+}
+
+[data-theme="dark"] {
+	color-scheme: dark;
+}
