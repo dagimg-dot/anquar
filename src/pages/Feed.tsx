@@ -7,6 +7,7 @@ import ReadingPulse from "../components/ReadingPulse";
 import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
 import { libraryVersion } from "../lib/imports";
+import { bookPath } from "../lib/routes";
 import { openBook } from "../lib/transitions";
 import { splashReady } from "../splash";
 
@@ -133,7 +134,7 @@ export default function FeedPage() {
 								const book = lastBook();
 								if (book)
 									openBook(
-										() => navigate(`/book/${book.id}`),
+										() => navigate(bookPath(book.id)),
 										book.id,
 										e.currentTarget,
 									);
@@ -146,7 +147,7 @@ export default function FeedPage() {
 					<ReadingPulse
 						onOpen={() => {
 							const book = lastBook();
-							if (book) openBook(() => navigate(`/book/${book.id}`), book.id);
+							if (book) openBook(() => navigate(bookPath(book.id)), book.id);
 						}}
 					/>
 					<FinishedList />

@@ -4,6 +4,7 @@ import BookCover from "../components/BookCover";
 import HighlightCard from "../components/HighlightCard";
 import { coverUrl } from "../lib/covers";
 import { db, getBookMeta } from "../lib/db";
+import { bookPath } from "../lib/routes";
 import { openBook } from "../lib/transitions";
 
 interface BookmarkItem {
@@ -35,7 +36,10 @@ export default function Saved() {
 		);
 	// A save opens the book at its card, which shows it without making it your reading place (Feed.tsx).
 	const visit = (bm: BookmarkItem) =>
-		openBook(() => navigate(`/book/${bm.bookId}?saved=${bm.id}`), bm.bookId);
+		openBook(
+			() => navigate(`${bookPath(bm.bookId)}?saved=${bm.id}`),
+			bm.bookId,
+		);
 
 	onMount(async () => {
 		try {

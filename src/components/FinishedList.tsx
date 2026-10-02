@@ -2,6 +2,7 @@ import { useNavigate } from "@solidjs/router";
 import { createSignal, For, onMount, Show } from "solid-js";
 import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
+import { bookPath } from "../lib/routes";
 import { openBook } from "../lib/transitions";
 import BookCover from "./BookCover";
 import SectionHeader from "./SectionHeader";
@@ -50,14 +51,14 @@ export default function FinishedList() {
 							class="flex items-center gap-3 py-2 px-5 cursor-pointer bg-transparent border-none w-full text-left [font:inherit] [color:inherit] transition-colors duration-100 active:bg-surface"
 							onClick={(e) =>
 								openBook(
-									() => navigate(`/book/${book.id}`),
+									() => navigate(bookPath(book.id)),
 									book.id,
 									e.currentTarget,
 								)
 							}
 							onKeyDown={(e) => {
 								if (e.key === "Enter" || e.key === " ")
-									navigate(`/book/${book.id}`);
+									navigate(bookPath(book.id));
 							}}
 						>
 							<BookCover

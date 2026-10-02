@@ -3,6 +3,8 @@
 // with the look in index.css (data-transition); tabs fade in the page itself (switchTab). With reduced
 // motion, or without the API, the screen just changes.
 
+import { isBookPath } from "./routes.ts";
+
 type Kind = "open" | "back";
 
 const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -132,7 +134,7 @@ export function animateBackFromReader() {
 			replaying ||
 			!animates() ||
 			!(leaving instanceof HTMLElement) ||
-			location.pathname.startsWith("/book/")
+			isBookPath(location.pathname)
 		)
 			return;
 		e.stopImmediatePropagation();

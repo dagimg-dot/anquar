@@ -8,6 +8,7 @@ import ImportSheet from "./components/ImportSheet.tsx";
 import { lastOpenedBook } from "./lib/db.ts";
 import { importShared } from "./lib/imports.ts";
 import { ReaderSettingsProvider } from "./lib/reader-settings.tsx";
+import { bookPath, HOME, isBookPath } from "./lib/routes.ts";
 import { switchTab } from "./lib/transitions.ts";
 import PWABadge from "./PWABadge.tsx";
 import FeedPage from "./pages/Feed.tsx";
@@ -15,7 +16,7 @@ import Library from "./pages/Library.tsx";
 import Saved from "./pages/Saved.tsx";
 import SettingsTab from "./pages/SettingsTab.tsx";
 
-// Outside App, which the router mounts afresh for "/" and for a book: back from a book returns to the tab
+// Outside App, which the router mounts afresh for the tabs and for a book: back from a book returns to the tab
 // it was opened from.
 const [activeTab, setActiveTab] = createSignal("feed");
 
@@ -25,18 +26,18 @@ function App() {
 	const navigate = useNavigate();
 	const [main, setMain] = createSignal<HTMLElement>();
 
-	const isReaderPage = () => location.pathname.startsWith("/book/");
+	const isReaderPage = () => isBookPath(location.pathname);
 	const bookId = () => params.id || null;
 
-	// A book shared to anquar from another app arrives as a redirect to "/?shared", with the files left in
+	// A book shared to anquar from another app arrives as a redirect to "/app/?shared", with the files left in
 	// the service worker's cache.
 	onMount(() => {
 		if (!new URLSearchParams(location.search).has("shared")) return;
-		navigate("/", { replace: true });
+		navigate(HOME, { replace: true });
 		void importShared();
 	});
 
-	// Continue reading, the shortcut on the app's icon, opens "/?continue": straight into the book read last,
+	// Continue reading, the shortcut on the app's icon, opens "/app/?continue": straight into the book read last,
 	// or home when none has been opened. Home waits for the answer, so the splash lands only once.
 	const [continuing, setContinuing] = createSignal(
 		new URLSearchParams(location.search).has("continue"),
@@ -44,7 +45,7 @@ function App() {
 	onMount(async () => {
 		if (!continuing()) return;
 		const book = await lastOpenedBook();
-		navigate(book ? `/book/${book.id}` : "/", { replace: true });
+		navigate(book ? bookPath(book.id) : HOME, { replace: true });
 		setContinuing(false);
 	});
 

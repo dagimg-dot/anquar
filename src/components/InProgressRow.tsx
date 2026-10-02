@@ -1,5 +1,6 @@
 import { useNavigate } from "@solidjs/router";
 import { For } from "solid-js";
+import { bookPath } from "../lib/routes";
 import { openBook } from "../lib/transitions";
 import BookCover from "./BookCover";
 import CarouselRow from "./CarouselRow";
@@ -31,7 +32,7 @@ export default function InProgressRow(props: InProgressRowProps) {
 							class="w-[120px] cursor-pointer bg-transparent border-none p-0 text-left [font:inherit] [color:inherit] active:scale-95 transition-transform duration-300"
 							onClick={(e) =>
 								openBook(
-									() => navigate(`/book/${book.id}`),
+									() => navigate(bookPath(book.id)),
 									book.id,
 									e.currentTarget,
 								)

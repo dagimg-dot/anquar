@@ -69,6 +69,7 @@ import {
 	pulseOf,
 	readingGoal,
 } from "../lib/reading.ts";
+import { HOME } from "../lib/routes";
 import { readSelection } from "../lib/selection.ts";
 import { shareCard } from "../lib/share-card.ts";
 import { leaveBook, readerLanded } from "../lib/transitions.ts";
@@ -925,7 +926,7 @@ export default function Feed() {
 						<button
 							aria-label="Back to library"
 							class="fixed top-0 left-0 z-40 m-3 flex h-[34px] items-center gap-1.5 rounded-xl px-2.5 font-semibold text-[12.5px] transition-opacity duration-[230ms] active:scale-95"
-							onClick={() => leaveBook(() => navigate("/"), meta().id)}
+							onClick={() => leaveBook(() => navigate(HOME), meta().id)}
 							style={{
 								background: `color-mix(in oklab, ${themeColors().textColor} 8%, transparent)`,
 								color: themeColors().textColor,

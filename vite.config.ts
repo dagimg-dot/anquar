@@ -1,5 +1,6 @@
+import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig, type Plugin } from "vite";
+import { type Connect, defineConfig, type Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import solid from "vite-plugin-solid";
 import { GROUND, INK, markSvgLines, SPLASH_BOX } from "./src/brand/mark.ts";
@@ -23,7 +24,23 @@ function manifestContentType(): Plugin {
 	};
 }
 
-// The splash's first frame has to be in index.html, painted before the bundle loads, so the mark, its
+// The app lives under /app/, and every path there without a file in it is one of its own routes (a book),
+// so it gets the app's page, as netlify.toml does once deployed.
+function appRoutes(): Plugin {
+	const toApp: Connect.NextHandleFunction = (req, _res, next) => {
+		const [path, query] = (req.url ?? "").split("?");
+		if (/^\/app(\/[^.]*)?$/.test(path) && path !== "/app/index.html")
+			req.url = `/app/index.html${query ? `?${query}` : ""}`;
+		next();
+	};
+	return {
+		name: "app-routes",
+		configureServer: (server) => void server.middlewares.use(toApp),
+		configurePreviewServer: (server) => void server.middlewares.use(toApp),
+	};
+}
+
+// The splash's first frame has to be in app/index.html, painted before the bundle loads, so the mark, its
 // colours and size, and the iOS startup images are written into it from src/brand.
 function brandHtml(): Plugin {
 	return {
@@ -44,6 +61,14 @@ function brandHtml(): Plugin {
 }
 
 export default defineConfig({
+	appType: "mpa",
+	build: {
+		rollupOptions: {
+			input: {
+				app: fileURLToPath(new URL("app/index.html", import.meta.url)),
+			},
+		},
+	},
 	resolve: {
 		conditions: ["browser"],
 		mainFields: ["browser", "module", "main"],
@@ -58,26 +83,28 @@ export default defineConfig({
 		tailwindcss(),
 		solid(),
 		manifestContentType(),
+		appRoutes(),
 		brandHtml(),
 		VitePWA({
 			registerType: "prompt",
 			injectRegister: false,
+			scope: "/app/",
 			// Android draws its splash from background_color and the maskable icon, whose ground is the same
 			// colour, and keeps theme_color in the status bar: both are the dark canvas, so the launch, the
 			// splash and the Feed tab are one surface.
 			manifest: {
-				id: "/",
+				id: "/app/",
 				name: "anquar",
 				short_name: "anquar",
-				description: "Guilt-free doomscrolling — books in a TikTok-style feed",
+				description: "Guilt-free bookscrolling: books as a vertical feed",
 				theme_color: GROUND,
 				background_color: GROUND,
 				display: "standalone",
-				scope: "/",
-				start_url: "/",
+				scope: "/app/",
+				start_url: "/app/",
 				// Share → anquar from other apps; public/share-target.js takes the post.
 				share_target: {
-					action: "/share-target",
+					action: "/app/share-target",
 					method: "POST",
 					enctype: "multipart/form-data",
 					params: {
@@ -91,7 +118,7 @@ export default defineConfig({
 					{
 						name: "Continue reading",
 						short_name: "Continue",
-						url: "/?continue",
+						url: "/app/?continue",
 						icons: [
 							{
 								src: "icons/maskable-192x192.png",
@@ -129,16 +156,20 @@ export default defineConfig({
 					},
 				],
 			},
+			// Only the app is cached for offline use: the landing page and its own code stay out, so changing
+			// the page at / never offers the installed app an update.
 			workbox: {
 				globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
-				globIgnores: ["share-target.js"],
+				globIgnores: ["share-target.js", "index.html"],
 				importScripts: ["share-target.js"],
+				navigateFallback: "/app/index.html",
+				navigateFallbackAllowlist: [/^\/app\//],
 				cleanupOutdatedCaches: true,
 				clientsClaim: true,
 			},
 			devOptions: {
 				enabled: false,
-				navigateFallback: "index.html",
+				navigateFallback: "app/index.html",
 				suppressWarnings: true,
 				type: "module",
 			},

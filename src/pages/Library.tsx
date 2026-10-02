@@ -15,6 +15,7 @@ import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
 import { tick } from "../lib/haptics";
 import { libraryVersion, pickBooks } from "../lib/imports";
+import { bookPath } from "../lib/routes";
 import { openBook } from "../lib/transitions";
 
 interface BookWithProgress {
@@ -125,7 +126,7 @@ export default function Library() {
 									class="block w-full p-0 m-0 border-0 bg-none text-left cursor-pointer font-[inherit] text-[color:inherit] active:scale-95 transition-transform duration-300"
 									onClick={(e) =>
 										openBook(
-											() => navigate(`/book/${book.id}`),
+											() => navigate(bookPath(book.id)),
 											book.id,
 											e.currentTarget,
 										)

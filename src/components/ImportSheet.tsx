@@ -14,6 +14,7 @@ import {
 	readingTime,
 	registerPicker,
 } from "../lib/imports";
+import { bookPath } from "../lib/routes";
 import { openBook } from "../lib/transitions";
 import { useCloseOnBack } from "../lib/useCloseOnBack";
 import { useSheetDrag } from "../lib/useSheetDrag";
@@ -248,7 +249,7 @@ export default function ImportSheet() {
 	const startReading = (id: string | undefined) => {
 		if (!id) return;
 		closeImports();
-		openBook(() => navigate(`/book/${id}`), id);
+		openBook(() => navigate(bookPath(id)), id);
 	};
 
 	return (

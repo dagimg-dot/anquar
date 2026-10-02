@@ -3,6 +3,7 @@ import "./splash.ts";
 import { Route, Router } from "@solidjs/router";
 import { render } from "solid-js/web";
 import App from "./App.tsx";
+import { BOOK_ROUTE, HOME } from "./lib/routes.ts";
 import { animateBackFromReader } from "./lib/transitions.ts";
 import { ThemeProvider } from "./theme/ThemeContext.tsx";
 import "./index.css";
@@ -20,8 +21,8 @@ render(
 	() => (
 		<ThemeProvider>
 			<Router>
-				<Route component={App} path="/" />
-				<Route component={App} path="/book/:id" />
+				<Route component={App} path={HOME} />
+				<Route component={App} path={BOOK_ROUTE} />
 			</Router>
 		</ThemeProvider>
 	),

@@ -2,7 +2,7 @@
 // cache until the page picks them up after the redirect; see importShared in src/lib/imports.ts.
 self.addEventListener("fetch", (event) => {
 	const url = new URL(event.request.url);
-	if (event.request.method !== "POST" || url.pathname !== "/share-target")
+	if (event.request.method !== "POST" || url.pathname !== "/app/share-target")
 		return;
 	event.respondWith(
 		(async () => {
@@ -21,7 +21,7 @@ self.addEventListener("fetch", (event) => {
 					}),
 				);
 			}
-			return Response.redirect("/?shared", 303);
+			return Response.redirect("/app/?shared", 303);
 		})(),
 	);
 });
