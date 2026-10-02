@@ -284,6 +284,10 @@ export async function deleteBook(bookId: string) {
 	});
 }
 
+export function getBookmark(id: number) {
+	return db.bookmarks.get(id);
+}
+
 export function listBookmarks(bookId: string) {
 	return db.bookmarks.where("bookId").equals(bookId).toArray();
 }

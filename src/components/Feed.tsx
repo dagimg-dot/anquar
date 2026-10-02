@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "@solidjs/router";
+import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
 import {
 	BLOCK_GAP_LINES,
 	type Block,
@@ -43,6 +43,7 @@ import { coverUrl } from "../lib/covers.ts";
 import {
 	addBookmark,
 	getBookMeta,
+	getBookmark,
 	getProgress,
 	imageKey,
 	listBookmarks,
@@ -53,6 +54,7 @@ import {
 } from "../lib/db.ts";
 import { flourish, tick } from "../lib/haptics.ts";
 import { imageUrl } from "../lib/images.ts";
+import { rangeOf } from "../lib/passage-range.ts";
 import {
 	getAccentColors,
 	type ReaderSettings,
@@ -371,6 +373,7 @@ function cardText(blocks: Block[]): string {
 
 export default function Feed() {
 	const params = useParams();
+	const [search] = useSearchParams();
 	const navigate = useNavigate();
 	const { settings, themeColors } = useReaderSettings();
 
@@ -616,6 +619,17 @@ export default function Feed() {
 	);
 	onCleanup(() => clearTimeout(returnDeadline));
 
+	// Opened from Saved, the book shows the saved card without making it your place: that waits until you
+	// read on from it, and the passage's highlight goes when you do.
+	let visiting: string | undefined;
+	const HIGHLIGHT = "saved-passage";
+	function showPassage(card: Element | undefined, passage: string) {
+		const range = card && rangeOf(card, passage);
+		if (range && "highlights" in CSS)
+			CSS.highlights.set(HIGHLIGHT, new Highlight(range));
+	}
+	onCleanup(() => "highlights" in CSS && CSS.highlights.delete(HIGHLIGHT));
+
 	// The place is the card's id, a place in the book, so a relayout can't move it. The cover isn't a place:
 	// scrolling back to it keeps the card you were on.
 	let saveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -632,6 +646,11 @@ export default function Feed() {
 				const meta = bookMeta();
 				const card = currentCard();
 				if (!meta || !card) return;
+				if (visiting !== undefined) {
+					if (card.id === visiting) return;
+					visiting = undefined;
+					if ("highlights" in CSS) CSS.highlights.delete(HIGHLIGHT);
+				}
 				const place = {
 					cardId: card.id,
 					chapterIndex: card.chapterIndex,
@@ -660,17 +679,27 @@ export default function Feed() {
 			() => bookMeta()?.id,
 			async (id) => {
 				if (!id) return;
-				const saved = await getProgress(id);
+				const bookmark = search.saved
+					? await getBookmark(Number(search.saved))
+					: undefined;
+				const visit = bookmark?.bookId === id ? bookmark : undefined;
+				const saved = visit ? undefined : await getProgress(id);
 				if (id !== bookMeta()?.id) return;
-				await openAt(saved?.chapterIndex ?? 0);
+				await openAt(visit?.chapterIndex ?? saved?.chapterIndex ?? 0);
 				if (id !== bookMeta()?.id) return;
-				const index = saved?.cardId
-					? findCardHolding(cards(), saved.cardId)
-					: -1;
-				if (saved?.cardId && index >= 0) {
-					anchor = saved.cardId;
+				const place = visit?.cardId ?? saved?.cardId;
+				const index = place ? findCardHolding(cards(), place) : -1;
+				// Before the position moves, which would otherwise save it as your place.
+				if (visit) visiting = cards()[index]?.id ?? "";
+				if (place && index >= 0) {
+					anchor = place;
 					scrollToCard(index, true);
 					setPosition(index + coverPages());
+				}
+				if (visit?.passage) {
+					const page =
+						container()?.querySelectorAll(".snap-page")[index + coverPages()];
+					showPassage(page, visit.textSnippet);
 				}
 				readerLanded();
 			},

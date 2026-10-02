@@ -4,9 +4,11 @@ import BookCover from "../components/BookCover";
 import HighlightCard from "../components/HighlightCard";
 import { coverUrl } from "../lib/covers";
 import { db, getBookMeta } from "../lib/db";
+import { openBook } from "../lib/transitions";
 
 interface BookmarkItem {
 	bookId: string;
+	cardId?: string;
 	chapterIndex: number;
 	createdAt: string;
 	id?: number;
@@ -24,6 +26,16 @@ export default function Saved() {
 	const navigate = useNavigate();
 	const [groups, setGroups] = createSignal<BookGroup[]>([]);
 	const [loading, setLoading] = createSignal(true);
+	// A book shows its three latest saves until it's opened out.
+	const [expanded, setExpanded] = createSignal<string[]>([]);
+	const isOpen = (id: string) => expanded().includes(id);
+	const toggle = (id: string) =>
+		setExpanded((ids) =>
+			ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
+		);
+	// A save opens the book at its card, which shows it without making it your reading place (Feed.tsx).
+	const visit = (bm: BookmarkItem) =>
+		openBook(() => navigate(`/book/${bm.bookId}?saved=${bm.id}`), bm.bookId);
 
 	onMount(async () => {
 		try {
@@ -63,13 +75,16 @@ export default function Saved() {
 				<For each={groups()}>
 					{(group) => (
 						<div class="mb-6">
-							{/* biome-ignore lint/a11y/useKeyWithClickEvents: interactive header for navigation */}
-							{/* biome-ignore lint/a11y/noStaticElementInteractions: interactive header for navigation */}
-							<div
-								class="flex items-center gap-3 py-3 px-5 cursor-pointer transition-opacity duration-150 active:opacity-70"
-								onClick={() => navigate(`/saved/${group.bookId}`)}
+							<button
+								class="flex w-full cursor-pointer items-center gap-3 px-5 py-3 text-left transition-opacity duration-150 active:opacity-70"
+								onClick={() => toggle(group.bookId)}
+								type="button"
 							>
-								<BookCover src={group.book.coverImage} class="w-10 h-14" />
+								<BookCover
+									class="w-10 h-14"
+									data-cover={group.bookId}
+									src={group.book.coverImage}
+								/>
 								<div class="flex-1 min-w-0">
 									<div class="text-base font-semibold text-ink">
 										{group.book.title}
@@ -78,22 +93,45 @@ export default function Saved() {
 										{group.bookmarks.length} highlights
 									</div>
 								</div>
-								<div class="text-xl text-ink-soft">›</div>
-							</div>
+								<div
+									class="text-xl text-ink-soft transition-transform duration-200"
+									classList={{ "rotate-90": isOpen(group.bookId) }}
+								>
+									›
+								</div>
+							</button>
 							<div class="px-5">
-								<For each={group.bookmarks.slice(0, 3)}>
+								<For
+									each={
+										isOpen(group.bookId)
+											? group.bookmarks
+											: group.bookmarks.slice(0, 3)
+									}
+								>
 									{(bm) => (
-										<HighlightCard
-											text={bm.textSnippet}
-											meta={new Date(bm.createdAt).toLocaleDateString()}
-										/>
+										<button
+											class="block w-full cursor-pointer text-left transition-opacity duration-150 active:opacity-60"
+											onClick={() => visit(bm)}
+											type="button"
+										>
+											<HighlightCard
+												meta={new Date(bm.createdAt).toLocaleDateString()}
+												text={bm.textSnippet}
+											/>
+										</button>
 									)}
 								</For>
 							</div>
 							<Show when={group.bookmarks.length > 3}>
-								<div class="py-2 px-5 text-sm text-brand-500 font-medium">
-									View all {group.bookmarks.length} highlights →
-								</div>
+								<button
+									class="cursor-pointer px-5 py-2 font-medium text-brand-500 text-sm"
+									onClick={() => toggle(group.bookId)}
+									type="button"
+								>
+									{isOpen(group.bookId)
+										? "Show fewer"
+										: `View all ${group.bookmarks.length} highlights →`}
+								</button>
 							</Show>
 						</div>
 					)}

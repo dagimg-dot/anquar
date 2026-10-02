@@ -178,6 +178,11 @@ textarea,
 	animation: 300ms cubic-bezier(0.2, 0, 0, 1) both vt-in;
 }
 
+/* A passage opened from Saved, marked on its card until you read on (Feed.tsx). */
+::highlight(saved-passage) {
+	background-color: color-mix(in srgb, var(--color-brand-500) 32%, transparent);
+}
+
 /* An app, not a page: nothing shows a scrollbar. */
 * {
 	scrollbar-width: none;
