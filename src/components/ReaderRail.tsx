@@ -192,9 +192,6 @@ export default function ReaderRail(props: ReaderRailProps) {
 				</span>
 			</Item>
 
-			{/* Everything above acts on the passage; Settings acts on the app. */}
-			<span class="h-px w-5 bg-current opacity-20" />
-
 			<Item label="Settings" onClick={props.onSettings} order={0}>
 				<span class="rail-glyph flex h-10 w-10 items-center justify-center">
 					<GearSix size={27} />
