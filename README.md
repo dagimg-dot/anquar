@@ -33,7 +33,7 @@ You need [Bun](https://bun.sh).
 
 ```bash
 bun install
-bun run dev      # http://localhost:5173
+bun run dev      # http://localhost:5173 (the app is at /app/)
 ```
 
 | Command | What it does |

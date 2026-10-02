@@ -1,12 +1,13 @@
 # anquar
 
-Guilt-free doomscrolling — a Solid.js PWA that turns books into a TikTok-style vertical scroll feed.
+Guilt-free bookscrolling: a Solid.js PWA that turns books into a vertical feed,
+with its landing page on the same origin.
 
 ## Setup
 
 ```bash
 bun install
-bun run dev      # http://localhost:5173
+bun run dev      # landing at http://localhost:5173, the app at /app/
 ```
 
 The book parser and paginator is **`anquar-core`**, published to npm from its
@@ -51,9 +52,31 @@ search only opens Google in the browser.
 
 **Stack** — Solid.js, Vite, Tailwind v4, `vite-plugin-pwa`.
 
-**Routing** — `src/index.tsx` mounts two routes, both rendering `App`: `/` for
-the tabs (Feed, Library, Saved, Settings, switched by signal rather than URL)
-and `/book/:id` for the reader.
+**One origin, two pages** — Vite builds two pages: the landing page at `/`
+(`index.html`) and the app at `/app/` (`app/index.html`). The manifest, the
+service worker and its precache are scoped to `/app/`, so the landing page is
+never installed or cached as the app. `appRoutes()` in `vite.config.ts` serves
+`/app/...` as the app in dev and preview, as `netlify.toml` does in production.
+
+**Routing** — `src/index.tsx` mounts two routes, both rendering `App`: `/app/`
+for the tabs (Feed, Library, Saved, Settings, switched by signal rather than
+URL) and `/app/book/:id` for the reader. The paths live in `src/lib/routes.ts`;
+they are written out rather than set as the router's `base`, which gives `/app`
+without the slash, outside the manifest's scope.
+
+**Landing** — `index.html` is the page's markup and `src/landing` its scripts
+and styles, with no framework. Its phones are built from the app's own parts:
+the Feed tab's Reading Pulse runs the real `pulseOf`, and the reader pages the
+opening of Moby-Dick with anquar-core in a probe of the reader's type, so the
+cards are the ones the app would cut. Icons are a Phosphor sprite in
+`public/landing/icons.svg`. Its theme toggle writes the app's `theme` key, so
+both pages follow one choice.
+
+**Theme and type** — `src/theme/tokens.css` holds every colour once, as
+`light-dark()` pairs, with `data-theme` forcing one side; the app's Tailwind
+`@theme` and the landing page both read it. `src/theme/fonts.css` self-hosts
+Geist (UI) and Newsreader (reading) from `src/assets/fonts`. The reader's five
+themes are data in `src/lib/reader-themes.ts`, shared with the landing reader.
 
 **Import** — every way in (the Feed tab's +, the Library tab's +, and books
 shared to anquar from other apps) goes through the queue in `src/lib/imports.ts`
@@ -70,8 +93,8 @@ ticks when a book lands, and the Feed and Library tabs load again on it.
 
 **Share target** — the manifest's `share_target` makes anquar a target for
 EPUBs in Android's share sheet. `public/share-target.js`, imported into the
-generated service worker, takes the post, leaves the files in the
-`anquar-shared` cache and redirects to `/?shared`, where `importShared` hands
+generated service worker, takes the post to `/app/share-target`, leaves the files in the
+`anquar-shared` cache and redirects to `/app/?shared`, where `importShared` hands
 them to the queue. An installed app only picks up a change to the share target
 when Chrome rebuilds it, which can take a day; reinstalling is immediate.
 
@@ -172,7 +195,7 @@ Android draws its launch splash from them, so launch, splash and app are one
 surface.
 
 **Splash** — only in the installed app. Android shows its own splash first
-(the maskable icon's mark, centred on the whole screen), so `index.html` paints
+(the maskable icon's mark, centred on the whole screen), so `app/index.html` paints
 the same mark in the same place before the bundle loads; `vite.config.ts`
 writes the mark and sizes into it from `src/brand`. `src/splash.ts` takes that
 frame over: it holds 0.3 s while Android's splash fades (elsewhere the mark
