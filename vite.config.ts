@@ -161,7 +161,12 @@ export default defineConfig({
 			// the page at / never offers the installed app an update.
 			workbox: {
 				globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
-				globIgnores: ["share-target.js", "index.html", "assets/landing-*", "landing/**"],
+				globIgnores: [
+					"share-target.js",
+					"index.html",
+					"assets/landing-*",
+					"landing/**",
+				],
 				importScripts: ["share-target.js"],
 				navigateFallback: "/app/index.html",
 				navigateFallbackAllowlist: [/^\/app\//],
