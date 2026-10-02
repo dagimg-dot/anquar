@@ -68,6 +68,7 @@ import {
 import { readSelection } from "../lib/selection.ts";
 import { useLazyChapters } from "../lib/useLazyChapters.ts";
 import { useReadingTracker } from "../lib/useReadingTracker.ts";
+import { useScreenAwake } from "../lib/useScreenAwake.ts";
 import { useTikTokScroll } from "../lib/useTikTokScroll.ts";
 import { splashReady } from "../splash.ts";
 import BottomSheet from "./BottomSheet.tsx";
@@ -396,6 +397,7 @@ export default function Feed() {
 
 	const [container, setContainer] = createSignal<HTMLDivElement>();
 	useTikTokScroll(container);
+	useScreenAwake(container);
 
 	const bodyStart = createMemo(() => {
 		if (!atStart()) return 0;
