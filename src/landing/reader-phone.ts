@@ -16,6 +16,14 @@ import { MOBY_DICK } from "./sample.ts";
 import { renderShare } from "./share-card.ts";
 
 const RING = 115.6;
+// The reader's floor (MIN_BRIGHTNESS), and how far a slide on the lamp goes to reach it.
+const MIN_LEVEL = 0.3;
+const RANGE_PX = 190;
+// Phosphor's Lamp as BrightnessLamp draws it, its shade filled as far as the page is lit.
+const SHADE =
+	"M69.28 40h117.44a8 8 0 0 1 7.35 4.85l41.15 96A8 8 0 0 1 227.87 152H28.13a8 8 0 0 1-7.35-11.15l41.15-96A8 8 0 0 1 69.28 40Z";
+const lampSVG = () =>
+	`<svg class="ic" viewBox="0 0 256 256" aria-hidden="true" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><path class="lamp-lit" d="${SHADE}" fill="currentColor" fill-opacity="0.56" stroke="none"/><path d="${SHADE}" fill="none"/><path d="M128 152v64M96 216h64M200 152v40" fill="none"/></svg>`;
 const CHAPTERS = [
 	"Loomings",
 	"The Carpet-Bag",
@@ -121,12 +129,18 @@ function phoneBody() {
 			.join("");
 
 	return `<div class="r-scroll" tabindex="0" role="region" aria-label="Moby-Dick, chapter 1, as anquar cards. Scroll to read."></div>
+		<div class="r-dim"></div>
+		<div class="lamp-scrim" hidden></div>
 		<button class="back-chip" type="button" aria-label="Back to the Feed tab">${icon("caret-left-bold")}Library</button>
 		<div class="rail" data-shown="true">
-			${railItem("contents", "Contents", `<span class="ring"><span class="cover">${coverHTML("moby")}</span><svg viewBox="0 0 42 42" aria-hidden="true"><circle cx="21" cy="21" r="18.4" fill="none" stroke="currentColor" stroke-width="2.7" opacity="0.22"/><circle class="ring-arc" cx="21" cy="21" r="18.4" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-dasharray="${RING}" stroke-dashoffset="${RING}"/></svg></span>`, 4)}
-			${railItem("explain", "Explain", `<span class="rail-glyph">${icon("lightbulb")}</span>`, 3)}
-			${railItem("save", "Save", `<span class="rail-glyph">${icon("bookmark-simple")}</span>`, 2)}
-			${railItem("share", "Share", `<span class="rail-glyph">${icon("export")}</span>`, 1)}
+			${railItem("contents", "Contents", `<span class="ring"><span class="cover">${coverHTML("moby")}</span><svg viewBox="0 0 42 42" aria-hidden="true"><circle cx="21" cy="21" r="18.4" fill="none" stroke="currentColor" stroke-width="2.7" opacity="0.22"/><circle class="ring-arc" cx="21" cy="21" r="18.4" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-dasharray="${RING}" stroke-dashoffset="${RING}"/></svg></span>`, 5)}
+			${railItem("explain", "Explain", `<span class="rail-glyph">${icon("lightbulb")}</span>`, 4)}
+			${railItem("save", "Save", `<span class="rail-glyph">${icon("bookmark-simple")}</span>`, 3)}
+			${railItem("share", "Share", `<span class="rail-glyph">${icon("export")}</span>`, 2)}
+			<div class="lamp-wrap">
+				<div class="rail-item rail-lamp" role="slider" tabindex="0" aria-label="Brightness" aria-valuemin="30" aria-valuemax="100" aria-valuenow="100" style="--i:1"><span class="rail-glyph">${lampSVG()}</span><span class="rail-label">Dim</span></div>
+				<div class="lamp-box" data-open="false" data-pinned="false"><span class="lamp-read">100%</span><div class="lamp-pill"><div class="lamp-fill"></div><span class="lamp-ic">${lampSVG()}</span></div></div>
+			</div>
 			${railItem("settings", "Settings", `<span class="rail-glyph">${icon("gear-six")}</span>`, 0)}
 		</div>
 		${sheet("contents", "Contents", `<ol class="toc">${CHAPTERS.map((title, i) => `<li><span>${title}</span><span>${i + 1}</span></li>`).join("")}</ol>`)}
@@ -318,6 +332,118 @@ export function mountReaderPhone(slot: HTMLElement, controls: HTMLElement) {
 		opener?.focus({ preventScroll: true });
 	}
 
+	// The lamp, as BrightnessLamp works: press it and slide, and the pill grows out of it while the page dims;
+	// a tap leaves the pill open until the page is tapped. The level isn't kept: the app reads the same storage.
+	const lamp = rail.querySelector<HTMLElement>(".rail-lamp") as HTMLElement;
+	const pillBox = rail.querySelector<HTMLElement>(".lamp-box") as HTMLElement;
+	const pill = pillBox.querySelector<HTMLElement>(".lamp-pill") as HTMLElement;
+	const dim = screen.querySelector<HTMLElement>(".r-dim") as HTMLElement;
+	const lampScrim = screen.querySelector<HTMLElement>(
+		".lamp-scrim",
+	) as HTMLElement;
+	let level = 1;
+	let lampTimer = 0;
+	let press: { from: number; y: number } | undefined;
+	let slid = false;
+	let onPill = false;
+
+	function setLevel(value: number) {
+		const before = level;
+		level = Math.min(1, Math.max(MIN_LEVEL, value));
+		if (level !== before && (level === 1 || level === MIN_LEVEL))
+			navigator.vibrate?.(10);
+		const lit = (level - MIN_LEVEL) / (1 - MIN_LEVEL);
+		const percent = `${Math.round(level * 100)}%`;
+		dim.style.opacity = String(1 - level);
+		for (const shade of rail.querySelectorAll(".lamp-lit"))
+			shade.setAttribute("fill-opacity", (0.06 + 0.5 * lit).toFixed(2));
+		(lamp.querySelector(".rail-label") as HTMLElement).textContent =
+			level === 1 ? "Dim" : percent;
+		(pillBox.querySelector(".lamp-read") as HTMLElement).textContent = percent;
+		(pill.querySelector(".lamp-fill") as HTMLElement).style.height =
+			`${level * 100}%`;
+		lamp.setAttribute("aria-valuenow", String(Math.round(level * 100)));
+	}
+	function closePill() {
+		clearTimeout(lampTimer);
+		pillBox.dataset.open = "false";
+		pillBox.dataset.pinned = "false";
+		rail.dataset.dimming = "false";
+		lampScrim.hidden = true;
+	}
+	function closePillIn(ms: number) {
+		clearTimeout(lampTimer);
+		lampTimer = window.setTimeout(closePill, ms);
+	}
+	function showPill(pinned: boolean) {
+		clearTimeout(lampTimer);
+		pillBox.dataset.open = "true";
+		pillBox.dataset.pinned = String(pinned);
+		rail.dataset.dimming = "true";
+		lampScrim.hidden = !pinned;
+		if (pinned) closePillIn(4000);
+	}
+	const togglePill = () =>
+		pillBox.dataset.pinned === "true" ? closePill() : showPill(true);
+	// The phone is drawn 844px tall and zoomed to fit its column, so a slide is measured in the phone's pixels.
+	const phonePx = () => screen.getBoundingClientRect().height / 844;
+	const setAt = (y: number) => {
+		const rect = pill.getBoundingClientRect();
+		setLevel(1 - (y - rect.top) / rect.height);
+	};
+
+	lamp.addEventListener("pointerdown", (e) => {
+		lamp.setPointerCapture(e.pointerId);
+		press = { from: level, y: e.clientY };
+		slid = false;
+	});
+	lamp.addEventListener("pointermove", (e) => {
+		if (!press) return;
+		const up = (press.y - e.clientY) / phonePx();
+		if (!slid && Math.abs(up) < 6) return;
+		if (!slid) {
+			slid = true;
+			showPill(false);
+		}
+		setLevel(press.from + (up / RANGE_PX) * (1 - MIN_LEVEL));
+	});
+	const release = () => {
+		press = undefined;
+		if (!slid) return;
+		closePillIn(650);
+		// The click that may follow a slide isn't a tap.
+		setTimeout(() => {
+			slid = false;
+		});
+	};
+	lamp.addEventListener("pointerup", release);
+	lamp.addEventListener("pointercancel", release);
+	lamp.addEventListener("click", () => {
+		if (!slid) togglePill();
+	});
+	lamp.addEventListener("keydown", (e) => {
+		if (e.key === "Enter" || e.key === " ") togglePill();
+		else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+			setLevel(level + (e.key === "ArrowUp" ? 0.05 : -0.05));
+			showPill(true);
+		} else return;
+		e.preventDefault();
+	});
+	pill.addEventListener("pointerdown", (e) => {
+		pill.setPointerCapture(e.pointerId);
+		clearTimeout(lampTimer);
+		onPill = true;
+		setAt(e.clientY);
+	});
+	pill.addEventListener("pointermove", (e) => {
+		if (onPill) setAt(e.clientY);
+	});
+	pill.addEventListener("pointerup", () => {
+		onPill = false;
+		closePillIn(4000);
+	});
+	lampScrim.addEventListener("click", closePill);
+
 	rail.addEventListener("click", (e) => {
 		const item = (e.target as Element).closest<HTMLElement>("[data-rail]");
 		if (!item) return;
@@ -336,7 +462,10 @@ export function mountReaderPhone(slot: HTMLElement, controls: HTMLElement) {
 			closeSheets();
 	});
 	screen.addEventListener("keydown", (e) => {
-		if (e.key === "Escape") closeSheets();
+		if (e.key === "Escape") {
+			closeSheets();
+			closePill();
+		}
 	});
 	// Library leaves the book as it does in the app: here, back up to the hero's Feed tab.
 	screen.querySelector(".back-chip")?.addEventListener("click", () => {
