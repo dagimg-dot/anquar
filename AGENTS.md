@@ -157,10 +157,12 @@ frames of the same height, so snapping, jumps and keeping your place work as if
 every card were built, and a book of long chapters opens without building
 hundreds of cards.
 
-**Reader chrome** — `ReaderRail` carries contents, explain, save, share and
-settings for the card on screen; each opens a `BottomSheet`. The rail overlays
-the page rather than reserving a gutter, so it drops `pointer-events` whenever
-it is not shown.
+**Reader chrome** — `ReaderRail` carries contents, explain, save, share, the
+lamp and settings for the card on screen; each opens a `BottomSheet` but the
+lamp (`BrightnessLamp`), which dims the page under a dark layer, since the web
+can't set the screen's brightness: press it and slide, or tap it to leave its
+pill open. The rail overlays the page rather than reserving a gutter, so it
+drops `pointer-events` whenever it is not shown.
 
 **Picking text** — the reader's text is never selectable, so Chrome's handles
 and menu never appear; `TextPick` is the reader's own selection. Holding a word

@@ -78,7 +78,6 @@ import { useScreenAwake } from "../lib/useScreenAwake.ts";
 import { useTikTokScroll } from "../lib/useTikTokScroll.ts";
 import { splashReady } from "../splash.ts";
 import BottomSheet from "./BottomSheet.tsx";
-import BrightnessSlider from "./BrightnessSlider.tsx";
 import ContentsSheet from "./ContentsSheet.tsx";
 import CoverCard from "./CoverCard.tsx";
 import ExplainSheet from "./ExplainSheet.tsx";
@@ -961,8 +960,6 @@ export default function Feed() {
 							class="pointer-events-none fixed inset-0 z-[35] bg-black"
 							style={{ opacity: 1 - brightness() }}
 						/>
-
-						<BrightnessSlider rest={settings().railRest} shown={railShown()} />
 
 						<ReaderRail
 							coverUrl={meta().coverUrl}

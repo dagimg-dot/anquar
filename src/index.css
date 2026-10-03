@@ -407,6 +407,53 @@ html {
 	transition-delay: 0ms;
 }
 
+/* While the lamp's pill is out, the rest of the rail steps back. */
+.rail[data-dimming="true"] .rail-item:not(.rail-lamp) {
+	opacity: 0.12;
+	transition-delay: 0ms;
+}
+
+/* The box only scales: fading it would hide the page from the pill's blur until the fade ended, so the pill
+   and its readout fade themselves. */
+.rail-pill-box {
+	pointer-events: none;
+	transform: scale(0.5);
+	transform-origin: right calc(100% - 66px);
+	transition: transform 260ms var(--rail-ease);
+}
+
+.rail-pill-box > * {
+	opacity: 0;
+	transition: opacity 170ms var(--rail-ease);
+}
+
+.rail-pill-box[data-open="true"] {
+	transform: none;
+}
+
+.rail-pill-box[data-open="true"] > * {
+	opacity: 1;
+}
+
+.rail-pill-box[data-pinned="true"] {
+	pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.rail-pill-box {
+		transform: none;
+	}
+}
+
+.rail-pill {
+	background: color-mix(in oklab, var(--rail-halo) 58%, transparent);
+	-webkit-backdrop-filter: blur(14px) saturate(1.3);
+	backdrop-filter: blur(14px) saturate(1.3);
+	box-shadow:
+		0 0 0 1px color-mix(in oklab, currentColor 14%, transparent),
+		0 10px 28px rgb(0 0 0 / 0.22);
+}
+
 .rail-glyph {
 	transition: transform 150ms var(--rail-ease);
 }

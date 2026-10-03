@@ -13,7 +13,7 @@ The name is Amharic: **anquar** (አንኳር), the core of a thing. One card of
 - **A book as a feed.** Each card fills one screen. Paragraphs stay whole where they fit, a long one breaks at a sentence, and a heading stays with what it opens. Change the type size or the margins and you land back on the words you were reading.
 - **Your books, offline.** Import a DRM-free EPUB with the + button, or share one to anquar from any app on Android. Once it's installed, it reads with no connection.
 - **Reading Pulse.** Your daily goal (30 anquars unless you change it) fills the mark one line at a time. Five anquars keep your streak, every seven reading days bank a rest day for one you miss (two at most), and the day ends at 4 a.m. A card counts once it has been on screen long enough to read at 600 words a minute.
-- **The rail.** Contents, Explain, Save, Share and the reader's settings sit one tap from the page, with five reader themes and a brightness slider.
+- **The rail.** Contents, Explain, Save, Share and the reader's settings sit one tap from the page, with five reader themes and a lamp that dims the page.
 - **Explain.** Select a word or a passage and ask Gemini about it, with your own API key.
 - **Share.** A passage goes out as an image framed by the book's cover, with the words as text below.
 - **Saved.** Keep a whole card, or only the lines you selected.

@@ -1,11 +1,12 @@
 import { BookmarkSimple, Export, GearSix, Lightbulb } from "phosphor-solid";
 import type { JSX } from "solid-js";
-import { Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import {
 	getAccentColors,
 	type RailRest,
 	useReaderSettings,
 } from "../lib/reader-settings.tsx";
+import BrightnessLamp from "./BrightnessLamp.tsx";
 
 /** 2π × 18.4, the radius the ring is drawn at. */
 const RING = 115.6;
@@ -52,6 +53,8 @@ export default function ReaderRail(props: ReaderRailProps) {
 	const { settings, themeColors } = useReaderSettings();
 	const accents = () => getAccentColors(settings());
 
+	const [dimming, setDimming] = createSignal(false);
+
 	let saveGlyph: HTMLSpanElement | undefined;
 	let saveHalo: HTMLSpanElement | undefined;
 
@@ -74,6 +77,7 @@ export default function ReaderRail(props: ReaderRailProps) {
 	return (
 		<div
 			class="rail fixed right-3 z-40 flex flex-col items-center gap-4"
+			data-dimming={dimming()}
 			data-shown={props.shown}
 			data-rest={props.rest}
 			style={{
@@ -82,7 +86,7 @@ export default function ReaderRail(props: ReaderRailProps) {
 				"--rail-halo": themeColors().bgColor,
 			}}
 		>
-			<Item label="Contents" onClick={props.onContents} order={4}>
+			<Item label="Contents" onClick={props.onContents} order={5}>
 				<span class="rail-glyph relative block h-[42px] w-[42px]">
 					{/* inset cannot size a replaced element — the img needs its own box. */}
 					<span class="absolute inset-[5.5px] overflow-hidden rounded-full bg-gradient-to-br from-brand-400 to-brand-700">
@@ -124,7 +128,7 @@ export default function ReaderRail(props: ReaderRailProps) {
 				</span>
 			</Item>
 
-			<Item label="Explain" onClick={props.onExplain} order={3}>
+			<Item label="Explain" onClick={props.onExplain} order={4}>
 				<span class="rail-glyph flex h-10 w-10 items-center justify-center">
 					<Lightbulb size={27} />
 				</span>
@@ -136,7 +140,7 @@ export default function ReaderRail(props: ReaderRailProps) {
 					if (!props.saved) flashSave();
 					props.onSave();
 				}}
-				order={2}
+				order={3}
 				style={props.saved ? { color: accents().save } : undefined}
 			>
 				<span
@@ -151,11 +155,13 @@ export default function ReaderRail(props: ReaderRailProps) {
 				</span>
 			</Item>
 
-			<Item label="Share" onClick={props.onShare} order={1}>
+			<Item label="Share" onClick={props.onShare} order={2}>
 				<span class="rail-glyph flex h-10 w-10 items-center justify-center">
 					<Export size={27} />
 				</span>
 			</Item>
+
+			<BrightnessLamp onOpen={setDimming} order={1} />
 
 			<Item label="Settings" onClick={props.onSettings} order={0}>
 				<span class="rail-glyph flex h-10 w-10 items-center justify-center">
