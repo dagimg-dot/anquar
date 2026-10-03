@@ -35,6 +35,15 @@
       #splash[data-entry="build"] > svg { visibility: hidden; }
     </style>
     <title>anquar</title>
+    <script>
+    // Cloudflare Web Analytics, on the live site only, so dev and preview never count.
+    if (location.hostname === "anquar.netlify.app") {
+      const beacon = document.createElement("script");
+      beacon.src = "https://static.cloudflareinsights.com/beacon.min.js";
+      beacon.dataset.cfBeacon = '{"token": "053ea2126087438d8066bd8aa2299192"}';
+      document.head.append(beacon);
+    }
+    </script>
   </head>
   <body>
     <div id="splash"><div></div><svg viewBox="0 0 64 64" aria-hidden="true"><!--mark--></svg></div>

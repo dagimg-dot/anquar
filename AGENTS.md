@@ -47,9 +47,13 @@ small bookkeeping there too: `anquar_last_read_at` (for sessions),
 
 ## Architecture
 
-Entirely client-side: no server, no telemetry, no build-time content. The only
-request that ever leaves the device is an explicit Explain call; a cover
-search only opens Google in the browser.
+Entirely client-side: no server, no build-time content. The only request that
+carries anything read is an explicit Explain call; a cover search only opens
+Google in the browser. Both pages load Cloudflare Web Analytics' beacon (inline
+in `index.html` and `app/index.html`), but only on `anquar.netlify.app`, so dev
+and preview never count. It counts page views and route changes without
+cookies, and a book's route holds only its random id, never its title. The
+landing page's privacy section says this, so keep the two in step.
 
 **Stack** — Solid.js, Vite, Tailwind v4, `vite-plugin-pwa`.
 

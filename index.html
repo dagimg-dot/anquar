@@ -4,7 +4,7 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 		<title>anquar: guilt-free bookscrolling</title>
-		<meta name="description" content="anquar turns your EPUBs into a vertical feed: one screen of a book per swipe, on your phone, offline, with nothing leaving it.">
+		<meta name="description" content="anquar turns your EPUBs into a vertical feed: one screen of a book per swipe, on your phone, offline, with your books never leaving it.">
 		<meta name="theme-color" content="#0B1210">
 		<meta property="og:type" content="website">
 		<meta property="og:title" content="anquar: guilt-free bookscrolling">
@@ -22,6 +22,15 @@
 			} catch {}
 		</script>
 		<script type="module" src="/src/landing/main.ts"></script>
+		<script>
+		// Cloudflare Web Analytics, on the live site only, so dev and preview never count.
+		if (location.hostname === "anquar.netlify.app") {
+			const beacon = document.createElement("script");
+			beacon.src = "https://static.cloudflareinsights.com/beacon.min.js";
+			beacon.dataset.cfBeacon = '{"token": "053ea2126087438d8066bd8aa2299192"}';
+			document.head.append(beacon);
+		}
+		</script>
 	</head>
 	<body>
 		<nav class="nav" aria-label="Main">
@@ -181,7 +190,7 @@
 						<div class="fact" data-reveal>
 							<svg class="ic" aria-hidden="true"><use href="/landing/icons.svg#i-lock-simple" /></svg>
 							<h3>No account, no server</h3>
-							<p>Books, places, saves and streaks live in your browser's storage on this phone. There is nothing to sign up for and nothing tracking you.</p>
+							<p>Books, places, saves and streaks live in your browser's storage on this phone. There is nothing to sign up for, and no cookies.</p>
 						</div>
 						<div class="fact" data-reveal>
 							<svg class="ic" aria-hidden="true"><use href="/landing/icons.svg#i-wifi-slash" /></svg>
@@ -191,7 +200,7 @@
 						<div class="fact" data-reveal>
 							<svg class="ic" aria-hidden="true"><use href="/landing/icons.svg#i-lightbulb" /></svg>
 							<h3>One request, on your tap</h3>
-							<p>Explain is the only thing that leaves the phone, and only when you ask. It goes to Gemini with your own key.</p>
+							<p>Explain is the only thing that sends your words anywhere, and only when you ask. It goes to Gemini with your own key. Beyond that, Cloudflare counts page visits, with no cookies and nothing from your books.</p>
 						</div>
 					</div>
 				</div>

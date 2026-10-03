@@ -21,7 +21,7 @@ The name is Amharic: **anquar** (አንኳር), the core of a thing. One card of
 
 ## Private by design
 
-There's no account, no server and no telemetry. Books, places, saves and reading history live in your browser's storage on your phone. The only request that ever leaves the device is an Explain you ask for, sent to Gemini with your own key; a cover search only opens Google in your browser.
+There's no account and no server. Books, places, saves and reading history live in your browser's storage on your phone. The only request that carries anything you read is an Explain you ask for, sent to Gemini with your own key; a cover search only opens Google in your browser. Page visits are counted with Cloudflare Web Analytics, which sets no cookies and sees only the page's address, never a book.
 
 ## Install
 
