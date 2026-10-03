@@ -265,6 +265,8 @@ kept, each once a day.
 `src/lib/reading.ts` with their tests beside them, in `reading.test.ts`: the
 4 a.m. day, what counts as an anquar, the streak and rest days, the card's
 line and which moment to show. Change a rule there, test first.
+`changelog.test.ts` checks that releases run newest first with valid versions
+and dates.
 
 ## PR / Commit
 
@@ -272,6 +274,8 @@ line and which moment to show. Change a rule there, test first.
 - Use semantic prefixes: `feat:`, `fix:`, `chore:`, `refactor:`.
 - No `Co-authored-by:` or attribution footers.
 - Run `bun run check` before committing.
+- A change a reader would notice adds a note to the newest release in
+  `src/lib/changelog.ts`, or a new release if the last one has shipped.
 - Keep commits atomic — one logical change per commit.
 - **Never commit without explicit user approval.** Wait for confirmation before committing anything.
 

@@ -7,6 +7,7 @@ import SettingsSection, {
 	SettingsRowInfo,
 	SettingsThemeOption,
 } from "../components/SettingsSection";
+import { VERSION } from "../lib/changelog";
 import { db } from "../lib/db";
 import { canInstall, install } from "../lib/install";
 import { RAIL_RESTS, railRest, setRailRest } from "../lib/reader-settings";
@@ -235,7 +236,7 @@ export default function SettingsTab() {
 			</SettingsSection>
 
 			<div class="text-center py-8 px-5 text-xs text-ink-muted">
-				anquar · v0.1.0
+				anquar · v{VERSION}
 			</div>
 		</div>
 	);
