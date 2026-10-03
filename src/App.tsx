@@ -1,5 +1,12 @@
 import { useLocation, useNavigate, useParams } from "@solidjs/router";
-import { createSignal, Match, onMount, Show, Switch } from "solid-js";
+import {
+	createEffect,
+	createSignal,
+	Match,
+	onMount,
+	Show,
+	Switch,
+} from "solid-js";
 import AppHeader from "./components/AppHeader.tsx";
 import AppleToaster from "./components/AppleToaster.tsx";
 import BottomNav from "./components/BottomNav.tsx";
@@ -20,6 +27,11 @@ import SettingsTab from "./pages/SettingsTab.tsx";
 // it was opened from.
 const [activeTab, setActiveTab] = createSignal("feed");
 
+const viewport = document.querySelector<HTMLMetaElement>(
+	'meta[name="viewport"]',
+);
+const zoomable = viewport?.content ?? "";
+
 function App() {
 	const params = useParams();
 	const location = useLocation();
@@ -28,6 +40,16 @@ function App() {
 
 	const isReaderPage = () => isBookPath(location.pathname);
 	const bookId = () => params.id || null;
+
+	// Pinch zoom is for reading: only the reader lets the page scale.
+	createEffect(() => {
+		viewport?.setAttribute(
+			"content",
+			isReaderPage()
+				? zoomable
+				: `${zoomable}, maximum-scale=1, user-scalable=no`,
+		);
+	});
 
 	// A book shared to anquar from another app arrives as a redirect to "/app/?shared", with the files left in
 	// the service worker's cache.
