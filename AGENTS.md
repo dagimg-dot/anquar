@@ -114,6 +114,13 @@ sits at the top of the Feed tab, and Settings has an App section with the same
 button; "Not now" puts the card off for two weeks, but not the Settings row.
 Safari has no such event, so an iPhone never sees either.
 
+**Starter book** — Start with Meditations fetches
+`public/books/meditations.epub`, George Long's translation as Project Gutenberg
+ships it (#15877), outside the precache so nobody else downloads it.
+`shapeStarter` (`src/lib/starter.ts`) rebuilds Gutenberg's size-cut chapters as
+Book I to Book XII without Long's essays, notes, indexes or Gutenberg's pages,
+and the book gets a cover drawn like the one in the onboarding fan.
+
 **Updates** — `src/lib/changelog.ts` lists every release, newest first, as a
 `major.minor.patch` version, a date, a title and plain notes in a reader's
 words; the newest is the app's version, so a release is made by adding one
@@ -284,7 +291,8 @@ kept, each once a day.
 4 a.m. day, what counts as an anquar, the streak and rest days, the card's
 line and which moment to show. Change a rule there, test first.
 `changelog.test.ts` checks that releases run newest first with valid versions
-and dates.
+and dates, and `starter.test.ts` runs the real Meditations file, so a note left
+in or a section of Marcus's taken out fails there.
 
 ## PR / Commit
 
