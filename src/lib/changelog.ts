@@ -20,6 +20,7 @@ export const RELEASES: Release[] = [
 			"Hear a word said aloud from the speaker beside it in Explain.",
 			"Dim the page from the lamp on the rail: press it and slide.",
 			"anquar tells you when an update is ready, and what it brings.",
+			"Someone new gets three pages that end in a first book: theirs, or Meditations.",
 		],
 	},
 	{

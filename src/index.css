@@ -210,6 +210,38 @@ textarea,
 	}
 }
 
+/* Onboarding (Onboarding.tsx): the stage fades out where the feed's other cards pass its top and bottom, the
+   swipe hint nudges upward, and only the page in front takes taps. */
+.onboarding-stage {
+	mask-image: linear-gradient(transparent, #000 8%, #000 90%, transparent);
+}
+
+.onboarding-nudge {
+	animation: onboarding-nudge 1.8s cubic-bezier(0.3, 0, 0.1, 1) infinite;
+}
+
+@keyframes onboarding-nudge {
+	0%,
+	100% {
+		transform: none;
+		opacity: 0.6;
+	}
+	45% {
+		transform: translateY(-7px);
+		opacity: 1;
+	}
+}
+
+.onboarding [data-live] button {
+	pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.onboarding-nudge {
+		animation: none;
+	}
+}
+
 /* A passage opened from Saved, marked on its card until you read on (Feed.tsx). */
 /* The reader's pick (TextPick): the highlight, and a handle at each end, a stem the height of the line with
    a knob above the first word and below the last. The hit box is far bigger than the drawing and takes the

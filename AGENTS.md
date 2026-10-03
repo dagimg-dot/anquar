@@ -35,8 +35,9 @@ shows between taps, `anquar_rail` (one setting for every book), as is the
 reader's brightness, `anquar_brightness`. The Reading Pulse keeps its
 small bookkeeping there too: `anquar_last_read_at` (for sessions),
 `anquar_moments` and `anquar_pulse_stepped` (what has been celebrated today).
-`anquar_install_later` is when the install card was last put off, and
-`anquar_version` the release whose notes were last seen on this phone.
+`anquar_install_later` is when the install card was last put off,
+`anquar_version` the release whose notes were last seen on this phone, and
+`anquar_onboarded` that onboarding has been seen or skipped.
 
 ## Commands
 
@@ -113,6 +114,18 @@ away) and holds it. While it's held and the app isn't installed, `InstallCard`
 sits at the top of the Feed tab, and Settings has an App section with the same
 button; "Not now" puts the card off for two weeks, but not the Settings row.
 Safari has no such event, so an iPhone never sees either.
+
+**Onboarding** — `Onboarding`, loaded lazily by the Feed tab, shows once: when
+the library is empty and `anquar_onboarded` isn't set. A library with books
+sets it without showing, as does arriving through `?shared` or `?continue`
+(`src/lib/onboarding.ts`). Three pages snap like the feed (what anquar is, the
+daily goal, which writes `anquar_goal`, and a first book) over one SVG stage
+scrubbed by the scroll position: the mark opens into a page of text, folds back
+as the goal's meter, and grows into three covers, while a pill down the right
+edge follows the page. The splash lands on the stage's mark
+(`[data-splash-land="onboarding"]`, which `splash.ts` prefers to the header's),
+and finishing folds the books back into the mark and flies it to the header.
+The design is option D of `design/onboarding.html`.
 
 **Starter book** — Start with Meditations fetches
 `public/books/meditations.epub`, George Long's translation as Project Gutenberg

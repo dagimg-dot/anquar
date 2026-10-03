@@ -1,5 +1,5 @@
 import { useNavigate } from "@solidjs/router";
-import { createEffect, createSignal, on, Show } from "solid-js";
+import { createEffect, createSignal, lazy, on, Show } from "solid-js";
 import FinishedList from "../components/FinishedList";
 import InProgressRow from "../components/InProgressRow";
 import InstallCard from "../components/InstallCard";
@@ -9,10 +9,14 @@ import UpdateCard from "../components/UpdateCard";
 import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
 import { libraryVersion } from "../lib/imports";
+import { finishOnboarding, onboarded } from "../lib/onboarding";
 import { bookPath } from "../lib/routes";
 import { openBook } from "../lib/transitions";
 import { updateCard } from "../lib/update";
 import { splashReady } from "../splash";
+
+// Only someone new ever sees it, so it loads only for them.
+const Onboarding = lazy(() => import("../components/Onboarding"));
 
 export default function FeedPage() {
 	const navigate = useNavigate();
@@ -33,13 +37,18 @@ export default function FeedPage() {
 	>([]);
 	const [loading, setLoading] = createSignal(true);
 	const [hasBooks, setHasBooks] = createSignal(false);
+	const [welcoming, setWelcoming] = createSignal(false);
 
 	createEffect(on(libraryVersion, () => void load()));
 
 	async function load() {
 		try {
 			const books = await listBooks();
-			if (books.length === 0) return;
+			if (books.length === 0) {
+				if (!onboarded()) setWelcoming(true);
+				return;
+			}
+			if (!onboarded()) finishOnboarding();
 
 			setHasBooks(true);
 
@@ -90,12 +99,16 @@ export default function FeedPage() {
 			console.error("Failed to load feed:", err);
 		} finally {
 			setLoading(false);
-			splashReady();
+			// Onboarding hands the splash its own mark to land on, and says when it's ready.
+			if (!welcoming()) splashReady();
 		}
 	}
 
 	return (
 		<div class="pb-24" data-splash-rise="children">
+			<Show when={welcoming()}>
+				<Onboarding onDone={() => setWelcoming(false)} />
+			</Show>
 			<Show fallback={<InstallCard />} when={updateCard()}>
 				<UpdateCard />
 			</Show>

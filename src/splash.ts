@@ -211,7 +211,10 @@ function run(el: HTMLElement, boot: Boot) {
 	function leave() {
 		removeEventListener("resize", boot.place);
 		el.style.pointerEvents = "none";
-		const target = document.querySelector<SVGElement>("[data-splash-land]");
+		// Onboarding, when it shows, takes the mark in place of the header.
+		const target =
+			document.querySelector<SVGElement>('[data-splash-land="onboarding"]') ??
+			document.querySelector<SVGElement>("[data-splash-land]");
 		const to = target?.getBoundingClientRect();
 		if (reduce || !target || !to?.width) {
 			el.animate([{ opacity: 1 }, { opacity: 0 }], {
