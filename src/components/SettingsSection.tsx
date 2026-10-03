@@ -22,7 +22,7 @@ export function SettingsRowInfo(props: {
 	children?: JSX.Element;
 }) {
 	return (
-		<div class="flex items-center justify-between mb-2.5">
+		<div class="flex items-center justify-between gap-4 mb-2.5">
 			<div class="min-w-0">
 				<div class="text-[15px] font-medium">{props.label}</div>
 				<Show when={props.desc}>

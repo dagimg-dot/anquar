@@ -82,7 +82,7 @@ export default function LibraryData() {
 	return (
 		<>
 			<SettingsRowInfo
-				desc="Books, places, saves, history and settings. Not your Gemini key."
+				desc="Everything but your Gemini key"
 				label="Export library"
 			>
 				<button
@@ -95,7 +95,7 @@ export default function LibraryData() {
 				</button>
 			</SettingsRowInfo>
 			<SettingsRowInfo
-				desc="Adds an exported library's books and history to this one"
+				desc="Adds an exported library to this one"
 				label="Import library"
 			>
 				<button
@@ -119,7 +119,7 @@ export default function LibraryData() {
 				type="file"
 			/>
 			<SettingsRowInfo
-				desc="Erase every book and all reading history"
+				desc="Erases every book and all history"
 				label="Clear library"
 			>
 				<button class={DANGER} onClick={() => setAsking(true)} type="button">
