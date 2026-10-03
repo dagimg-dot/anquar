@@ -1,4 +1,4 @@
-import { Copy, Lightbulb } from "phosphor-solid";
+import { Copy, Lightbulb, SpeakerHigh } from "phosphor-solid";
 import {
 	createEffect,
 	createMemo,
@@ -21,6 +21,7 @@ import {
 	connect,
 } from "../lib/gemini.ts";
 import { tick } from "../lib/haptics.ts";
+import { canSay, hush, say, saying } from "../lib/speech.ts";
 
 interface ExplainSheetProps {
 	author: string;
@@ -91,7 +92,10 @@ export default function ExplainSheet(props: ExplainSheetProps) {
 	const [asked, setAsked] = createSignal<string | null>(null);
 	const [question, setQuestion] = createSignal<string[]>([]);
 	let controller: AbortController | undefined;
-	onCleanup(() => controller?.abort());
+	onCleanup(() => {
+		controller?.abort();
+		hush();
+	});
 
 	async function ask() {
 		controller?.abort();
@@ -241,18 +245,26 @@ export default function ExplainSheet(props: ExplainSheetProps) {
 				>
 					<Show
 						fallback={
-							<div class="font-read text-[15px] text-ink-soft leading-snug">
-								{question().length
-									? list(question())
-									: selected
-										? "All of your selection"
-										: "This card"}
+							<div class="flex items-start justify-between gap-3">
+								<div class="font-read text-[15px] text-ink-soft leading-snug">
+									{question().length
+										? list(question())
+										: selected
+											? "All of your selection"
+											: "This card"}
+								</div>
+								<Show when={question().length > 0}>
+									<Say text={question().join(", ")} />
+								</Show>
 							</div>
 						}
 						when={single}
 					>
-						<div class="font-medium font-read text-[32px] text-ink leading-[1.1] tracking-[-0.015em]">
-							{words[0]}
+						<div class="flex items-center gap-3">
+							<div class="min-w-0 break-words font-medium font-read text-[32px] text-ink leading-[1.1] tracking-[-0.015em]">
+								{words[0]}
+							</div>
+							<Say text={words[0]} />
 						</div>
 					</Show>
 					<Show when={single || question().length > 0}>
@@ -338,6 +350,30 @@ export default function ExplainSheet(props: ExplainSheetProps) {
 				</div>
 			</Show>
 		</div>
+	);
+}
+
+// A dictionary's speaker, shown only where the phone has a voice of its own to say the word in.
+function Say(props: { text: string }) {
+	const on = () => saying() === props.text;
+	return (
+		<Show when={canSay()}>
+			<button
+				aria-label={`Say “${props.text}”`}
+				class="grid size-[34px] shrink-0 place-items-center rounded-full transition-[background-color,color,transform] duration-200 active:scale-[0.92]"
+				classList={{
+					"bg-surface text-brand-500": !on(),
+					"bg-brand-500 text-canvas": on(),
+				}}
+				onClick={() => {
+					tick();
+					say(props.text);
+				}}
+				type="button"
+			>
+				<SpeakerHigh size={18} weight="fill" />
+			</button>
+		</Show>
 	);
 }
 

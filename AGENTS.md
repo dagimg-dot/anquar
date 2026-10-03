@@ -184,6 +184,9 @@ rest, later taps add or remove one, and Explain asks what those words mean in
 that context, or what all of it says. One word picked is asked about at once,
 with the card as context. `explain.ts` streams the answer from Gemini, a gist
 line and then its detail, and the sheet sets it in Source Serif 4 word by word.
+A speaker beside the asked word says it, as a dictionary's does, in a voice
+that lives on the phone (`speech.ts`); with no such voice it isn't shown, since
+a network voice would send the word away.
 
 **Sharing** — Share sends an image of the passage with the passage as text
 and `— Title, Author` on the line below. `src/lib/share-card.ts` draws the
