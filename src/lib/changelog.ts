@@ -21,6 +21,7 @@ export const RELEASES: Release[] = [
 			"Dim the page from the lamp on the rail: press it and slide.",
 			"anquar tells you when an update is ready, and what it brings.",
 			"Someone new gets three pages that end in a first book: theirs, or Meditations.",
+			"A numbered paragraph keeps its number on the same screen as its words.",
 		],
 	},
 	{
