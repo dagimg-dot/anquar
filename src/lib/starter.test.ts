@@ -59,6 +59,7 @@ const parsed: ParsedBook = {
 			text(
 				"If these words are genuine, Antoninus may have written this first book…",
 			),
+			text("THE FORUM."),
 			heading("II."),
 			text("Begin the morning by saying to thyself…"),
 		]),
@@ -109,7 +110,9 @@ describe("shapeStarter", () => {
 			.map((b) => (b.type === "text" ? b.content : ""));
 		expect(
 			all.some((t) =>
-				/Marcus was born|\[A\] |If these words|Abstinence|Section 1/.test(t),
+				/Marcus was born|\[A\] |If these words|FORUM|Abstinence|Section 1/.test(
+					t,
+				),
 			),
 		).toBe(false);
 	});
@@ -172,6 +175,10 @@ describe("shapeStarter on public/books/meditations.epub", async () => {
 		const notes =
 			/\[[A-Z]\]|^(If these words are genuine|Gataker, whose notes|It was the fashion of the Stoics|Antoninus says)/;
 		expect(paragraphs.filter((p) => notes.test(p))).toEqual([]);
+	});
+
+	it("keeps none of the pictures' captions", () => {
+		expect(paragraphs.filter((p) => !/\p{Ll}/u.test(p))).toEqual([]);
 	});
 
 	it("keeps Marcus where his text runs on past a note", () => {

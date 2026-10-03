@@ -31,7 +31,6 @@ const NOTES_RUNNING_ON = [
 	"Antoninus says, ",
 	"If these words are genuine",
 	'"Si quaeras Helicen',
-	"THE CAPITOL AND TEMPLE OF JUPITER",
 	'"Reddenda terrae',
 	"We now come to the alternate",
 	"If there is no error in the passage",
@@ -42,8 +41,12 @@ const NOTES_RUNNING_ON = [
 	"Σφαῖρος κυκοτερὴς",
 	"Gataker, whose notes",
 ];
-const isNote = (text: string) =>
+// The edition's pictures are left out, so their captions go too, with the printer's "THE END.": nothing of
+// Marcus's is set in capitals.
+const CAPTION = /^(?=.*\p{Lu}{3})[^\p{Ll}]+$/u;
+const notMarcus = (text: string) =>
 	NOTE.test(text) ||
+	CAPTION.test(text) ||
 	NOTES_RUNNING_ON.some((opening) => text.startsWith(opening));
 
 const unmark = (b: TextBlock): TextBlock => {
@@ -72,7 +75,7 @@ export function shapeStarter(parsed: ParsedBook): ParsedBook {
 	const books: Block[][] = [];
 	for (const b of blocks.slice(start)) {
 		if (b.type === "text") {
-			if (!isNote(b.content)) books.at(-1)?.push(unmark(b));
+			if (!notMarcus(b.content)) books.at(-1)?.push(unmark(b));
 			continue;
 		}
 		if (b.type !== "heading" || b.level === 1) continue;
