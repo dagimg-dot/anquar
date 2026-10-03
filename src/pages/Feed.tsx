@@ -5,11 +5,13 @@ import InProgressRow from "../components/InProgressRow";
 import InstallCard from "../components/InstallCard";
 import NowReading from "../components/NowReading";
 import ReadingPulse from "../components/ReadingPulse";
+import UpdateCard from "../components/UpdateCard";
 import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
 import { libraryVersion } from "../lib/imports";
 import { bookPath } from "../lib/routes";
 import { openBook } from "../lib/transitions";
+import { updateCard } from "../lib/update";
 import { splashReady } from "../splash";
 
 export default function FeedPage() {
@@ -94,7 +96,9 @@ export default function FeedPage() {
 
 	return (
 		<div class="pb-24" data-splash-rise="children">
-			<InstallCard />
+			<Show fallback={<InstallCard />} when={updateCard()}>
+				<UpdateCard />
+			</Show>
 			<Show
 				when={!loading()}
 				fallback={

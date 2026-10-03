@@ -9,6 +9,7 @@ import {
 	startupImage,
 	startupMedia,
 } from "./src/brand/startup.ts";
+import { RELEASES } from "./src/lib/changelog.ts";
 
 function manifestContentType(): Plugin {
 	return {
@@ -60,6 +61,28 @@ function brandHtml(): Plugin {
 	};
 }
 
+// The changelog as a file beside the app, left out of the precache, so a copy of the app still running an
+// older version can read what the waiting one brings (src/lib/update.ts).
+function changelogFile(): Plugin {
+	const json = JSON.stringify(RELEASES);
+	return {
+		name: "changelog-file",
+		configureServer(server) {
+			server.middlewares.use("/app/changelog.json", (_req, res) => {
+				res.setHeader("Content-Type", "application/json");
+				res.end(json);
+			});
+		},
+		generateBundle() {
+			this.emitFile({
+				type: "asset",
+				fileName: "app/changelog.json",
+				source: json,
+			});
+		},
+	};
+}
+
 export default defineConfig({
 	appType: "mpa",
 	build: {
@@ -86,6 +109,7 @@ export default defineConfig({
 		manifestContentType(),
 		appRoutes(),
 		brandHtml(),
+		changelogFile(),
 		VitePWA({
 			registerType: "prompt",
 			injectRegister: false,

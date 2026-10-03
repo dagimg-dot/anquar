@@ -35,7 +35,8 @@ shows between taps, `anquar_rail` (one setting for every book), as is the
 reader's brightness, `anquar_brightness`. The Reading Pulse keeps its
 small bookkeeping there too: `anquar_last_read_at` (for sessions),
 `anquar_moments` and `anquar_pulse_stepped` (what has been celebrated today).
-`anquar_install_later` is when the install card was last put off.
+`anquar_install_later` is when the install card was last put off, and
+`anquar_version` the release whose notes were last seen on this phone.
 
 ## Commands
 
@@ -113,6 +114,23 @@ sits at the top of the Feed tab, and Settings has an App section with the same
 button; "Not now" puts the card off for two weeks, but not the Settings row.
 Safari has no such event, so an iPhone never sees either.
 
+**Updates** — `src/lib/changelog.ts` lists every release, newest first, as a
+`major.minor.patch` version, a date, a title and plain notes in a reader's
+words; the newest is the app's version, so a release is made by adding one
+there, and its tests check the list's order and shape. `vite.config.ts` writes
+it to `/app/changelog.json`, outside the precache. A deploy arrives as a waiting
+service worker (`src/lib/update.ts`, `registerType: "prompt"`), looked for on
+launch and, once an hour at most, when the app comes back on screen. It fetches
+`changelog.json` to see what the waiting version brings, and `UpdateCard` takes
+the install card's place on the Feed tab with that release's title and one
+button, Update, so nothing reloads under a book. After that reload the What's
+new sheet (`ChangelogSheet`) opens once the splash has landed, or a toast says
+it updated when the release had no notes. An update taken by closing the app
+shows the card as "anquar updated" until its notes are opened. The sheet leads
+with the releases not seen before it opened, marked New, and folds the rest
+under Earlier; Settings → App opens it any time. Someone new starts with
+nothing to catch up on.
+
 **Storage** — Dexie over IndexedDB in `src/lib/db.ts`, database `anquar`,
 schema v2. Tables: `books`, `chapters`, `progress`, `bookmarks`,
 `readerSettings`, `reading`, `images`. Image bytes are split into `images`
@@ -123,14 +141,14 @@ because the streak belongs to you, not the book.
 
 **Library file** — Settings → Data exports every table, the covers and the
 pictures as one zip (`src/lib/library-file.ts`, format `anquar-library` v1),
-with the `anquar_*` settings but never the Gemini key, so a library moves to
-another phone or origin without its EPUBs. Import adds to the library instead
-of replacing it: the place read last wins, a day read on both phones counts
-each card once, and saves already there are skipped, so importing a file twice
-changes nothing. A file from a newer format is refused, not guessed at. Clear
-library (`eraseLibrary`) is a true reset of what was read: books, places,
-saves, reading history and the Pulse's keys all go, after a sheet asks; the
-reader defaults, the goal, the theme and the Gemini key stay.
+with the `anquar_*` settings but never the Gemini key or `anquar_version`, so a
+library moves to another phone or origin without its EPUBs. Import adds to the
+library instead of replacing it: the place read last wins, a day read on both
+phones counts each card once, and saves already there are skipped, so importing
+a file twice changes nothing. A file from a newer format is refused, not
+guessed at. Clear library (`eraseLibrary`) is a true reset of what was read:
+books, places, saves, reading history and the Pulse's keys all go, after a
+sheet asks; the reader defaults, the goal, the theme and the Gemini key stay.
 
 **Feed** — `src/components/Feed.tsx`. CSS scroll-snap over cards that
 anquar-core's `paginate` lays out to fill one screen each: whole paragraphs

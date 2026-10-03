@@ -10,6 +10,7 @@ import {
 import AppHeader from "./components/AppHeader.tsx";
 import AppleToaster from "./components/AppleToaster.tsx";
 import BottomNav from "./components/BottomNav.tsx";
+import ChangelogSheet from "./components/ChangelogSheet.tsx";
 import Feed from "./components/Feed.tsx";
 import ImportSheet from "./components/ImportSheet.tsx";
 import { lastOpenedBook } from "./lib/db.ts";
@@ -17,7 +18,6 @@ import { importShared } from "./lib/imports.ts";
 import { ReaderSettingsProvider } from "./lib/reader-settings.tsx";
 import { bookPath, HOME, isBookPath } from "./lib/routes.ts";
 import { switchTab } from "./lib/transitions.ts";
-import PWABadge from "./PWABadge.tsx";
 import FeedPage from "./pages/Feed.tsx";
 import Library from "./pages/Library.tsx";
 import Saved from "./pages/Saved.tsx";
@@ -143,8 +143,8 @@ function App() {
 				/>
 			</Show>
 			<ImportSheet />
+			<ChangelogSheet />
 			<AppleToaster />
-			<PWABadge />
 		</div>
 	);
 }

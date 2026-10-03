@@ -12,6 +12,7 @@ import { db } from "../lib/db";
 import { canInstall, install } from "../lib/install";
 import { RAIL_RESTS, railRest, setRailRest } from "../lib/reader-settings";
 import { readingGoal, setReadingGoal } from "../lib/reading";
+import { openWhatsNew } from "../lib/update";
 import { useTheme } from "../theme/ThemeContext";
 
 const FONT_SIZES = ["XS", "S", "M", "L", "XL"] as const;
@@ -59,9 +60,9 @@ export default function SettingsTab() {
 
 	return (
 		<div class="pb-24">
-			{/* Still there for anyone who said not now to the Feed tab's card. */}
-			<Show when={canInstall()}>
-				<SettingsSection title="App">
+			<SettingsSection title="App">
+				{/* Still there for anyone who said not now to the Feed tab's card. */}
+				<Show when={canInstall()}>
 					<SettingsRowInfo
 						desc="Full screen, offline, and in your share sheet"
 						label="Install anquar"
@@ -74,8 +75,17 @@ export default function SettingsTab() {
 							Install
 						</button>
 					</SettingsRowInfo>
-				</SettingsSection>
-			</Show>
+				</Show>
+				<SettingsRowInfo desc="What each update brought" label="What's new">
+					<button
+						class="min-w-[5.5rem] shrink-0 cursor-pointer rounded-xl border border-border bg-surface px-4 py-2 text-center font-semibold text-sm transition-transform duration-200 active:scale-95"
+						onClick={openWhatsNew}
+						type="button"
+					>
+						Open
+					</button>
+				</SettingsRowInfo>
+			</SettingsSection>
 
 			<SettingsSection title="Appearance">
 				<SettingsRowInfo

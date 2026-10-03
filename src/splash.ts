@@ -45,6 +45,12 @@ export function splashReady() {
 	readyAt ??= performance.now();
 }
 
+let handOver = () => {};
+/** Settles once the splash has handed the screen to the app, or at once where there is none. */
+export const splashGone = new Promise<void>((resolve) => {
+	handOver = resolve;
+});
+
 function bezier([x1, y1, x2, y2]: readonly number[]) {
 	const cx = 3 * x1;
 	const bx = 3 * (x2 - x1) - cx;
@@ -211,7 +217,10 @@ function run(el: HTMLElement, boot: Boot) {
 			el.animate([{ opacity: 1 }, { opacity: 0 }], {
 				duration: T.fade * 1000,
 				fill: "forwards",
-			}).finished.then(() => el.remove());
+			}).finished.then(() => {
+				el.remove();
+				handOver();
+			});
 			return;
 		}
 
@@ -241,6 +250,7 @@ function run(el: HTMLElement, boot: Boot) {
 			if (x < T.land) return requestAnimationFrame(fly);
 			target.style.visibility = "";
 			el.remove();
+			handOver();
 		};
 		requestAnimationFrame(fly);
 	}
@@ -251,3 +261,4 @@ function run(el: HTMLElement, boot: Boot) {
 const el = document.getElementById("splash");
 const boot = window.__anquarSplash;
 if (el && boot) run(el, boot);
+else handOver();

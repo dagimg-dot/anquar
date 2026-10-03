@@ -43,8 +43,8 @@ export class LibraryFileError extends Error {
 export const libraryFileName = (date: Date) =>
 	`anquar-library-${date.toLocaleDateString("en-CA")}.zip`;
 
-// The Gemini key stays on the phone it was typed into.
-const PRIVATE = new Set(["anquar_api_key"]);
+// The Gemini key stays on the phone it was typed into, and which release notes were seen is this phone's.
+const PRIVATE = new Set(["anquar_api_key", "anquar_version"]);
 
 export function pickSettings(
 	entries: Iterable<[string, string]>,
