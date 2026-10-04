@@ -29,16 +29,24 @@ interface ReaderRailProps {
 function Item(props: {
 	children: JSX.Element;
 	label: string;
+	/** The key that does the same from a keyboard, where there is one. */
+	shortcut?: string;
 	onClick: () => void;
 	order: number;
 	style?: JSX.CSSProperties;
 }) {
 	return (
 		<button
+			aria-keyshortcuts={props.shortcut}
 			aria-label={props.label}
 			class="rail-item flex flex-col items-center gap-[3px]"
 			onClick={props.onClick}
 			style={{ ...props.style, "--rail-i": String(props.order) }}
+			title={
+				props.shortcut
+					? `${props.label} (${props.shortcut.toUpperCase()})`
+					: props.label
+			}
 			type="button"
 		>
 			{props.children}
@@ -85,7 +93,7 @@ export default function ReaderRail(props: ReaderRailProps) {
 				"--rail-halo": themeColors().bgColor,
 			}}
 		>
-			<Item label="Contents" onClick={props.onContents} order={5}>
+			<Item label="Contents" onClick={props.onContents} order={5} shortcut="c">
 				<span class="rail-glyph relative block h-[42px] w-[42px]">
 					{/* inset cannot size a replaced element — the img needs its own box. */}
 					<span class="absolute inset-[5.5px] overflow-hidden rounded-full bg-gradient-to-br from-brand-400 to-brand-700">
@@ -127,7 +135,7 @@ export default function ReaderRail(props: ReaderRailProps) {
 				</span>
 			</Item>
 
-			<Item label="Explain" onClick={props.onExplain} order={4}>
+			<Item label="Explain" onClick={props.onExplain} order={4} shortcut="e">
 				<span class="rail-glyph flex h-10 w-10 items-center justify-center">
 					<Lightbulb size={27} />
 				</span>
@@ -140,6 +148,7 @@ export default function ReaderRail(props: ReaderRailProps) {
 					props.onSave();
 				}}
 				order={3}
+				shortcut="s"
 				style={props.saved ? { color: accents().save } : undefined}
 			>
 				<span
@@ -162,7 +171,7 @@ export default function ReaderRail(props: ReaderRailProps) {
 
 			<BrightnessLamp onOpen={setDimming} order={1} />
 
-			<Item label="Settings" onClick={props.onSettings} order={0}>
+			<Item label="Settings" onClick={props.onSettings} order={0} shortcut="t">
 				<span class="rail-glyph flex h-10 w-10 items-center justify-center">
 					<GearSix size={27} />
 				</span>

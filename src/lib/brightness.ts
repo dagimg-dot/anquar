@@ -30,3 +30,10 @@ export function setBrightness(value: number) {
 		// Without storage it holds for this visit only.
 	}
 }
+
+// The steps a key walks the page through, brightest to darkest, and back to full.
+const STEPS = [1, 0.65, MIN_BRIGHTNESS];
+
+export function cycleBrightness() {
+	setBrightness(STEPS.find((step) => step < brightness() - 0.01) ?? 1);
+}

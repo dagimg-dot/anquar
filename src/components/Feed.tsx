@@ -30,7 +30,7 @@ import {
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import toast from "solid-toast";
-import { brightness } from "../lib/brightness.ts";
+import { brightness, cycleBrightness } from "../lib/brightness.ts";
 import {
 	createPager,
 	findCardHolding,
@@ -55,6 +55,7 @@ import {
 import { flourish, tick } from "../lib/haptics.ts";
 import { imageUrl } from "../lib/images.ts";
 import { rangeOf } from "../lib/passage-range.ts";
+import { useReaderKeys } from "../lib/reader-keys.ts";
 import {
 	getAccentColors,
 	type ReaderSettings,
@@ -75,6 +76,7 @@ import { SNIPPET_CHARS } from "../lib/saved-quote.ts";
 import { preparePassage } from "../lib/share-passage.ts";
 import { leaveBook, readerLanded } from "../lib/transitions.ts";
 import { useLazyChapters } from "../lib/useLazyChapters.ts";
+import { useMouseActivity } from "../lib/useMouseActivity.ts";
 import { useReadingTracker } from "../lib/useReadingTracker.ts";
 import { useScreenAwake } from "../lib/useScreenAwake.ts";
 import { useTikTokScroll } from "../lib/useTikTokScroll.ts";
@@ -409,7 +411,7 @@ export default function Feed() {
 	const coverPages = () => (atStart() ? 1 : 0);
 
 	const [container, setContainer] = createSignal<HTMLDivElement>();
-	useTikTokScroll(container);
+	const scroller = useTikTokScroll(container);
 	useScreenAwake(container);
 
 	const bodyStart = createMemo(() => {
@@ -488,7 +490,9 @@ export default function Feed() {
 	const reduceMotion = () =>
 		window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-	const railShown = shown;
+	// A tap shows the controls on a phone; with a mouse they follow it.
+	const mouseNear = useMouseActivity();
+	const railShown = () => shown() || mouseNear();
 
 	const chapterSpans = createMemo(() => {
 		const map = new Map<number, { count: number; first: number }>();
@@ -786,6 +790,7 @@ export default function Feed() {
 	}
 
 	function onPointerUp(e: PointerEvent) {
+		if (e.pointerType === "mouse") return;
 		if ((e.target as HTMLElement | null)?.closest(".rail")) return;
 		const wasSwipe =
 			Math.abs(e.clientX - downX) > 10 || Math.abs(e.clientY - downY) > 10;
@@ -804,6 +809,25 @@ export default function Feed() {
 		lastTap = now;
 		setShown((v) => !v);
 	}
+
+	const toggleSheet = (name: SheetName) =>
+		setSheet((open) => (open === name ? null : name));
+
+	function goBack() {
+		const id = bookMeta()?.id;
+		if (id) leaveBook(() => navigate(HOME), id);
+	}
+
+	useReaderKeys({
+		contents: () => toggleSheet("contents"),
+		dim: cycleBrightness,
+		explain: () => (sheet() === "explain" ? setSheet(null) : explain("")),
+		leave: () => (sheet() ? setSheet(null) : goBack()),
+		next: () => scroller.step(1),
+		previous: () => scroller.step(-1),
+		save: () => void toggleSave(),
+		settings: () => toggleSheet("settings"),
+	});
 
 	function startReading() {
 		const el = container();
@@ -908,7 +932,7 @@ export default function Feed() {
 						<button
 							aria-label="Back to library"
 							class="fixed top-0 left-0 z-40 m-3 flex h-[34px] items-center gap-1.5 rounded-xl px-2.5 font-semibold text-[12.5px] transition-opacity duration-[230ms] active:scale-95"
-							onClick={() => leaveBook(() => navigate(HOME), meta().id)}
+							onClick={goBack}
 							style={{
 								background: `color-mix(in oklab, ${themeColors().textColor} 8%, transparent)`,
 								color: themeColors().textColor,

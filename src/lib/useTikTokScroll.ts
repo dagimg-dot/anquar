@@ -12,6 +12,9 @@ interface Metrics {
 }
 
 export function useTikTokScroll(ref: () => HTMLElement | undefined) {
+	// What a key does: the same one-card step a wheel takes, from wherever the last step is headed.
+	let stepBy: (delta: number) => void = () => {};
+
 	// An effect, not onMount: the scroll container is behind a <Show> that
 	// only resolves once the book has loaded from IndexedDB.
 	createEffect(() => {
@@ -26,6 +29,9 @@ export function useTikTokScroll(ref: () => HTMLElement | undefined) {
 
 		let isAnimating = false;
 		let lockedUntil = 0;
+		// The card a step in progress is going to, so keys pressed in a row add up instead of each starting from
+		// wherever the scroll has got to.
+		let target: number | undefined;
 		let settleTimer: ReturnType<typeof setTimeout> | undefined;
 
 		/**
@@ -68,6 +74,7 @@ export function useTikTokScroll(ref: () => HTMLElement | undefined) {
 			clearTimeout(settleTimer);
 			settleTimer = setTimeout(() => {
 				isAnimating = false;
+				target = undefined;
 				lockedUntil = Date.now() + COOLDOWN_MS;
 			}, SETTLE_MS);
 		}
@@ -80,6 +87,7 @@ export function useTikTokScroll(ref: () => HTMLElement | undefined) {
 			}
 
 			isAnimating = true;
+			target = index;
 			container.scrollTo({
 				top,
 				behavior: reduceMotion.matches ? "auto" : "smooth",
@@ -115,13 +123,25 @@ export function useTikTokScroll(ref: () => HTMLElement | undefined) {
 			}
 		}
 
+		stepBy = (delta) => {
+			const m = measure();
+			if (!m) {
+				return;
+			}
+			const next = (target ?? indexAt(m)) + delta;
+			scrollToPage(m, Math.min(m.count - 1, Math.max(0, next)));
+		};
+
 		container.addEventListener("wheel", onWheel, { passive: false });
 		container.addEventListener("scroll", onScroll, { passive: true });
 
 		onCleanup(() => {
+			stepBy = () => {};
 			clearTimeout(settleTimer);
 			container.removeEventListener("wheel", onWheel);
 			container.removeEventListener("scroll", onScroll);
 		});
 	});
+
+	return { step: (delta: number) => stepBy(delta) };
 }
