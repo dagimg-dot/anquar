@@ -212,9 +212,14 @@ function run(el: HTMLElement, boot: Boot) {
 		removeEventListener("resize", boot.place);
 		el.style.pointerEvents = "none";
 		// Onboarding, when it shows, takes the mark in place of the header.
+		// The header and the sidebar each carry a mark, and only one of them is ever on screen.
+		const onScreen = (selector: string) =>
+			[...document.querySelectorAll<SVGElement>(selector)].find(
+				(el) => el.getBoundingClientRect().width > 0,
+			);
 		const target =
-			document.querySelector<SVGElement>('[data-splash-land="onboarding"]') ??
-			document.querySelector<SVGElement>("[data-splash-land]");
+			onScreen('[data-splash-land="onboarding"]') ??
+			onScreen("[data-splash-land]");
 		const to = target?.getBoundingClientRect();
 		if (reduce || !target || !to?.width) {
 			el.animate([{ opacity: 1 }, { opacity: 0 }], {

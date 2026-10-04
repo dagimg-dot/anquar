@@ -1,30 +1,18 @@
-import { MARK, markLines } from "../brand/mark";
+import Brand from "./Brand";
+import { HeaderSlot } from "./HeaderTools";
 
-export default function AppHeader() {
+// On a phone the header is the brand. From tablet up the sidebar carries the brand and the header names the
+// tab, with that tab's own controls at its right end (HeaderTools).
+export default function AppHeader(props: { title: string }) {
 	return (
-		<header class="glass-mask sticky top-0 z-20 flex items-center justify-between bg-canvas/80 px-5 pt-4 pb-5 backdrop-blur-xl">
-			<span class="flex items-center gap-2 text-[22px] font-extrabold tracking-tight">
-				<svg
-					class="w-[26px] h-[26px] text-brand-500 shrink-0"
-					viewBox="0 0 64 64"
-					fill="none"
-					stroke="currentColor"
-					stroke-width={MARK.stroke}
-					stroke-linecap="round"
-					aria-hidden="true"
-					data-splash-land
-				>
-					{markLines().map((l) => (
-						<line x1={l.x1} y1={l.y} x2={l.x2} y2={l.y} />
-					))}
-				</svg>
-				<span
-					class="bg-gradient-to-br from-ink to-ink-soft bg-clip-text text-transparent"
-					data-splash-word
-				>
-					anquar
-				</span>
-			</span>
+		<header class="glass-mask sticky top-0 z-20 bg-canvas/80 backdrop-blur-xl">
+			<div class="page-column flex items-center justify-between px-5 pt-4 pb-5 tablet:h-[84px] tablet:py-0">
+				<Brand class="tablet:hidden" />
+				<h1 class="hidden font-extrabold text-[28px] tracking-[-0.03em] tablet:block">
+					{props.title}
+				</h1>
+				<HeaderSlot />
+			</div>
 		</header>
 	);
 }

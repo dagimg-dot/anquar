@@ -1,20 +1,15 @@
-import { Bookmark, BookOpen, Books, GearSix, Plus } from "phosphor-solid";
+import { Plus } from "phosphor-solid";
 import { createEffect, createSignal, For, on, onCleanup } from "solid-js";
 import { openAdd } from "../lib/add.ts";
-
-const NAV_ITEMS = [
-	{ label: "Feed", icon: BookOpen },
-	{ label: "Library", icon: Books },
-	{ label: "Saved", icon: Bookmark },
-	{ label: "Settings", icon: GearSix },
-] as const;
+import { TABS, type TabId } from "../lib/tabs.ts";
+import { TAB_ICONS } from "./tab-icons.ts";
 
 // Scrolled this far down a tab, the bar shrinks to the tab you're on.
 const SHRINK_AFTER_PX = 48;
 
 interface BottomNavProps {
-	activeTab: string;
-	setActiveTab: (tab: string) => void;
+	activeTab: TabId;
+	setActiveTab: (tab: TabId) => void;
 	scroller: () => HTMLElement | undefined;
 }
 
@@ -22,11 +17,10 @@ interface BottomNavProps {
 // to the tab you choose, and adding books in a glass circle of its own beside it. Scrolling down a tab shrinks the
 // capsule to that tab alone, giving the screen back; scrolling up, or a tap, opens it again. Nothing here has a
 // view-transition name: a name makes an element a backdrop root, so the blur sees nothing behind it, and
-// during a transition its snapshot shows the blur as a hard rectangle.
+// during a transition its snapshot shows the blur as a hard rectangle. From tablet up the sidebar takes its place.
 export default function BottomNav(props: BottomNavProps) {
 	const [small, setSmall] = createSignal(false);
-	const index = () =>
-		NAV_ITEMS.findIndex((item) => item.label.toLowerCase() === props.activeTab);
+	const index = () => TABS.findIndex((tab) => tab.id === props.activeTab);
 	let lozenge: HTMLSpanElement | undefined;
 
 	createEffect(
@@ -58,7 +52,7 @@ export default function BottomNav(props: BottomNavProps) {
 
 	return (
 		<nav
-			class="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-3.5 pb-[max(14px,env(safe-area-inset-bottom))]"
+			class="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-3.5 pb-[max(14px,env(safe-area-inset-bottom))] tablet:hidden"
 			data-splash-slide
 		>
 			<div class="flex items-end justify-between gap-2.5">
@@ -76,13 +70,14 @@ export default function BottomNav(props: BottomNavProps) {
 						style={{ transform: `translateX(${index() * 100}%)` }}
 					/>
 					<div class="relative grid h-full grid-cols-4">
-						<For each={NAV_ITEMS}>
-							{(item, i) => {
+						<For each={TABS}>
+							{(tab, i) => {
 								const active = () => i() === index();
+								const Icon = TAB_ICONS[tab.id];
 								return (
 									<button
 										aria-current={active() ? "page" : undefined}
-										aria-label={item.label}
+										aria-label={tab.label}
 										class="grid place-items-center rounded-full transition-[opacity,color] duration-200"
 										classList={{
 											"text-brand-500": active(),
@@ -90,10 +85,10 @@ export default function BottomNav(props: BottomNavProps) {
 											"pointer-events-none opacity-0": small() && !active(),
 											"absolute inset-0": small() && active(),
 										}}
-										onClick={() => props.setActiveTab(item.label.toLowerCase())}
+										onClick={() => props.setActiveTab(tab.id)}
 										type="button"
 									>
-										<item.icon aria-hidden="true" size={24} weight="fill" />
+										<Icon aria-hidden="true" size={24} weight="fill" />
 									</button>
 								);
 							}}

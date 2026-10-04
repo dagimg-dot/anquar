@@ -14,10 +14,13 @@ import BottomNav from "./components/BottomNav.tsx";
 import ChangelogSheet from "./components/ChangelogSheet.tsx";
 import Feed from "./components/Feed.tsx";
 import ImportSheet from "./components/ImportSheet.tsx";
+import Sidebar from "./components/Sidebar.tsx";
 import { lastOpenedBook } from "./lib/db.ts";
 import { importShared } from "./lib/imports.ts";
 import { ReaderSettingsProvider } from "./lib/reader-settings.tsx";
 import { bookPath, HOME, isBookPath } from "./lib/routes.ts";
+import { useShellKeys } from "./lib/shell-keys.ts";
+import { type TabId, tabLabel } from "./lib/tabs.ts";
 import { switchTab } from "./lib/transitions.ts";
 import FeedPage from "./pages/Feed.tsx";
 import Library from "./pages/Library.tsx";
@@ -26,7 +29,11 @@ import SettingsTab from "./pages/SettingsTab.tsx";
 
 // Outside App, which the router mounts afresh for the tabs and for a book: back from a book returns to the tab
 // it was opened from.
-const [activeTab, setActiveTab] = createSignal("feed");
+const [activeTab, setActiveTab] = createSignal<TabId>("feed");
+
+// On a wide screen the tabs sit beside a sidebar; the reader has the whole window.
+const SHELL =
+	"tablet:grid tablet:grid-cols-[4.875rem_minmax(0,1fr)] desktop:grid-cols-[14.75rem_minmax(0,1fr)]";
 
 const viewport = document.querySelector<HTMLMetaElement>(
 	'meta[name="viewport"]',
@@ -41,6 +48,10 @@ function App() {
 
 	const isReaderPage = () => isBookPath(location.pathname);
 	const bookId = () => params.id || null;
+
+	const openTab = (tab: TabId) =>
+		tab !== activeTab() && switchTab(() => setActiveTab(tab));
+	useShellKeys(openTab, () => !isReaderPage());
 
 	// Pinch zoom is for reading: only the reader lets the page scale.
 	createEffect(() => {
@@ -95,52 +106,56 @@ function App() {
 				</defs>
 			</svg>
 
-			<main
-				ref={setMain}
-				class="h-dvh"
-				classList={{
-					"overflow-hidden": isReaderPage(),
-					"overflow-y-auto": !isReaderPage(),
-				}}
-			>
-				<Show
-					fallback={
-						<>
-							<AppHeader />
-							{/* What fades when the tab changes; the header and the tab bar stay (lib/transitions.ts). */}
-							<div data-tab-content>
-								<Switch>
-									<Match when={activeTab() === "feed" && !continuing()}>
-										<FeedPage />
-									</Match>
-									<Match when={activeTab() === "library"}>
-										<Library />
-									</Match>
-									<Match when={activeTab() === "saved"}>
-										<Saved />
-									</Match>
-									<Match when={activeTab() === "settings"}>
-										<SettingsTab />
-									</Match>
-								</Switch>
-							</div>
-						</>
-					}
-					when={isReaderPage() && bookId()}
-				>
-					<ReaderSettingsProvider bookId={bookId() as string}>
-						<Feed />
-					</ReaderSettingsProvider>
+			<div classList={{ [SHELL]: !isReaderPage() }}>
+				<Show when={!isReaderPage()}>
+					<Sidebar activeTab={activeTab()} onSelect={openTab} />
 				</Show>
-			</main>
+
+				<main
+					ref={setMain}
+					class="h-dvh"
+					classList={{
+						"overflow-hidden": isReaderPage(),
+						"overflow-y-auto": !isReaderPage(),
+					}}
+				>
+					<Show
+						fallback={
+							<>
+								<AppHeader title={tabLabel(activeTab())} />
+								{/* What fades when the tab changes; the header and the tab bar stay (lib/transitions.ts). */}
+								<div class="page-column" data-tab-content>
+									<Switch>
+										<Match when={activeTab() === "feed" && !continuing()}>
+											<FeedPage />
+										</Match>
+										<Match when={activeTab() === "library"}>
+											<Library />
+										</Match>
+										<Match when={activeTab() === "saved"}>
+											<Saved />
+										</Match>
+										<Match when={activeTab() === "settings"}>
+											<SettingsTab />
+										</Match>
+									</Switch>
+								</div>
+							</>
+						}
+						when={isReaderPage() && bookId()}
+					>
+						<ReaderSettingsProvider bookId={bookId() as string}>
+							<Feed />
+						</ReaderSettingsProvider>
+					</Show>
+				</main>
+			</div>
 
 			<Show when={!isReaderPage()}>
 				<BottomNav
 					activeTab={activeTab()}
 					scroller={main}
-					setActiveTab={(tab) =>
-						tab !== activeTab() && switchTab(() => setActiveTab(tab))
-					}
+					setActiveTab={openTab}
 				/>
 			</Show>
 			<ImportSheet />

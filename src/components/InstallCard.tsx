@@ -1,13 +1,17 @@
 import { Show } from "solid-js";
 import { install, installLater, suggestInstall } from "../lib/install.ts";
-import PromptCard, { PromptAction } from "./PromptCard.tsx";
+import PromptCard, {
+	PromptAction,
+	type PromptPlacement,
+} from "./PromptCard.tsx";
 
-// Opened in Chrome rather than installed: one card at the top of the Feed tab says what installing gives you.
-export default function InstallCard() {
+// Opened in Chrome rather than installed: one card says what installing gives you.
+export default function InstallCard(props: { placement: PromptPlacement }) {
 	return (
 		<Show when={suggestInstall()}>
 			<PromptCard
 				desc="Opens full screen, reads offline, and takes EPUBs from your share sheet."
+				placement={props.placement}
 				title="Install anquar"
 			>
 				<PromptAction label="Install" onClick={() => void install()} />

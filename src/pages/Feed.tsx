@@ -2,17 +2,15 @@ import { useNavigate } from "@solidjs/router";
 import { createEffect, createSignal, lazy, on, Show } from "solid-js";
 import FinishedList from "../components/FinishedList";
 import InProgressRow from "../components/InProgressRow";
-import InstallCard from "../components/InstallCard";
 import NowReading from "../components/NowReading";
+import Prompts from "../components/Prompts";
 import ReadingPulse from "../components/ReadingPulse";
-import UpdateCard from "../components/UpdateCard";
 import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
 import { libraryVersion } from "../lib/imports";
 import { finishOnboarding, onboarded } from "../lib/onboarding";
 import { bookPath } from "../lib/routes";
 import { openBook } from "../lib/transitions";
-import { updateCard } from "../lib/update";
 import { splashReady } from "../splash";
 
 // Only someone new ever sees it, so it loads only for them.
@@ -109,9 +107,7 @@ export default function FeedPage() {
 			<Show when={welcoming()}>
 				<Onboarding onDone={() => setWelcoming(false)} />
 			</Show>
-			<Show fallback={<InstallCard />} when={updateCard()}>
-				<UpdateCard />
-			</Show>
+			<Prompts placement="feed" />
 			<Show
 				when={!loading()}
 				fallback={
