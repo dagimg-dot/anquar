@@ -68,7 +68,7 @@ export default function AddSheet() {
 					<span class="min-w-0">
 						<span class="block font-semibold text-[16px]">Add from files</span>
 						<span class="block text-[13px] opacity-75">
-							EPUBs from your phone, as many as you like
+							As many EPUBs as you like
 						</span>
 					</span>
 				</button>
@@ -121,6 +121,10 @@ export default function AddSheet() {
 						</button>
 					</Show>
 				</div>
+
+				<p class="mt-3 hidden text-center text-[12.5px] text-ink-muted tablet:block">
+					Or drop EPUBs anywhere on the window
+				</p>
 			</div>
 		</BottomSheet>
 	);

@@ -12,10 +12,12 @@ import AppHeader from "./components/AppHeader.tsx";
 import AppleToaster from "./components/AppleToaster.tsx";
 import BottomNav from "./components/BottomNav.tsx";
 import ChangelogSheet from "./components/ChangelogSheet.tsx";
+import DropOverlay from "./components/DropOverlay.tsx";
 import Feed from "./components/Feed.tsx";
 import ImportSheet from "./components/ImportSheet.tsx";
 import Sidebar from "./components/Sidebar.tsx";
 import { lastOpenedBook } from "./lib/db.ts";
+import { useDropBooks } from "./lib/drop-books.ts";
 import { importShared } from "./lib/imports.ts";
 import { ReaderSettingsProvider } from "./lib/reader-settings.tsx";
 import { bookPath, HOME, isBookPath } from "./lib/routes.ts";
@@ -52,6 +54,7 @@ function App() {
 	const openTab = (tab: TabId) =>
 		tab !== activeTab() && switchTab(() => setActiveTab(tab));
 	useShellKeys(openTab, () => !isReaderPage());
+	useDropBooks();
 
 	// Pinch zoom is for reading: only the reader lets the page scale.
 	createEffect(() => {
@@ -161,6 +164,7 @@ function App() {
 			<ImportSheet />
 			<AddSheet />
 			<ChangelogSheet />
+			<DropOverlay />
 			<AppleToaster />
 		</div>
 	);
