@@ -89,13 +89,13 @@ export default function ReadingPulse(props: { onOpen?: () => void }) {
 
 	return (
 		<div class="mb-2">
-			<SectionHeader title="Your Reading Pulse" />
+			<SectionHeader class="desktop:hidden" title="Your Reading Pulse" />
 			<Show when={pulse()}>
 				{(p) => (
 					<>
 						<button
 							aria-label={`Continue reading. ${p().today} of ${goal} anquars today, ${p().streak}-day streak.`}
-							class="mx-5 block w-[calc(100%-2.5rem)] cursor-pointer rounded-2xl border border-border bg-surface px-4 pt-4 pb-3.5 text-left transition-transform duration-200 active:scale-[0.985]"
+							class="mx-5 block w-[calc(100%-2.5rem)] cursor-pointer tablet:mx-0 tablet:w-full rounded-2xl border border-border bg-surface px-4 pt-4 pb-3.5 text-left transition-transform duration-200 active:scale-[0.985]"
 							onClick={() => props.onOpen?.()}
 							type="button"
 						>
@@ -176,7 +176,7 @@ export default function ReadingPulse(props: { onOpen?: () => void }) {
 							</div>
 						</button>
 
-						<div class="mt-3 flex gap-2 px-5">
+						<div class="mt-3 flex gap-2 px-5 tablet:px-0">
 							<StatCard label="min this week" value={p().minutesThisWeek} />
 							<StatCard label="best streak" value={p().best} />
 							<StatCard label="books finished" value={finished()} />

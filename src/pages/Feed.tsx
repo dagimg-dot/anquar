@@ -13,6 +13,16 @@ import { bookPath } from "../lib/routes";
 import { openBook } from "../lib/transitions";
 import { splashReady } from "../splash";
 
+// Where each part of the tab sits. A phone stacks them in this order; a tablet lifts the Pulse under the lead;
+// a desktop sets the Pulse in a column of its own beside the rest, pinned as they scroll.
+const PART = {
+	lead: "order-1 desktop:col-start-1",
+	shelf: "order-2 tablet:order-3 desktop:col-start-1",
+	pulse:
+		"order-3 tablet:order-2 desktop:sticky desktop:top-[6.5rem] desktop:col-start-2 desktop:row-span-3 desktop:row-start-1",
+	finished: "order-4 desktop:col-start-1",
+} as const;
+
 // Only someone new ever sees it, so it loads only for them.
 const Onboarding = lazy(() => import("../components/Onboarding"));
 
@@ -103,7 +113,10 @@ export default function FeedPage() {
 	}
 
 	return (
-		<div class="pb-24" data-splash-rise="children">
+		<div
+			class="flex flex-col pb-24 desktop:grid desktop:grid-cols-[minmax(0,1fr)_21.5rem] desktop:items-start desktop:gap-x-8 desktop:gap-y-9"
+			data-splash-rise="children"
+		>
 			<Show when={welcoming()}>
 				<Onboarding onDone={() => setWelcoming(false)} />
 			</Show>
@@ -143,29 +156,37 @@ export default function FeedPage() {
 					}
 				>
 					<Show when={lastBook()}>
-						<NowReading
-							book={lastBook() as NonNullable<ReturnType<typeof lastBook>>}
-							onClick={(e) => {
-								const book = lastBook();
-								if (book)
-									openBook(
-										() => navigate(bookPath(book.id)),
-										book.id,
-										e.currentTarget,
-									);
-							}}
-						/>
+						<div class={PART.lead}>
+							<NowReading
+								book={lastBook() as NonNullable<ReturnType<typeof lastBook>>}
+								onClick={(e) => {
+									const book = lastBook();
+									if (book)
+										openBook(
+											() => navigate(bookPath(book.id)),
+											book.id,
+											e.currentTarget,
+										);
+								}}
+							/>
+						</div>
 					</Show>
 					<Show when={inProgressBooks().length > 0}>
-						<InProgressRow books={inProgressBooks()} />
+						<div class={PART.shelf}>
+							<InProgressRow books={inProgressBooks()} />
+						</div>
 					</Show>
-					<ReadingPulse
-						onOpen={() => {
-							const book = lastBook();
-							if (book) openBook(() => navigate(bookPath(book.id)), book.id);
-						}}
-					/>
-					<FinishedList />
+					<div class={PART.pulse}>
+						<ReadingPulse
+							onOpen={() => {
+								const book = lastBook();
+								if (book) openBook(() => navigate(bookPath(book.id)), book.id);
+							}}
+						/>
+					</div>
+					<div class={PART.finished}>
+						<FinishedList />
+					</div>
 				</Show>
 			</Show>
 		</div>

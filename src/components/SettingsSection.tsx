@@ -5,9 +5,16 @@ interface SettingsSectionProps {
 	children: JSX.Element;
 }
 
+/** A section's anchor, so the sidebar-side contents can scroll to it. */
+export const sectionId = (title: string) =>
+	`settings-${title.toLowerCase().replace(/\s+/g, "-")}`;
+
 export default function SettingsSection(props: SettingsSectionProps) {
 	return (
-		<div class="px-5 mb-7">
+		<div
+			class="mb-7 scroll-mt-24 px-5 tablet:px-0 desktop:col-start-2"
+			id={sectionId(props.title)}
+		>
 			<div class="text-xs font-semibold text-brand-500 uppercase tracking-widest mb-3">
 				{props.title}
 			</div>

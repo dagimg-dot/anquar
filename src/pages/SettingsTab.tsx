@@ -2,6 +2,7 @@ import { createSignal, For, Show } from "solid-js";
 import GeminiSettings from "../components/GeminiSettings";
 import LibraryData from "../components/LibraryData";
 import ReminderSettings from "../components/ReminderSettings";
+import SettingsNav from "../components/SettingsNav";
 import SettingsSection, {
 	SettingsOption,
 	SettingsOptionGroup,
@@ -60,7 +61,8 @@ export default function SettingsTab() {
 	};
 
 	return (
-		<div class="pb-24">
+		<div class="pb-24 tablet:max-w-[40rem] desktop:grid desktop:max-w-none desktop:grid-cols-[10.5rem_minmax(0,40rem)] desktop:gap-x-14">
+			<SettingsNav />
 			<SettingsSection title="App">
 				{/* Still there for anyone who said not now to the Feed tab's card. */}
 				<Show when={canInstall()}>
@@ -247,7 +249,7 @@ export default function SettingsTab() {
 				<LibraryData />
 			</SettingsSection>
 
-			<div class="text-center py-8 px-5 text-xs text-ink-muted">
+			<div class="text-center py-8 px-5 text-xs text-ink-muted desktop:col-start-2">
 				anquar · v{VERSION}
 			</div>
 		</div>

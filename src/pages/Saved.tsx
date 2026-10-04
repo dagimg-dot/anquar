@@ -1,4 +1,5 @@
 import { useNavigate } from "@solidjs/router";
+import { DotsThree } from "phosphor-solid";
 import { createSignal, For, onMount, Show } from "solid-js";
 import BookCover from "../components/BookCover";
 import HighlightCard from "../components/HighlightCard";
@@ -110,7 +111,7 @@ export default function Saved() {
 					{(group) => (
 						<div class="mb-6">
 							<button
-								class="flex w-full cursor-pointer items-center gap-3 px-5 py-3 text-left transition-opacity duration-150 active:opacity-70"
+								class="flex w-full cursor-pointer items-center gap-3 px-5 py-3 text-left transition-opacity duration-150 active:opacity-70 tablet:px-0"
 								aria-expanded={isOpen(group.bookId)}
 								onClick={() => toggle(group.bookId)}
 								type="button"
@@ -143,24 +144,42 @@ export default function Saved() {
 									"grid-template-rows": isOpen(group.bookId) ? "1fr" : "0fr",
 								}}
 							>
-								<div class="overflow-hidden px-5">
+								{/* Two columns from tablet up, each save a card of its own. */}
+								<div class="overflow-hidden px-5 tablet:columns-2 tablet:gap-4 tablet:px-0">
 									<For each={group.bookmarks}>
 										{(bm) => (
-											<button
-												class="block w-full cursor-pointer text-left transition-opacity duration-150 active:opacity-60"
-												onClick={() => visit(bm)}
-												onContextMenu={(e) => {
-													e.preventDefault();
-													hold(group, bm);
-												}}
-												tabIndex={isOpen(group.bookId) ? 0 : -1}
-												type="button"
-											>
-												<HighlightCard
-													meta={new Date(bm.createdAt).toLocaleDateString()}
-													text={savedQuote(bm.textSnippet, !bm.passage)}
-												/>
-											</button>
+											<div class="group relative tablet:mb-4 tablet:break-inside-avoid">
+												<button
+													class="block w-full cursor-pointer text-left transition-opacity duration-150 active:opacity-60"
+													onClick={() => visit(bm)}
+													onContextMenu={(e) => {
+														e.preventDefault();
+														hold(group, bm);
+													}}
+													tabIndex={isOpen(group.bookId) ? 0 : -1}
+													type="button"
+												>
+													<HighlightCard
+														class="tablet:rounded-2xl tablet:border tablet:border-border tablet:bg-surface tablet:px-5 tablet:py-4 tablet:transition-colors tablet:group-hover:border-ink-muted"
+														meta={new Date(bm.createdAt).toLocaleDateString()}
+														text={savedQuote(bm.textSnippet, !bm.passage)}
+													/>
+												</button>
+												{/* Where a phone holds a save, a mouse reaches for this: Share and Delete. */}
+												<button
+													aria-label="Share or delete this save"
+													class="absolute top-2.5 right-2.5 hidden size-[30px] cursor-pointer place-items-center rounded-lg bg-surface-elevated text-ink-soft opacity-0 transition-opacity hover:text-ink focus-visible:opacity-100 group-hover:opacity-100 tablet:grid"
+													onClick={() => hold(group, bm)}
+													tabIndex={isOpen(group.bookId) ? 0 : -1}
+													type="button"
+												>
+													<DotsThree
+														aria-hidden="true"
+														size={20}
+														weight="bold"
+													/>
+												</button>
+											</div>
 										)}
 									</For>
 								</div>

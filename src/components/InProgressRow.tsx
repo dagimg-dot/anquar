@@ -29,7 +29,7 @@ export default function InProgressRow(props: InProgressRowProps) {
 					{(book) => (
 						<button
 							type="button"
-							class="w-[120px] cursor-pointer bg-transparent border-none p-0 text-left [font:inherit] [color:inherit] active:scale-95 transition-transform duration-300"
+							class="w-[120px] cursor-pointer bg-transparent border-none p-0 text-left [font:inherit] [color:inherit] active:scale-95 hover:-translate-y-1 transition-transform duration-300 tablet:w-[140px]"
 							onClick={(e) =>
 								openBook(
 									() => navigate(bookPath(book.id)),
@@ -42,7 +42,7 @@ export default function InProgressRow(props: InProgressRowProps) {
 								data-cover={book.id}
 								src={book.coverImage}
 								progress={book.progress}
-								class="w-[120px] h-[180px]"
+								class="w-full"
 							/>
 							<div class="text-xs font-semibold text-ink mt-1.5 leading-[1.3] line-clamp-2">
 								{book.title}

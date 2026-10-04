@@ -11,6 +11,8 @@ import BookCover from "../components/BookCover";
 import BookEditor, { type EditableBook } from "../components/BookEditor";
 import CoverGrid from "../components/CoverGrid";
 import FilterChip from "../components/FilterChip";
+import HeaderTools from "../components/HeaderTools";
+import SearchBox from "../components/SearchBox";
 import { openAdd } from "../lib/add";
 import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
@@ -85,29 +87,12 @@ export default function Library() {
 	return (
 		<>
 			<div class="pb-24">
-				<div class="mx-5 mb-4 flex gap-2.5">
-					<div class="relative flex-1">
-						<svg
-							class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-ink-muted"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-							stroke-width="2"
-							aria-hidden="true"
-						>
-							<circle cx="11" cy="11" r="8" />
-							<path d="m21 21-4.35-4.35" />
-						</svg>
-						<input
-							class="w-full rounded-xl bg-surface-elevated border border-border py-3 pr-4 pl-11 text-sm text-ink outline-none placeholder:text-ink-muted transition-colors duration-200 focus:border-brand-500"
-							type="search"
-							placeholder="Search your library…"
-							value={search()}
-							onInput={(e) => setSearch(e.currentTarget.value)}
-						/>
+				<HeaderTools>
+					<div class="mx-5 mb-4 flex gap-2.5 tablet:m-0">
+						<SearchBox onInput={setSearch} value={search()} />
 					</div>
-				</div>
-				<div class="flex gap-2 pb-4 px-5 overflow-x-auto">
+				</HeaderTools>
+				<div class="flex gap-2 pb-4 px-5 overflow-x-auto tablet:flex-wrap tablet:px-0 tablet:pb-6">
 					<For each={FILTERS}>
 						{(f) => (
 							<FilterChip
@@ -124,7 +109,7 @@ export default function Library() {
 							{(book) => (
 								<button
 									type="button"
-									class="block w-full p-0 m-0 border-0 bg-none text-left cursor-pointer font-[inherit] text-[color:inherit] active:scale-95 transition-transform duration-300"
+									class="block w-full p-0 m-0 border-0 bg-none text-left cursor-pointer font-[inherit] text-[color:inherit] active:scale-95 hover:-translate-y-1 transition-transform duration-300"
 									onClick={(e) =>
 										openBook(
 											() => navigate(bookPath(book.id)),
