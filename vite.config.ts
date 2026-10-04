@@ -191,6 +191,7 @@ export default defineConfig({
 					"index.html",
 					"assets/landing-*",
 					"landing/**",
+					"og/**",
 				],
 				importScripts: ["share-target.js", "push.js"],
 				navigateFallback: "/app/index.html",

@@ -30,6 +30,7 @@
 		"build": "tsc -b && vite build",
 		"preview": "vite preview",
 		"icons": "bun scripts/icons.ts",
+		"og": "bun scripts/og.ts",
 		"check": "biome check --write",
 		"format": "biome format --write",
 		"test": "vitest run",

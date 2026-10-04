@@ -286,6 +286,19 @@ into `public/`; never edit those by hand. The icon's ground is the dark canvas
 Android draws its launch splash from them, so launch, splash and app are one
 surface.
 
+**Link previews** — the picture a chat or timeline shows for anquar's address.
+`bun run og` (`scripts/og.ts`, needs chromium and ffmpeg) draws the landing
+hero as a poster, the headline over faint Moby-Dick, from `mark.ts`,
+`tokens.css`, the shipped fonts and the landing's sample text, and writes five
+JPEGs into `public/og/`: `anquar-og` (1200×630, which Facebook, LinkedIn,
+Slack, Discord, iMessage, WhatsApp and Telegram read as `og:image`) and
+`anquar-x` (2:1, `twitter:image`) are named by the tags on both pages; square,
+pin and story are for posting by hand. Each stays under 300 KB, which the
+script checks, since WhatsApp swaps a heavier preview for a thumbnail. `og/**`
+is left out of the precache, so an installed app never downloads them. Never
+edit them by hand; the design and its two rejected directions are in
+`design/og.html`.
+
 **Splash** — only in the installed app. Android shows its own splash first
 (the maskable icon's mark, centred on the whole screen), so `app/index.html` paints
 the same mark in the same place before the bundle loads; `vite.config.ts`
