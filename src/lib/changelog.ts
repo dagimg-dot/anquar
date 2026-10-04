@@ -13,6 +13,15 @@ export interface Release {
 
 export const RELEASES: Release[] = [
 	{
+		version: "0.1.3",
+		date: "2026-10-04",
+		title: "Share a save, or let it go",
+		notes: [
+			"Hold a saved passage to share it as an image or delete it.",
+			"A saved card ends on its last whole sentence instead of mid-word.",
+		],
+	},
+	{
 		version: "0.1.2",
 		date: "2026-10-03",
 		title: "Hear a word, dim the page",

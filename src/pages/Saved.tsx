@@ -2,9 +2,12 @@ import { useNavigate } from "@solidjs/router";
 import { createSignal, For, onMount, Show } from "solid-js";
 import BookCover from "../components/BookCover";
 import HighlightCard from "../components/HighlightCard";
+import PassageSheet, { type HeldPassage } from "../components/PassageSheet";
 import { coverUrl } from "../lib/covers";
 import { db, getBookMeta } from "../lib/db";
+import { tick } from "../lib/haptics";
 import { bookPath } from "../lib/routes";
+import { savedQuote } from "../lib/saved-quote";
 import { openBook } from "../lib/transitions";
 
 interface BookmarkItem {
@@ -14,12 +17,13 @@ interface BookmarkItem {
 	createdAt: string;
 	id?: number;
 	label: string;
+	passage?: boolean;
 	textSnippet: string;
 }
 
 interface BookGroup {
 	bookId: string;
-	book: { coverImage?: string; title: string };
+	book: { author: string; coverImage?: string; title: string };
 	bookmarks: BookmarkItem[];
 }
 
@@ -41,6 +45,31 @@ export default function Saved() {
 			bm.bookId,
 		);
 
+	// Held (or right-clicked), a save offers Share and Delete, as a held book in the Library offers its editor.
+	const [held, setHeld] = createSignal<HeldPassage>();
+	const hold = (group: BookGroup, bm: BookmarkItem) => {
+		if (bm.id === undefined) return;
+		tick();
+		setHeld({
+			book: {
+				author: group.book.author,
+				coverUrl: group.book.coverImage,
+				title: group.book.title,
+			},
+			id: bm.id,
+			quote: savedQuote(bm.textSnippet, !bm.passage),
+		});
+	};
+	const forget = (id: number) =>
+		setGroups((gs) =>
+			gs
+				.map((g) => ({
+					...g,
+					bookmarks: g.bookmarks.filter((b) => b.id !== id),
+				}))
+				.filter((g) => g.bookmarks.length > 0),
+		);
+
 	onMount(async () => {
 		try {
 			const bookmarks = (await db.bookmarks.toArray()) as BookmarkItem[];
@@ -56,6 +85,7 @@ export default function Saved() {
 					result.push({
 						bookId,
 						book: {
+							author: book.author,
 							title: book.title,
 							coverImage: coverUrl(book.id, book.coverImage),
 						},
@@ -95,7 +125,8 @@ export default function Saved() {
 										{group.book.title}
 									</div>
 									<div class="text-xs text-ink-soft mt-0.5">
-										{group.bookmarks.length} highlights
+										{group.bookmarks.length} highlight
+										{group.bookmarks.length === 1 ? "" : "s"}
 									</div>
 								</div>
 								<div
@@ -118,12 +149,16 @@ export default function Saved() {
 											<button
 												class="block w-full cursor-pointer text-left transition-opacity duration-150 active:opacity-60"
 												onClick={() => visit(bm)}
+												onContextMenu={(e) => {
+													e.preventDefault();
+													hold(group, bm);
+												}}
 												tabIndex={isOpen(group.bookId) ? 0 : -1}
 												type="button"
 											>
 												<HighlightCard
 													meta={new Date(bm.createdAt).toLocaleDateString()}
-													text={bm.textSnippet}
+													text={savedQuote(bm.textSnippet, !bm.passage)}
 												/>
 											</button>
 										)}
@@ -139,6 +174,11 @@ export default function Saved() {
 					No highlights yet
 				</div>
 			</Show>
+			<PassageSheet
+				onClose={() => setHeld(undefined)}
+				onDeleted={forget}
+				passage={held()}
+			/>
 		</div>
 	);
 }

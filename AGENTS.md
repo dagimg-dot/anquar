@@ -237,7 +237,11 @@ Share hands the JPEG and the text to the phone's own share sheet, shown only
 where the browser can share files (not Chrome on Linux, not Firefox); Copy
 image puts it on the clipboard as a PNG, made after the tap and handed over as
 a promise, since the clipboard takes no JPEG; Save image downloads it; Copy text
-copies the passage with its book.
+copies the passage with its book. `preparePassage` (`share-passage.ts`) is that
+path for the reader and for Saved, where holding a save opens `PassageSheet`:
+Share, or Delete on a second tap. A whole card is saved as its first 280
+characters, so `savedQuote` ends it on its last whole sentence, in the list and
+when shared.
 
 **Transitions** — screen changes go through `src/lib/transitions.ts`. A
 book's cover grows into the reader and the reader shrinks back into it on the

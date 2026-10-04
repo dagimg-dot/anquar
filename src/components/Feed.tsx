@@ -70,6 +70,7 @@ import {
 	readingGoal,
 } from "../lib/reading.ts";
 import { HOME } from "../lib/routes";
+import { SNIPPET_CHARS } from "../lib/saved-quote.ts";
 import { preparePassage } from "../lib/share-passage.ts";
 import { leaveBook, readerLanded } from "../lib/transitions.ts";
 import { useLazyChapters } from "../lib/useLazyChapters.ts";
@@ -578,7 +579,7 @@ export default function Feed() {
 				),
 				...(passage
 					? { passage: true, textSnippet: passage }
-					: { textSnippet: cardText(card.blocks).slice(0, 280) }),
+					: { textSnippet: cardText(card.blocks).slice(0, SNIPPET_CHARS) }),
 			});
 			toast.success(passage ? "Passage saved" : "Saved to your shelf");
 		}
