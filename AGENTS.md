@@ -73,6 +73,20 @@ URL) and `/app/book/:id` for the reader. The paths live in `src/lib/routes.ts`;
 they are written out rather than set as the router's `base`, which gives `/app`
 without the slash, outside the manifest's scope.
 
+**Wide screens** — under 720px the app is the phone's, unchanged. `tablet:` (720px) and `desktop:` (1080px) are
+Tailwind breakpoints named in `index.css`; `lib/layout.ts` has `isTablet` for code that must choose what to render.
+From tablet the bottom bar gives way to `Sidebar` (an icon rail, opening into labels and the update or install
+prompt from desktop; the tabs come from `lib/tabs.ts`, their icons from `tab-icons.ts`). The header then names the
+tab, and a tab's own controls reach its right end through `HeaderTools` (the Library's search); `page-column`
+centres a tab. From desktop the Feed is two columns, with the Pulse pinned in the second. `BottomSheet` and
+`ImportSheet` take their place from `lib/sheet-placement.ts`: a bottom sheet on a phone, a centred dialog from tablet,
+and for the reader's four sheets (`panel`) a right-hand panel, beside which the page's column slides left from 1280px
+(`data-panel`, `.reader-column`). Keys: `lib/keys.ts` says when a key is the page's, `shell-keys.ts` opens tabs (1–4)
+and the search (/), `reader-keys.ts` pages and drives the rail (its map is tested), and `useMouseActivity` shows the
+rail as a mouse moves, since a mouse's tap does nothing. `drop-books.ts` takes an EPUB dropped anywhere on the
+window into the import queue. Not done: a desktop card holds about twice a phone's words, so what an anquar is
+there is open, and picking text still wants a mouse drag.
+
 **Landing** — `index.html` is the page's markup and `src/landing` its scripts
 and styles, with no framework. Its phones are built from the app's own parts:
 the Feed tab's Reading Pulse runs the real `pulseOf`, and the reader pages the
