@@ -126,3 +126,13 @@ describe("what it says", () => {
 		expect(reminderLine("2026-10-04").title).toBe("anquar");
 	});
 });
+
+describe("the route", () => {
+	it("is the one the function declares", async () => {
+		const { readFileSync } = await import("node:fs");
+		const { REMINDER_PATH } = await import("./reminder-schedule.ts");
+		expect(readFileSync("netlify/functions/reminder.mts", "utf8")).toContain(
+			`path: "${REMINDER_PATH}"`,
+		);
+	});
+});
