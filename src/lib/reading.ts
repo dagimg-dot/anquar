@@ -1,7 +1,7 @@
 import type { Block } from "anquar-core";
 
 // The reading day ends at 4 a.m., so reading in bed after midnight counts for the evening it started.
-const DAY_ENDS_AT = 4;
+export const DAY_ENDS_AT = 4;
 export const STREAK_MIN = 5;
 // Each run of seven reading days banks a rest day, two at most, and a missed day spends one. A rest day
 // holds the streak without adding to it.
