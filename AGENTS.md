@@ -28,14 +28,16 @@ Linking leaves `package.json` and `bun.lock` alone, and a plain `bun install`
 keeps the link; `rm node_modules/anquar-core && bun install` goes back to the
 npm version.
 
-No environment variables and no `.env`. The Gemini key is entered in the app
+No `.env`; the only environment variable is `VAPID_PRIVATE_KEY`, set on Netlify for the reminder function (see
+Reminder). The Gemini key is entered in the app
 (Settings tab) and lives in `localStorage` under `anquar_api_key`, alongside
 `anquar_model`, the daily goal, `anquar_goal`, and how much the reader's rail
 shows between taps, `anquar_rail` (one setting for every book), as is the
 reader's brightness, `anquar_brightness`. The Reading Pulse keeps its
 small bookkeeping there too: `anquar_last_read_at` (for sessions),
 `anquar_moments` and `anquar_pulse_stepped` (what has been celebrated today).
-`anquar_install_later` is when the install card was last put off,
+`anquar_reminder` is the daily reminder's time of day and `anquar_reminder_sync` what the server was last
+told of it. `anquar_install_later` is when the install card was last put off,
 `anquar_version` the release whose notes were last seen on this phone, and
 `anquar_onboarded` that onboarding has been seen or skipped.
 
@@ -49,8 +51,8 @@ small bookkeeping there too: `anquar_last_read_at` (for sessions),
 
 ## Architecture
 
-Entirely client-side: no server, no build-time content. The only request that
-carries anything read is an explicit Explain call; a cover search only opens
+Client-side, with one small server for the daily reminder (see Reminder), and no build-time content. The only
+request that carries anything read is an explicit Explain call; a cover search only opens
 Google in the browser. Both pages load Cloudflare Web Analytics' beacon (inline
 in `index.html` and `app/index.html`), but only on `anquar.netlify.app`, so dev
 and preview never count. It counts page views and route changes without
@@ -308,6 +310,25 @@ a missed day spends, and a rest day holds the streak without adding to it.
 goal per line, and tapping it continues your book. `PulseMoment` is the pill
 the reader drops when the goal closes, a best day is beaten or the streak is
 kept, each once a day.
+
+**Reminder** — Settings → Reading has a Daily reminder switch. Turning it on asks for notifications, subscribes
+to Web Push and sends `/api/reminder` the subscription, the time of day and the phone's time zone
+(`src/lib/reminder.ts`). The server is two Netlify functions in `netlify/functions`, glue over
+`src/server/reminders.ts`: `reminder` keeps or drops a phone's row in Netlify Blobs, and `send-reminders` runs every
+15 minutes and sends what is due with `web-push`, dropping a phone whose push address has expired. A row holds the
+push address, the time, the zone, whether today's goal is closed and the day last reminded, never what was read.
+`syncReminder(closed)` is called wherever the Pulse is worked out (the Feed tab, the reader after each counted
+card) and tells the server the goal is closed, which keeps that day quiet; it only sends when that has changed.
+`dueDay` (`src/lib/reminder-schedule.ts`, tested) decides when: within 90 minutes after the chosen time, once per
+reading day, never on a closed day. The words come from the server and change by the day. `public/push.js`, imported
+into the generated service worker, shows them (not while the app is on screen, which Chrome allows) and a tap opens
+the app. The public VAPID key is in `reminder-schedule.ts`; the private half is `VAPID_PRIVATE_KEY` on Netlify, and
+scheduled functions run only on production deploys. Turning it off drops the subscription, which is what stops it;
+telling the server just tidies up. Only the push services browsers use are accepted as addresses
+(`isPushEndpoint`). An iPhone can be reminded only once anquar is on its Home Screen; `bun run dev` has no
+service worker or functions, so the switch can't turn on there; a built copy needs a stand-in for `/api/reminder`
+(call `handleReminder` and `sendDue` from `src/server/reminders.ts`), or use the deployed site. `public/icons/badge-96x96.png` is the white mark
+Android draws in the status bar; `bun run icons` writes it.
 
 ## Testing
 
