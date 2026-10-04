@@ -259,7 +259,7 @@ function CardView(props: { card: Card; bookId: string; filled: boolean }) {
 		>
 			<Show when={props.filled}>
 				<div
-					class="mx-auto flex min-h-0 w-full max-w-prose flex-1 flex-col overflow-y-auto"
+					class="reader-column mx-auto flex min-h-0 w-full max-w-prose flex-1 flex-col overflow-y-auto"
 					style={{
 						gap: `${BLOCK_GAP_LINES * settings().lineHeight}em`,
 						"justify-content": centred() ? "safe center" : "flex-start",
@@ -865,6 +865,7 @@ export default function Feed() {
 						<div
 							class="snap-container h-dvh overflow-y-auto"
 							data-book={meta().id}
+							data-panel={sheet() !== null}
 							onPointerDown={(e) => {
 								downX = e.clientX;
 								downY = e.clientY;
@@ -972,6 +973,7 @@ export default function Feed() {
 
 						<BottomSheet
 							onClose={() => setSheet(null)}
+							panel
 							open={sheet() === "contents"}
 							title="Contents"
 						>
@@ -989,6 +991,7 @@ export default function Feed() {
 
 						<BottomSheet
 							onClose={() => setSheet(null)}
+							panel
 							open={sheet() === "settings"}
 							title="Themes & Settings"
 						>
@@ -997,6 +1000,7 @@ export default function Feed() {
 
 						<BottomSheet
 							onClose={() => setSheet(null)}
+							panel
 							open={sheet() === "share"}
 							title="Share"
 						>
@@ -1014,6 +1018,7 @@ export default function Feed() {
 
 						<BottomSheet
 							onClose={() => setSheet(null)}
+							panel
 							open={sheet() === "explain"}
 							title="Explain"
 						>

@@ -15,6 +15,13 @@ import {
 	registerPicker,
 } from "../lib/imports";
 import { bookPath } from "../lib/routes";
+import {
+	FRAME,
+	MOVE,
+	opacityOf,
+	placementFor,
+	pose,
+} from "../lib/sheet-placement";
 import { openBook } from "../lib/transitions";
 import { useCloseOnBack } from "../lib/useCloseOnBack";
 import { useSheetDrag } from "../lib/useSheetDrag";
@@ -222,7 +229,12 @@ export default function ImportSheet() {
 	);
 	// Pulled down it closes like any sheet, except while a book is still being read: then it only gives.
 	const [panel, setPanel] = createSignal<HTMLDivElement>();
-	const drag = useSheetDrag(panel, closeImports, () => !working());
+	const placement = () => placementFor(false);
+	const drag = useSheetDrag(
+		() => (placement() === "sheet" ? panel() : undefined),
+		closeImports,
+		() => !working(),
+	);
 
 	const title = () => {
 		const one = single();
@@ -287,20 +299,23 @@ export default function ImportSheet() {
 				aria-hidden={!importsOpen()}
 				aria-label={title()}
 				aria-modal="true"
-				class="fixed inset-x-0 bottom-0 z-[71] mx-auto max-w-lg rounded-t-[1.5rem] border-border border-t bg-surface px-5 pt-2.5 after:absolute after:inset-x-0 after:top-full after:h-24 after:bg-surface"
+				class={`fixed z-[71] border-border border-t bg-surface px-5 pt-2.5 ${FRAME[placement()]}`}
+				classList={{ "pointer-events-none": !importsOpen() }}
 				ref={setPanel}
 				role="dialog"
 				style={{
-					transform: importsOpen()
-						? `translateY(${drag.offset()}px)`
-						: "translateY(105%)",
-					transition: drag.transition(
-						"transform 560ms cubic-bezier(0.16, 1, 0.3, 1)",
-					),
+					opacity: opacityOf(placement(), importsOpen()),
+					transform: pose(placement(), importsOpen(), drag.offset()),
+					transition:
+						placement() === "sheet"
+							? drag.transition("transform 560ms cubic-bezier(0.16, 1, 0.3, 1)")
+							: MOVE.dialog,
 					"padding-bottom": "max(1.5rem, env(safe-area-inset-bottom))",
 				}}
 			>
-				<div class="mx-auto mb-3 h-[5px] w-9 rounded-full bg-ink-muted/50" />
+				<Show when={placement() === "sheet"}>
+					<div class="mx-auto mb-3 h-[5px] w-9 rounded-full bg-ink-muted/50" />
+				</Show>
 				<div class="mb-4 flex items-center justify-between gap-3">
 					<h2 class="font-bold text-base text-ink">{title()}</h2>
 					<button

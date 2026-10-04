@@ -405,6 +405,19 @@ html {
 	--rail-halo: transparent;
 }
 
+/* A panel open at the right takes the room beside the page. Where there is room for both, the column of text
+   slides left to stay clear of it, by half the panel and its gap (BottomSheet's panel placement); narrower,
+   the panel covers part of the page. Only the paint moves, so the book isn't laid out again. */
+.reader-column {
+	transition: translate 380ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (min-width: 80rem) {
+	[data-panel="true"] .reader-column {
+		translate: -14rem 0;
+	}
+}
+
 .rail-glyph svg {
 	filter: drop-shadow(0 0 3px var(--rail-halo))
 		drop-shadow(0 0 7px var(--rail-halo));

@@ -76,12 +76,11 @@ export default function ReaderRail(props: ReaderRailProps) {
 
 	return (
 		<div
-			class="rail fixed right-3 z-40 flex flex-col items-center gap-4"
+			class="rail fixed right-3 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-40 flex flex-col items-center gap-4 tablet:top-1/2 tablet:right-6 tablet:bottom-auto tablet:-translate-y-1/2"
 			data-dimming={dimming()}
 			data-shown={props.shown}
 			data-rest={props.rest}
 			style={{
-				bottom: "calc(env(safe-area-inset-bottom) + 5.5rem)",
 				color: themeColors().textColor,
 				"--rail-halo": themeColors().bgColor,
 			}}
