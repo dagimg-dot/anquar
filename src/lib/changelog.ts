@@ -13,6 +13,15 @@ export interface Release {
 
 export const RELEASES: Release[] = [
 	{
+		version: "0.1.4",
+		date: "2026-10-04",
+		title: "Find a book, then add it",
+		notes: [
+			"The + now offers your files, Meditations, and a way to find a book.",
+			"Back from downloading one, the sheet comes up pointing at your Downloads.",
+		],
+	},
+	{
 		version: "0.1.3",
 		date: "2026-10-04",
 		title: "Share a save, or let it go",

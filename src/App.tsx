@@ -7,6 +7,7 @@ import {
 	Show,
 	Switch,
 } from "solid-js";
+import AddSheet from "./components/AddSheet.tsx";
 import AppHeader from "./components/AppHeader.tsx";
 import AppleToaster from "./components/AppleToaster.tsx";
 import BottomNav from "./components/BottomNav.tsx";
@@ -143,6 +144,7 @@ function App() {
 				/>
 			</Show>
 			<ImportSheet />
+			<AddSheet />
 			<ChangelogSheet />
 			<AppleToaster />
 		</div>

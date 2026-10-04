@@ -88,7 +88,15 @@ share card) from `src/assets/fonts`; `pageStyle` sets the reader's cards and
 in. The reader's five
 themes are data in `src/lib/reader-themes.ts`, shared with the landing reader.
 
-**Import** — every way in (the Feed tab's +, the Library tab's +, and books
+**Add** — the + on the nav bar and the Library's empty state open `AddSheet`
+(`src/lib/add.ts`): Add from files, which closes the sheet and opens the
+picker; Find a book, a plain button to the author's Telegram channel
+(`FIND_URL`), which posts where to get EPUBs and is opened outside the app; and
+Start with Meditations while it isn't in the library. Back from the channel
+after 10 seconds to an hour, `visibilitychange` raises the sheet with a line
+pointing at Downloads. The app names no site itself.
+
+**Import** — every way in (the Add sheet, and books
 shared to anquar from other apps) goes through the queue in `src/lib/imports.ts`
 and the sheet in `ImportSheet`. Books import one at a time, each in its own
 `src/workers/epub.worker.ts`, which `parseEpub` always shuts down afterwards. The

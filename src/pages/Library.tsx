@@ -11,10 +11,11 @@ import BookCover from "../components/BookCover";
 import BookEditor, { type EditableBook } from "../components/BookEditor";
 import CoverGrid from "../components/CoverGrid";
 import FilterChip from "../components/FilterChip";
+import { openAdd } from "../lib/add";
 import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
 import { tick } from "../lib/haptics";
-import { libraryVersion, pickBooks } from "../lib/imports";
+import { libraryVersion } from "../lib/imports";
 import { bookPath } from "../lib/routes";
 import { openBook } from "../lib/transitions";
 
@@ -165,7 +166,7 @@ export default function Library() {
 						</p>
 						<button
 							class="h-12 cursor-pointer rounded-2xl bg-brand-500 px-7 font-semibold text-[15px] text-canvas transition-transform active:scale-[0.98]"
-							onClick={pickBooks}
+							onClick={openAdd}
 							type="button"
 						>
 							Add your first book

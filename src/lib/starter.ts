@@ -1,6 +1,6 @@
 import type { Block, HeadingBlock, ParsedBook, TextBlock } from "anquar-core";
 import { BOOKS } from "../landing/sample.ts";
-import { saveBook } from "./db.ts";
+import { findBook, saveBook } from "./db.ts";
 import { parseEpub } from "./epub.ts";
 import { libraryChanged } from "./imports.ts";
 
@@ -142,6 +142,14 @@ async function drawCover(): Promise<Uint8Array | null> {
 		canvas.toBlob(done, "image/jpeg", 0.9),
 	);
 	return blob ? new Uint8Array(await blob.arrayBuffer()) : null;
+}
+
+/** Whether Meditations is in the library already, so it isn't offered twice. */
+export async function hasStarter(): Promise<boolean> {
+	return (
+		(await findBook({ title: "Meditations", author: "Marcus Aurelius" })) !==
+		undefined
+	);
 }
 
 /** Adds Meditations to the library and gives its id. */

@@ -1,6 +1,6 @@
 import { Bookmark, BookOpen, Books, GearSix, Plus } from "phosphor-solid";
 import { createEffect, createSignal, For, on, onCleanup } from "solid-js";
-import { pickBooks } from "../lib/imports.ts";
+import { openAdd } from "../lib/add.ts";
 
 const NAV_ITEMS = [
 	{ label: "Feed", icon: BookOpen },
@@ -103,7 +103,7 @@ export default function BottomNav(props: BottomNavProps) {
 				<button
 					aria-label="Add books"
 					class="liquid-glass glass-bar pointer-events-auto grid size-[60px] shrink-0 place-items-center rounded-full text-ink transition-transform active:scale-90"
-					onClick={pickBooks}
+					onClick={openAdd}
 					type="button"
 				>
 					<Plus aria-hidden="true" size={24} weight="bold" />
