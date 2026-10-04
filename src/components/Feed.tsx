@@ -70,7 +70,7 @@ import {
 	readingGoal,
 } from "../lib/reading.ts";
 import { HOME } from "../lib/routes";
-import { shareCard } from "../lib/share-card.ts";
+import { preparePassage } from "../lib/share-passage.ts";
 import { leaveBook, readerLanded } from "../lib/transitions.ts";
 import { useLazyChapters } from "../lib/useLazyChapters.ts";
 import { useReadingTracker } from "../lib/useReadingTracker.ts";
@@ -756,50 +756,17 @@ export default function Feed() {
 		if (i >= 0) scrollToCard(i, how === "opened");
 	}
 
-	// A passage leaves as an image of it (lib/share-card.ts) with the passage as text, the book on the line
-	// below, so a chat that shows only words still gets the whole quote. The Share sheet shows the image first
-	// and offers the phone's own share sheet, the clipboard and a download.
 	async function share(picked: string) {
 		const meta = bookMeta();
 		const card = currentCard();
 		if (!meta || !card) return;
-
-		const passage = (picked || cardText(card.blocks)).trim();
-		const text = `“${passage}”\n— ${meta.title}, ${meta.author}`;
-		const name =
-			meta.title.replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "") ||
-			"passage";
-		// Drawing the image takes a moment on a phone; anything slower than a blink says so until it's done.
-		let making: string | undefined;
-		const slow = setTimeout(() => {
-			making = toast.loading("Generating image…");
-		}, 200);
-		const image = await shareCard({
-			author: meta.author,
-			coverUrl: meta.coverUrl,
-			text: passage,
-			title: meta.title,
-		})
-			.catch(() => undefined)
-			.finally(() => {
-				clearTimeout(slow);
-				if (making) toast.dismiss(making);
-			});
-		if (image) {
-			setSharing({ image, name, text });
-			setSheet("share");
-			return;
-		}
-		if (navigator.share) {
-			await navigator.share({ text }).catch(() => {});
-			return;
-		}
-		try {
-			await navigator.clipboard.writeText(text);
-			toast.success("Passage copied");
-		} catch {
-			toast.error("Could not share this passage");
-		}
+		const ready = await preparePassage(
+			meta,
+			(picked || cardText(card.blocks)).trim(),
+		);
+		if (!ready) return;
+		setSharing(ready);
+		setSheet("share");
 	}
 
 	function explain(picked: string) {
