@@ -7,6 +7,7 @@ import {
 	pulseOf,
 	readingGoal,
 } from "../lib/reading";
+import { syncReminder } from "../lib/reminder";
 import MarkMeter from "./MarkMeter";
 import SectionHeader from "./SectionHeader";
 import StatCard from "./StatCard";
@@ -69,6 +70,7 @@ export default function ReadingPulse(props: { onOpen?: () => void }) {
 		const progress = await db.progress.toArray();
 		setHour(new Date().getHours());
 		setPulse(p);
+		void syncReminder(p.today >= goal);
 		setFinished(progress.filter((r) => r.progressPercent >= 100).length);
 		if (p.today >= goal && localStorage.getItem(STEPPED_KEY) !== today) {
 			localStorage.setItem(STEPPED_KEY, today);

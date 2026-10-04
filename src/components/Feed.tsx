@@ -69,6 +69,7 @@ import {
 	pulseOf,
 	readingGoal,
 } from "../lib/reading.ts";
+import { syncReminder } from "../lib/reminder.ts";
 import { HOME } from "../lib/routes";
 import { SNIPPET_CHARS } from "../lib/saved-quote.ts";
 import { preparePassage } from "../lib/share-passage.ts";
@@ -462,13 +463,11 @@ export default function Feed() {
 
 	const [moment, setMoment] = createSignal<Moment>();
 	async function celebrate() {
-		if (moment()) return;
 		const today = dayKey();
-		const next = momentFor(
-			pulseOf(await listReading(), today),
-			readingGoal(),
-			momentsShown(today),
-		);
+		const pulse = pulseOf(await listReading(), today);
+		void syncReminder(pulse.today >= readingGoal());
+		if (moment()) return;
+		const next = momentFor(pulse, readingGoal(), momentsShown(today));
 		if (!next) return;
 		markMomentShown(today, next.kind);
 		setMoment(next);

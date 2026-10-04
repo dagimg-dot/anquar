@@ -13,6 +13,15 @@ export interface Release {
 
 export const RELEASES: Release[] = [
 	{
+		version: "0.1.5",
+		date: "2026-10-04",
+		title: "A nudge to read",
+		notes: [
+			"Turn on a daily reminder in Settings, and anquar nudges you at the time you pick.",
+			"It stays quiet on a day you've already closed your goal.",
+		],
+	},
+	{
 		version: "0.1.4",
 		date: "2026-10-04",
 		title: "Find a book, then add it",

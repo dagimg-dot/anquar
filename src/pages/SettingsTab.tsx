@@ -1,6 +1,7 @@
 import { createSignal, For, Show } from "solid-js";
 import GeminiSettings from "../components/GeminiSettings";
 import LibraryData from "../components/LibraryData";
+import ReminderSettings from "../components/ReminderSettings";
 import SettingsSection, {
 	SettingsOption,
 	SettingsOptionGroup,
@@ -237,6 +238,7 @@ export default function SettingsTab() {
 						)}
 					</For>
 				</SettingsOptionGroup>
+				<ReminderSettings />
 			</SettingsSection>
 
 			<GeminiSettings />
