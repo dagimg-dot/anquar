@@ -14,12 +14,13 @@ import { openBook } from "../lib/transitions";
 import { splashReady } from "../splash";
 
 // Where each part of the tab sits. A phone stacks them in this order; a tablet lifts the Pulse under the lead;
-// a desktop sets the Pulse in a column of its own beside the rest, pinned as they scroll.
+// a desktop sets the Pulse in a column of its own beside the rest, pinned as they scroll. It stops at top-24, the
+// header (h-21 in AppHeader) plus the pt-3 the page starts below it, so it is level with the lead until it sticks.
 const PART = {
 	lead: "order-1 desktop:col-start-1",
 	shelf: "order-2 tablet:order-3 desktop:col-start-1",
 	pulse:
-		"order-3 tablet:order-2 desktop:sticky desktop:top-[6.5rem] desktop:col-start-2 desktop:row-span-3 desktop:row-start-1",
+		"order-3 tablet:order-2 desktop:sticky desktop:top-24 desktop:col-start-2 desktop:row-span-3 desktop:row-start-1",
 	finished: "order-4 desktop:col-start-1",
 } as const;
 
@@ -114,7 +115,7 @@ export default function FeedPage() {
 
 	return (
 		<div
-			class="flex flex-col pb-24 desktop:grid desktop:grid-cols-[minmax(0,1fr)_21.5rem] desktop:items-start desktop:gap-x-8 desktop:gap-y-9"
+			class="flex flex-col pb-24 desktop:grid desktop:pt-3 desktop:grid-cols-[minmax(0,1fr)_21.5rem] desktop:items-start desktop:gap-x-8 desktop:gap-y-9"
 			data-splash-rise="children"
 		>
 			<Show when={welcoming()}>

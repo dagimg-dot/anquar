@@ -6,7 +6,7 @@ import { HeaderSlot } from "./HeaderTools";
 export default function AppHeader(props: { title: string }) {
 	return (
 		<header class="glass-mask sticky top-0 z-20 bg-canvas/80 backdrop-blur-xl">
-			<div class="page-column flex items-center justify-between px-5 pt-4 pb-5 tablet:h-[84px] tablet:py-0">
+			<div class="page-column flex items-center justify-between px-5 pt-4 pb-5 tablet:h-21 tablet:py-0">
 				<Brand class="tablet:hidden" />
 				<h1 class="hidden font-extrabold text-[28px] tracking-[-0.03em] tablet:block">
 					{props.title}

@@ -61,7 +61,7 @@ export default function SettingsTab() {
 	};
 
 	return (
-		<div class="pb-24 tablet:max-w-[40rem] desktop:grid desktop:max-w-none desktop:grid-cols-[10.5rem_minmax(0,40rem)] desktop:gap-x-14">
+		<div class="pb-24 tablet:max-w-[40rem] desktop:grid desktop:pt-3 desktop:max-w-none desktop:grid-cols-[10.5rem_minmax(0,40rem)] desktop:gap-x-14">
 			<SettingsNav />
 			<SettingsSection title="App">
 				{/* Still there for anyone who said not now to the Feed tab's card. */}
