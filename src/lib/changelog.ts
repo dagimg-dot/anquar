@@ -13,6 +13,16 @@ export interface Release {
 
 export const RELEASES: Release[] = [
 	{
+		version: "0.1.6",
+		date: "2026-10-04",
+		title: "anquar on a big screen",
+		notes: [
+			"On a laptop or desktop, the tabs move to a sidebar and each one lays out to fit the window.",
+			"In a book, move with the arrow keys, J and K or Space, and open Contents, Explain and Settings with C, E and T.",
+			"Drop an EPUB anywhere on the window to add it.",
+		],
+	},
+	{
 		version: "0.1.5",
 		date: "2026-10-04",
 		title: "A nudge to read",
