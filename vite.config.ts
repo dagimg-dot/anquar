@@ -187,11 +187,12 @@ export default defineConfig({
 				globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
 				globIgnores: [
 					"share-target.js",
+					"push.js",
 					"index.html",
 					"assets/landing-*",
 					"landing/**",
 				],
-				importScripts: ["share-target.js"],
+				importScripts: ["share-target.js", "push.js"],
 				navigateFallback: "/app/index.html",
 				navigateFallbackAllowlist: [/^\/app\//],
 				cleanupOutdatedCaches: true,

@@ -39,6 +39,11 @@ function favicon(): string {
 	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" rx="3.2" fill="${GROUND}"/><g fill="${INK}">${bars}</g></svg>`;
 }
 
+// Android draws a notification's small icon from its shape alone, so the badge is the mark in white on nothing.
+function badge(): string {
+	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><g transform="translate(6.4 6.4) scale(0.8)" color="#fff">${markSvgLines()}</g></svg>`;
+}
+
 function png(svg: string, file: string, size: number): string {
 	const out = join(PUBLIC, file);
 	execFileSync("rsvg-convert", ["-w", `${size}`, "-h", `${size}`, "-o", out], {
@@ -66,6 +71,7 @@ const written: [string, number][] = [
 	[png(any, "icons/pwa-192x192.png", 192), 192],
 	[png(any, "icons/pwa-512x512.png", 512), 512],
 	[png(apple, "icons/apple-touch-icon-180x180.png", 180), 180],
+	[png(badge(), "icons/badge-96x96.png", 96), 96],
 ];
 
 writeFileSync(join(PUBLIC, "favicon.svg"), `${fav}\n`);
