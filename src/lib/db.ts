@@ -192,13 +192,24 @@ export async function getChaptersRange(
 		.between([bookId, fromOrder], [bookId, Number.POSITIVE_INFINITY])
 		.limit(limit)
 		.toArray();
+	return chapters.map(readChapter);
+}
 
-	return chapters.map((ch) => ({
+export async function listChapters(bookId: string) {
+	const chapters = await db.chapters
+		.where("[bookId+order]")
+		.between([bookId, 0], [bookId, Number.POSITIVE_INFINITY])
+		.toArray();
+	return chapters.map(readChapter);
+}
+
+function readChapter(ch: ChapterRecord) {
+	return {
 		index: ch.order,
 		title: ch.title,
 		frontMatter: ch.frontMatter ?? false,
 		blocks: JSON.parse(ch.blocks) as Block[],
-	}));
+	};
 }
 
 export async function listChapterTitles(bookId: string) {

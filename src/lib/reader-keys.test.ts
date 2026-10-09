@@ -22,6 +22,7 @@ describe("readerAction", () => {
 		expect(readerAction("t")).toBe("settings");
 		expect(readerAction("S")).toBe("save");
 		expect(readerAction("l")).toBe("dim");
+		expect(readerAction("/")).toBe("find");
 	});
 
 	it("leaves on Escape and ignores every other key", () => {

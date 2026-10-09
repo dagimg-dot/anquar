@@ -30,6 +30,7 @@ import {
 } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import toast from "solid-toast";
+import { matchRanges, type SearchHit } from "../lib/book-search.ts";
 import { brightness, cycleBrightness } from "../lib/brightness.ts";
 import {
 	createPager,
@@ -760,6 +761,60 @@ export default function Feed() {
 		if (i >= 0) scrollToCard(i, how === "opened");
 	}
 
+	// A match found in the book lands with every match on its card lit, until you read on from it.
+	const [query, setQuery] = createSignal("");
+	let searchField: HTMLInputElement | undefined;
+	const FOUND = "search-match";
+	let landing: { cardId: string; arrived: boolean } | undefined;
+	const unlight = () => "highlights" in CSS && CSS.highlights.delete(FOUND);
+	function light() {
+		const page = container()?.querySelectorAll(".snap-page")[position()];
+		const ranges = page ? matchRanges(page, query()) : [];
+		if (ranges.length > 0 && "highlights" in CSS)
+			CSS.highlights.set(FOUND, new Highlight(...ranges));
+	}
+	createEffect(
+		on(
+			position,
+			() => {
+				if (!landing) return;
+				if (currentCard()?.id === landing.cardId) {
+					landing.arrived = true;
+					requestAnimationFrame(light);
+				} else if (landing.arrived) {
+					landing = undefined;
+					unlight();
+				}
+			},
+			{ defer: true },
+		),
+	);
+	onCleanup(unlight);
+
+	function find() {
+		setSheet("contents");
+		requestAnimationFrame(() => {
+			searchField?.focus();
+			searchField?.select();
+		});
+	}
+
+	async function jumpToMatch(hit: SearchHit) {
+		setSheet(null);
+		unlight();
+		await reach(hit.chapterIndex);
+		const i = findCardHolding(cards(), hit.place);
+		if (i < 0) return;
+		landing = { cardId: cards()[i].id, arrived: false };
+		if (i === cardIndex()) {
+			landing.arrived = true;
+			return light();
+		}
+		// At once, not scrolled through: a match can be hundreds of cards away.
+		scrollToCard(i, true);
+		setPosition(i + coverPages());
+	}
+
 	async function share(picked: string) {
 		const meta = bookMeta();
 		const card = currentCard();
@@ -822,6 +877,7 @@ export default function Feed() {
 		contents: () => toggleSheet("contents"),
 		dim: cycleBrightness,
 		explain: () => (sheet() === "explain" ? setSheet(null) : explain("")),
+		find,
 		leave: () => (sheet() ? setSheet(null) : goBack()),
 		next: () => scroller.step(1),
 		previous: () => scroller.step(-1),
@@ -1006,9 +1062,15 @@ export default function Feed() {
 								bookId={meta().id}
 								coverUrl={meta().coverUrl}
 								currentChapter={currentChapter()}
+								onFind={(hit) => void jumpToMatch(hit)}
 								onJump={(i) => void jumpToChapter(i)}
+								onQuery={setQuery}
 								progress={progress()}
+								query={query()}
 								savedCount={bookmarks().length}
+								searchField={(el) => {
+									searchField = el;
+								}}
 								title={meta().title}
 							/>
 						</BottomSheet>

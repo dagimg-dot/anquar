@@ -6,6 +6,7 @@ export type ReaderAction =
 	| "previous"
 	| "contents"
 	| "explain"
+	| "find"
 	| "settings"
 	| "save"
 	| "dim"
@@ -20,6 +21,7 @@ const KEYS: Record<string, ReaderAction> = {
 	PageUp: "previous",
 	c: "contents",
 	e: "explain",
+	"/": "find",
 	t: "settings",
 	s: "save",
 	l: "dim",
@@ -41,6 +43,16 @@ export type ReaderKeys = Record<ReaderAction, () => void>;
 export function useReaderKeys(handlers: ReaderKeys) {
 	onMount(() => {
 		const onKey = (e: KeyboardEvent) => {
+			// The browser's own find can't see the cards that aren't built, so the book's search takes its key.
+			if (
+				(e.ctrlKey || e.metaKey) &&
+				!e.altKey &&
+				!e.defaultPrevented &&
+				e.key.toLowerCase() === "f"
+			) {
+				e.preventDefault();
+				return handlers.find();
+			}
 			if (!keyIsForPage(e)) return;
 			// Space on a focused button presses it.
 			if (

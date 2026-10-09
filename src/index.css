@@ -334,7 +334,8 @@ textarea,
 	}
 }
 
-::highlight(saved-passage) {
+::highlight(saved-passage),
+::highlight(search-match) {
 	background-color: color-mix(in srgb, var(--color-brand-500) 32%, transparent);
 }
 
