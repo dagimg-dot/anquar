@@ -219,6 +219,14 @@ frames of the same height, so snapping, jumps and keeping your place work as if
 every card were built, and a book of long chapters opens without building
 hundreds of cards.
 
+**Search** — `BookSearch`, at the top of the Contents sheet, searches the open book. `src/lib/book-search.ts` reads every chapter
+once (`listChapters`, kept for the last book searched) and folds its text into one string, without case, accents
+or curly quotes, so each keystroke is one `indexOf` over the whole book. A match keeps its block's id and offset as
+a card id (`c5-195@189`, or `c1-4#2` for a list item), which `findCardHolding` takes to the card holding it, as
+with saves and your place. The reader jumps there at once and lights every match on that card with the
+`search-match` highlight until you read on. `/` and Ctrl+F open it; the browser's own find can't see the cards
+that aren't built. Its tests run the real Meditations file.
+
 **Reader chrome** — `ReaderRail` carries contents, explain, save, share, the
 lamp and settings for the card on screen; each opens a `BottomSheet` but the
 lamp (`BrightnessLamp`), which dims the page under a dark layer, since the web
