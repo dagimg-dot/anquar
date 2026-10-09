@@ -13,6 +13,16 @@ export interface Release {
 
 export const RELEASES: Release[] = [
 	{
+		version: "0.1.7",
+		date: "2026-10-09",
+		title: "Search the book you're reading",
+		notes: [
+			"Contents has a search field: type a word or a line and every place it appears in the book shows up as you type.",
+			"Tap one and the book opens on it, with the words lit until you read on.",
+			"On a keyboard, / or Ctrl+F opens it.",
+		],
+	},
+	{
 		version: "0.1.6",
 		date: "2026-10-04",
 		title: "anquar on a big screen",
