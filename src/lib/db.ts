@@ -4,6 +4,7 @@ import { releaseCoverUrl } from "./covers.ts";
 import { sameBook } from "./import-check.ts";
 import {
 	freshBookmarks,
+	freshWords,
 	type LibraryDump,
 	later,
 	mergeReading,
@@ -12,6 +13,7 @@ import {
 	writeSettings,
 } from "./library-file.ts";
 import type { ReaderSettings } from "./reader-settings.tsx";
+import { firstDue, graded, termOf } from "./review.ts";
 
 export interface BookRecord {
 	addedAt: string;
@@ -81,6 +83,24 @@ export interface ReadingRecord {
 	sessions: number;
 }
 
+// What Explain told you, kept to come back to (review.ts).
+export interface WordRecord {
+	askedAt: string;
+	bookId: string;
+	cardId: string;
+	chapterIndex: number;
+	/** The sentence the words were asked in, or the passage asked about whole. */
+	context: string;
+	detail: string;
+	dueOn: string;
+	focus: string[];
+	gist: string;
+	id?: number;
+	step: number;
+	/** The focus as one string, which finds the same words asked again in the same book. */
+	term: string;
+}
+
 class LibraryDB extends Dexie {
 	books!: EntityTable<BookRecord, "id">;
 	chapters!: EntityTable<ChapterRecord, "id">;
@@ -89,6 +109,7 @@ class LibraryDB extends Dexie {
 	readerSettings!: EntityTable<ReaderSettingsRecord, "bookId">;
 	reading!: Table<ReadingRecord, [string, string]>;
 	images!: EntityTable<ImageRecord, "id">;
+	words!: EntityTable<WordRecord, "id">;
 
 	constructor() {
 		super("anquar");
@@ -105,6 +126,9 @@ class LibraryDB extends Dexie {
 		this.version(2).stores({
 			dailyRollups: null,
 			reading: "[date+bookId], date, bookId",
+		});
+		this.version(3).stores({
+			words: "++id, bookId, dueOn, [bookId+term]",
 		});
 	}
 }
@@ -293,6 +317,7 @@ export async function deleteBook(bookId: string) {
 		db.bookmarks,
 		db.readerSettings,
 		db.images,
+		db.words,
 	] as const;
 	await db.transaction("rw", tables, async () => {
 		await db.books.delete(bookId);
@@ -301,6 +326,7 @@ export async function deleteBook(bookId: string) {
 		await db.bookmarks.where("bookId").equals(bookId).delete();
 		await db.readerSettings.where("bookId").equals(bookId).delete();
 		await db.images.where("bookId").equals(bookId).delete();
+		await db.words.where("bookId").equals(bookId).delete();
 	});
 }
 
@@ -332,6 +358,54 @@ export function removeBookmark(id: number) {
 	return db.bookmarks.delete(id);
 }
 
+// The same words asked again in a book are one entry, asked afresh: re-asking is forgetting, so it starts over.
+// What it replaced comes back with the result, for an Undo to put back.
+export async function keepWord(
+	entry: Omit<WordRecord, "id" | "step" | "dueOn" | "term" | "askedAt">,
+	today: string,
+): Promise<{ id: number; replaced?: WordRecord }> {
+	const term = termOf(entry.focus);
+	const record = {
+		...entry,
+		...firstDue(today),
+		askedAt: new Date().toISOString(),
+		term,
+	};
+	return db.transaction("rw", db.words, async () => {
+		const replaced = term
+			? await db.words
+					.where("[bookId+term]")
+					.equals([entry.bookId, term])
+					.first()
+			: undefined;
+		const id = (await db.words.put(
+			replaced ? { ...record, id: replaced.id } : record,
+		)) as number;
+		return { id, replaced };
+	});
+}
+
+export function putWord(word: WordRecord) {
+	return db.words.put(word);
+}
+
+export function removeWord(id: number) {
+	return db.words.delete(id);
+}
+
+export function getWord(id: number) {
+	return db.words.get(id);
+}
+
+export function listWords() {
+	return db.words.toArray();
+}
+
+export async function gradeWord(id: number, right: boolean, today: string) {
+	const word = await db.words.get(id);
+	if (word) await db.words.update(id, graded(word, right, today));
+}
+
 export function saveReaderSettings(bookId: string, settings: ReaderSettings) {
 	return db.readerSettings.put({ bookId, ...settings });
 }
@@ -349,6 +423,7 @@ const libraryTables = () =>
 		db.bookmarks,
 		db.readerSettings,
 		db.reading,
+		db.words,
 	] as const;
 
 export async function dumpLibrary(): Promise<LibraryDump> {
@@ -360,6 +435,7 @@ export async function dumpLibrary(): Promise<LibraryDump> {
 		bookmarks,
 		readerSettings,
 		reading,
+		words,
 	] = await db.transaction("r", libraryTables(), () =>
 		Promise.all([
 			db.books.toArray(),
@@ -369,6 +445,7 @@ export async function dumpLibrary(): Promise<LibraryDump> {
 			db.bookmarks.toArray(),
 			db.readerSettings.toArray(),
 			db.reading.toArray(),
+			db.words.toArray(),
 		]),
 	);
 	return {
@@ -379,6 +456,7 @@ export async function dumpLibrary(): Promise<LibraryDump> {
 		bookmarks,
 		readerSettings,
 		reading,
+		words,
 		settings: readSettings(),
 	};
 }
@@ -406,6 +484,7 @@ export async function restoreLibrary(dump: LibraryDump) {
 			await db.reading.put(
 				mergeReading(await db.reading.get([day.date, day.bookId]), day),
 			);
+		await db.words.bulkAdd(freshWords(await db.words.toArray(), dump.words));
 	});
 	writeSettings(dump.settings);
 	for (const book of dump.books) releaseCoverUrl(book.id);
@@ -431,6 +510,7 @@ export async function eraseLibrary() {
 			db.progress.clear(),
 			db.bookmarks.clear(),
 			db.reading.clear(),
+			db.words.clear(),
 			db.readerSettings.where("bookId").notEqual("global").delete(),
 		]),
 	);

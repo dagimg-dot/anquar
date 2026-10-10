@@ -431,6 +431,8 @@ export default function Feed() {
 	const [shown, setShown] = createSignal(false);
 	const [sheet, setSheet] = createSignal<SheetName | null>(null);
 	const [explaining, setExplaining] = createSignal({
+		cardId: "",
+		chapterIndex: 0,
 		passage: "",
 		selection: "",
 	});
@@ -831,7 +833,12 @@ export default function Feed() {
 	function explain(picked: string) {
 		const card = currentCard();
 		if (!card) return;
-		setExplaining({ passage: cardText(card.blocks), selection: picked });
+		setExplaining({
+			cardId: card.id,
+			chapterIndex: card.chapterIndex,
+			passage: cardText(card.blocks),
+			selection: picked,
+		});
 		setSheet("explain");
 	}
 
@@ -1113,6 +1120,9 @@ export default function Feed() {
 								{(ask) => (
 									<ExplainSheet
 										author={meta().author}
+										bookId={meta().id}
+										cardId={ask.cardId}
+										chapterIndex={ask.chapterIndex}
 										passage={ask.passage}
 										selection={ask.selection}
 										title={meta().title}

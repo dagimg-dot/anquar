@@ -1,4 +1,10 @@
-import { Copy, Lightbulb, SpeakerHigh } from "phosphor-solid";
+import {
+	CheckCircle,
+	Circle,
+	Copy,
+	Lightbulb,
+	SpeakerHigh,
+} from "phosphor-solid";
 import {
 	createEffect,
 	createMemo,
@@ -12,6 +18,7 @@ import {
 	Switch,
 } from "solid-js";
 import toast from "solid-toast";
+import { keepWord, putWord, removeWord, type WordRecord } from "../lib/db.ts";
 import { type ExplainError, ExplainFailure, explain } from "../lib/explain.ts";
 import { answerParts, phrasesOf, wordsOf } from "../lib/explain-words.ts";
 import {
@@ -21,10 +28,16 @@ import {
 	connect,
 } from "../lib/gemini.ts";
 import { tick } from "../lib/haptics.ts";
+import { dayKey } from "../lib/reading.ts";
+import { sentenceAround } from "../lib/review.ts";
 import { canSay, hush, say, saying } from "../lib/speech.ts";
 
 interface ExplainSheetProps {
 	author: string;
+	bookId: string;
+	/** Where the card asked from is, so a kept word can open the book on it. */
+	cardId: string;
+	chapterIndex: number;
 	/** The card's text: the context when nothing, or one word, was selected. */
 	passage: string;
 	/** "" when nothing was selected. */
@@ -121,6 +134,7 @@ export default function ExplainSheet(props: ExplainSheetProps) {
 				own.signal,
 			);
 			setStatus("done");
+			void keep(focus);
 		} catch (error) {
 			if (own.signal.aborted) return;
 			setStatus(error instanceof ExplainFailure ? error.kind : "failed");
@@ -130,6 +144,45 @@ export default function ExplainSheet(props: ExplainSheetProps) {
 	onMount(() => {
 		if (single) void ask();
 	});
+
+	// Every answer is kept to come back to, with an Undo. A word sits in the sentence it was asked in; a
+	// passage asked about whole is kept whole.
+	const [kept, setKept] = createSignal<
+		{ id: number; replaced?: WordRecord } | "undone"
+	>();
+	let keeping: (() => Promise<void>) | undefined;
+	function keep(focus: string[]) {
+		const { gist, detail } = answerParts(text());
+		if (!gist) return;
+		const mine = keyOf();
+		setKept(undefined);
+		keeping = async () => {
+			const result = await keepWord(
+				{
+					bookId: props.bookId,
+					cardId: props.cardId,
+					chapterIndex: props.chapterIndex,
+					context: sentenceAround(
+						focus.length > 0 ? props.passage : context,
+						focus,
+					),
+					detail,
+					focus,
+					gist,
+				},
+				dayKey(),
+			);
+			if (asked() === mine) setKept(result);
+		};
+		return keeping();
+	}
+	async function undo() {
+		const done = kept();
+		if (!done || done === "undone") return void keeping?.();
+		tick();
+		setKept("undone");
+		await (done.replaced ? putWord(done.replaced) : removeWord(done.id));
+	}
 
 	const answered = () => asked() === keyOf() && !failed(status());
 	const stale = () => !single && asked() !== null && asked() !== keyOf();
@@ -330,6 +383,33 @@ export default function ExplainSheet(props: ExplainSheetProps) {
 											: "Only this card left your phone"}
 									</span>
 								</div>
+								<Show when={kept()}>
+									<div class="mt-4 flex items-center gap-2 border-border border-t pt-3 text-[13.5px] text-ink-soft">
+										<Show
+											fallback={
+												<>
+													<Circle class="shrink-0" size={17} />
+													<span>Not kept</span>
+												</>
+											}
+											when={kept() !== "undone"}
+										>
+											<CheckCircle
+												class="shrink-0 text-brand-500"
+												size={17}
+												weight="fill"
+											/>
+											<span>Kept in your Words</span>
+										</Show>
+										<button
+											class="ml-auto py-1.5 font-semibold text-ink"
+											onClick={() => void undo()}
+											type="button"
+										>
+											{kept() === "undone" ? "Keep" : "Undo"}
+										</button>
+									</div>
+								</Show>
 							</Show>
 						</Match>
 					</Switch>

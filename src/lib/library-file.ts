@@ -7,6 +7,7 @@ import type {
 	ProgressRecord,
 	ReaderSettingsRecord,
 	ReadingRecord,
+	WordRecord,
 } from "./db.ts";
 
 export interface LibraryDump {
@@ -17,6 +18,8 @@ export interface LibraryDump {
 	bookmarks: BookmarkRecord[];
 	readerSettings: ReaderSettingsRecord[];
 	reading: ReadingRecord[];
+	/** Absent from a file exported before words were kept. */
+	words: WordRecord[];
 	settings: Record<string, string>;
 }
 
@@ -113,6 +116,7 @@ export async function packLibrary(
 	json("bookmarks.json", dump.bookmarks);
 	json("reader-settings.json", dump.readerSettings);
 	json("reading.json", dump.reading);
+	json("words.json", dump.words);
 	json("settings.json", dump.settings);
 
 	return zip.generateAsync(
@@ -179,6 +183,7 @@ export async function unpackLibrary(
 		bookmarks: await list("bookmarks.json"),
 		readerSettings: await list("reader-settings.json"),
 		reading: await list("reading.json"),
+		words: await list("words.json"),
 		settings:
 			settings && typeof settings === "object"
 				? pickSettings(Object.entries(settings))
@@ -237,6 +242,25 @@ export function freshBookmarks(
 		if (seen.has(key)) continue;
 		seen.add(key);
 		fresh.push(save);
+	}
+	return fresh;
+}
+
+const wordKey = (word: WordRecord) =>
+	`${word.bookId}\n${word.askedAt}\n${word.term}`;
+
+// Words come in under new numbers too, leaving out any already here.
+export function freshWords(
+	here: WordRecord[],
+	restored: WordRecord[],
+): WordRecord[] {
+	const seen = new Set(here.map(wordKey));
+	const fresh: WordRecord[] = [];
+	for (const { id: _, ...word } of restored) {
+		const key = wordKey(word);
+		if (seen.has(key)) continue;
+		seen.add(key);
+		fresh.push(word);
 	}
 	return fresh;
 }

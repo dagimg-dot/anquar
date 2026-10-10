@@ -2,6 +2,7 @@ import JSZip from "jszip";
 import { describe, expect, it } from "vitest";
 import {
 	freshBookmarks,
+	freshWords,
 	type LibraryDump,
 	mergeReading,
 	newerProgress,
@@ -104,9 +105,25 @@ function library(): LibraryDump {
 				sessions: 1,
 			},
 		],
+		words: [WORD],
 		settings: { anquar_goal: "50", theme: "dark" },
 	};
 }
+
+const WORD = {
+	askedAt: "2026-10-01T09:00:00.000Z",
+	bookId: "b1",
+	cardId: "c1-3",
+	chapterIndex: 1,
+	context: "Our life is frittered away by detail.",
+	detail: "Wasted bit by bit on small things.",
+	dueOn: "2026-10-02",
+	focus: ["frittered"],
+	gist: "wasted little by little",
+	id: 4,
+	step: 0,
+	term: "frittered",
+};
 
 const zipOf = (files: Record<string, string>) => {
 	const zip = new JSZip();
@@ -138,6 +155,7 @@ describe("library file", () => {
 		expect(back.bookmarks).toEqual(saved.bookmarks);
 		expect(back.readerSettings).toEqual(saved.readerSettings);
 		expect(back.reading).toEqual(saved.reading);
+		expect(back.words).toEqual(saved.words);
 		expect(back.settings).toEqual(saved.settings);
 	});
 
@@ -252,5 +270,22 @@ describe("freshBookmarks", () => {
 		];
 		const { id: _, ...simplify } = save(8, "Simplify, simplify.");
 		expect(freshBookmarks(here, incoming)).toEqual([simplify]);
+	});
+});
+
+describe("freshWords", () => {
+	it("skips words already here and lets the rest take new numbers", () => {
+		const later = { ...WORD, id: 9, askedAt: "2026-10-05T09:00:00.000Z" };
+		const { id: _, ...fresh } = later;
+		expect(freshWords([WORD], [{ ...WORD, id: 7 }, later])).toEqual([fresh]);
+	});
+
+	it("reads a file from before words were kept as having none", async () => {
+		const zip = await JSZip.loadAsync(await packLibrary(library()));
+		zip.remove("words.json");
+		const back = await unpackLibrary(
+			await zip.generateAsync({ type: "uint8array" }),
+		);
+		expect(back.words).toEqual([]);
 	});
 });
