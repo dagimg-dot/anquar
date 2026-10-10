@@ -15,11 +15,13 @@ export const RELEASES: Release[] = [
 	{
 		version: "0.1.7",
 		date: "2026-10-09",
-		title: "Search the book you're reading",
+		title: "Search a book, and keep what you asked",
 		notes: [
 			"Contents has a search field: type a word or a line and every place it appears in the book shows up as you type.",
 			"Tap one and the book opens on it, with the words lit until you read on.",
 			"On a keyboard, / or Ctrl+F opens it.",
+			"What Explain tells you is kept now, with an Undo. Find it all under Saved, in Words.",
+			"A word you asked about comes back a few days later as a quick question on the Feed tab, and less often each time you know it.",
 		],
 	},
 	{
