@@ -176,22 +176,23 @@ under Earlier; Settings → App opens it any time. Someone new starts with
 nothing to catch up on.
 
 **Storage** — Dexie over IndexedDB in `src/lib/db.ts`, database `anquar`,
-schema v2. Tables: `books`, `chapters`, `progress`, `bookmarks`,
-`readerSettings`, `reading`, `images`. Image bytes are split into `images`
+schema v3. Tables: `books`, `chapters`, `progress`, `bookmarks`,
+`readerSettings`, `reading`, `images`, `words`. Image bytes are split into `images`
 so chapter JSON stays small; `saveBook` strips them with a replacer. `progress`
 keeps the id of the card you're on, and the reader opens at it.
 `reading` has one row per book per reading day; deleting a book keeps its rows,
-because the streak belongs to you, not the book.
+because the streak belongs to you, not the book. `words` (see Words) goes with
+its book.
 
 **Library file** — Settings → Data exports every table, the covers and the
 pictures as one zip (`src/lib/library-file.ts`, format `anquar-library` v1),
 with the `anquar_*` settings but never the Gemini key or `anquar_version`, so a
 library moves to another phone or origin without its EPUBs. Import adds to the
 library instead of replacing it: the place read last wins, a day read on both
-phones counts each card once, and saves already there are skipped, so importing
-a file twice changes nothing. A file from a newer format is refused, not
+phones counts each card once, and saves and words already there are skipped, so
+importing a file twice changes nothing; a file from before words has none. A file from a newer format is refused, not
 guessed at. Clear library (`eraseLibrary`) is a true reset of what was read:
-books, places, saves, reading history and the Pulse's keys all go, after a
+books, places, saves, words, reading history and the Pulse's keys all go, after a
 sheet asks; the reader defaults, the goal, the theme and the Gemini key stay.
 
 **Feed** — `src/components/Feed.tsx`. CSS scroll-snap over cards that
@@ -257,6 +258,21 @@ line and then its detail, and the sheet sets it in Source Serif 4 word by word.
 A speaker beside the asked word says it, as a dictionary's does, in a voice
 that lives on the phone (`speech.ts`); with no such voice it isn't shown, since
 a network voice would send the word away.
+
+**Words** — every finished answer is kept in `words`, with an Undo under it in
+the sheet: the words asked (none for a passage asked about whole), the sentence
+they sit in (`sentenceAround`), the gist and detail, and the card id. The same
+words asked again in a book replace their entry and start over. Saved has a
+Words view beside Passages (`WordList`), which opens the book on the word's card
+(`?word=`) with it lit. The rules are in `src/lib/review.ts`, tested: a kept
+word comes back the next day, then 3, 7, 16 and 35 days after each right answer,
+a wrong one tomorrow, and five right in a row is known and stops; at most 5 a
+day. On a day something is due, `ReviewCard` sits at the top of the Feed tab and
+opens `ReviewDeck`: a word is three meanings to pick from, the wrong two other
+kept words' gists, so no request is made; a passage, or a word with too few
+others, is Show me then Not yet / Knew it. Each answer is graded as given.
+Reviews aren't anquars and never touch the Pulse. The design is K1 + L1 + B of
+`design/explained.html`.
 
 **Sharing** — Share sends an image of the passage with the passage as text
 and `— Title, Author` on the line below. `src/lib/share-card.ts` draws the
