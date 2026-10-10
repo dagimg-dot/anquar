@@ -46,12 +46,14 @@ import {
 	getBookMeta,
 	getBookmark,
 	getProgress,
+	getWord,
 	imageKey,
 	listBookmarks,
 	listBooks,
 	listReading,
 	removeBookmark,
 	saveProgress,
+	type WordRecord,
 } from "../lib/db.ts";
 import { flourish, tick } from "../lib/haptics.ts";
 import { imageUrl } from "../lib/images.ts";
@@ -650,6 +652,14 @@ export default function Feed() {
 		if (range && "highlights" in CSS)
 			CSS.highlights.set(HIGHLIGHT, new Highlight(range));
 	}
+	// A kept word lands with each place it was asked about lit; a passage asked about whole, all of it.
+	function showWord(card: Element | undefined, word: WordRecord) {
+		if (!card || !("highlights" in CSS)) return;
+		if (word.focus.length === 0) return showPassage(card, word.context);
+		const ranges = word.focus.flatMap((phrase) => matchRanges(card, phrase));
+		if (ranges.length > 0)
+			CSS.highlights.set(HIGHLIGHT, new Highlight(...ranges));
+	}
 	onCleanup(() => "highlights" in CSS && CSS.highlights.delete(HIGHLIGHT));
 
 	// The place is the card's id, a place in the book, so a relayout can't move it. The cover isn't a place:
@@ -704,7 +714,12 @@ export default function Feed() {
 				const bookmark = search.saved
 					? await getBookmark(Number(search.saved))
 					: undefined;
-				const visit = bookmark?.bookId === id ? bookmark : undefined;
+				const word = search.word
+					? await getWord(Number(search.word))
+					: undefined;
+				const save = bookmark?.bookId === id ? bookmark : undefined;
+				const kept = word?.bookId === id ? word : undefined;
+				const visit = save ?? kept;
 				const saved = visit ? undefined : await getProgress(id);
 				if (id !== bookMeta()?.id) return;
 				await openAt(visit?.chapterIndex ?? saved?.chapterIndex ?? 0);
@@ -718,11 +733,10 @@ export default function Feed() {
 					scrollToCard(index, true);
 					setPosition(index + coverPages());
 				}
-				if (visit?.passage) {
-					const page =
-						container()?.querySelectorAll(".snap-page")[index + coverPages()];
-					showPassage(page, visit.textSnippet);
-				}
+				const page =
+					container()?.querySelectorAll(".snap-page")[index + coverPages()];
+				if (save?.passage) showPassage(page, save.textSnippet);
+				if (kept) showWord(page, kept);
 				readerLanded();
 			},
 		),

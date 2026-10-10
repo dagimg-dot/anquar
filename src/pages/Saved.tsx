@@ -4,6 +4,7 @@ import { createSignal, For, onMount, Show } from "solid-js";
 import BookCover from "../components/BookCover";
 import HighlightCard from "../components/HighlightCard";
 import PassageSheet, { type HeldPassage } from "../components/PassageSheet";
+import WordList from "../components/WordList";
 import { coverUrl } from "../lib/covers";
 import { db, getBookMeta } from "../lib/db";
 import { tick } from "../lib/haptics";
@@ -32,6 +33,10 @@ export default function Saved() {
 	const navigate = useNavigate();
 	const [groups, setGroups] = createSignal<BookGroup[]>([]);
 	const [loading, setLoading] = createSignal(true);
+	// What you kept from books, and what Explain told you: two views, one tab.
+	const [view, setView] = createSignal<"passages" | "words">("passages");
+	const [wordCount, setWordCount] = createSignal(0);
+	const saveCount = () => groups().reduce((n, g) => n + g.bookmarks.length, 0);
 	// Each book is a dropdown of its saves, open until its name is tapped.
 	const [closed, setClosed] = createSignal<string[]>([]);
 	const isOpen = (id: string) => !closed().includes(id);
@@ -72,6 +77,7 @@ export default function Saved() {
 		);
 
 	onMount(async () => {
+		void db.words.count().then(setWordCount);
 		try {
 			const bookmarks = (await db.bookmarks.toArray()) as BookmarkItem[];
 			const grouped: Record<string, BookmarkItem[]> = {};
@@ -106,7 +112,38 @@ export default function Saved() {
 
 	return (
 		<div class="pb-24">
-			<Show when={groups().length > 0}>
+			<div class="mx-5 mb-3 flex rounded-xl bg-surface-elevated p-[3px] tablet:mx-0 tablet:max-w-xs">
+				<For
+					each={
+						[
+							["passages", "Passages", saveCount],
+							["words", "Words", wordCount],
+						] as const
+					}
+				>
+					{([id, label, count]) => (
+						<button
+							aria-pressed={view() === id}
+							class="h-[34px] flex-1 rounded-[9px] font-semibold text-[13.5px] transition-colors"
+							classList={{
+								"bg-canvas text-ink shadow-sm": view() === id,
+								"text-ink-soft": view() !== id,
+							}}
+							onClick={() => setView(id)}
+							type="button"
+						>
+							{label}
+							<span class="ml-1 font-medium text-ink-muted tabular-nums">
+								{count()}
+							</span>
+						</button>
+					)}
+				</For>
+			</div>
+			<Show when={view() === "words"}>
+				<WordList onCount={setWordCount} />
+			</Show>
+			<Show when={view() === "passages" && groups().length > 0}>
 				<For each={groups()}>
 					{(group) => (
 						<div class="mb-6">
@@ -188,7 +225,7 @@ export default function Saved() {
 					)}
 				</For>
 			</Show>
-			<Show when={!loading() && groups().length === 0}>
+			<Show when={view() === "passages" && !loading() && groups().length === 0}>
 				<div class="text-center py-12 px-5 text-ink-soft text-sm">
 					No highlights yet
 				</div>
