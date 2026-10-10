@@ -5,6 +5,7 @@ import InProgressRow from "../components/InProgressRow";
 import NowReading from "../components/NowReading";
 import Prompts from "../components/Prompts";
 import ReadingPulse from "../components/ReadingPulse";
+import ReviewCard from "../components/ReviewCard";
 import { coverUrl } from "../lib/covers";
 import { getProgress, listBooks } from "../lib/db";
 import { libraryVersion } from "../lib/imports";
@@ -17,6 +18,7 @@ import { splashReady } from "../splash";
 // a desktop sets the Pulse in a column of its own beside the rest, pinned as they scroll. It stops at top-24, the
 // header (h-21 in AppHeader) plus the pt-3 the page starts below it, so it is level with the lead until it sticks.
 const PART = {
+	review: "order-1 desktop:col-start-1",
 	lead: "order-1 desktop:col-start-1",
 	shelf: "order-2 tablet:order-3 desktop:col-start-1",
 	pulse:
@@ -156,6 +158,9 @@ export default function FeedPage() {
 						</div>
 					}
 				>
+					<div class={PART.review}>
+						<ReviewCard />
+					</div>
 					<Show when={lastBook()}>
 						<div class={PART.lead}>
 							<NowReading
